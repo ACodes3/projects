@@ -1,211 +1,211 @@
 [
   {
     "id": 1,
-    "title": "Cyberpunk 2077",
-    "genre": ["RPG", "Action"],
+    "title": "Neon Drift",
+    "genre": ["Racing", "Arcade"],
     "platforms": ["PC", "PlayStation", "Xbox"],
-    "rating": 8.7,
-    "releaseYear": 2020,
-    "developer": "CD Projekt Red",
+    "rating": 9.1,
+    "releaseYear": 2025,
+    "developer": "Voltage Street Studios",
     "favorite": true,
     "status": "Installed",
-    "playTime": "32 h 30 min",
+    "playTime": "18 h 42 min",
     "lastPlayed": "Today",
-    "image": "https://placehold.co/500x500/f5df13/111111?text=Cyberpunk+2077",
-    "thumbnail": "https://placehold.co/100x100/f5df13/111111?text=C",
-    "description": "A futuristic open-world RPG set in Night City.",
+    "image": "/images/games/neon-drift.png",
+    "thumbnail": "/images/games/neon-drift.png",
+    "description": "A high-speed futuristic street racing game set in a neon megacity filled with dangerous night circuits and underground tournaments.",
     "achievements": {
-      "unlocked": 61,
-      "total": 118
+      "unlocked": 46,
+      "total": 78
     },
     "addon": {
-      "title": "Implant Psychosis",
-      "description": "Unlock a new story mission, discover hidden secrets and expand your journey through Night City.",
-      "price": "$9.99",
-      "image": "https://placehold.co/300x400/1686cc/ffffff?text=Addon"
+      "title": "Midnight Circuit Pack",
+      "description": "Unlock new night races, experimental vehicles and exclusive neon customization options.",
+      "price": "$8.99",
+      "image": "/images/games/neon-drift.png"
     },
     "update": {
-      "version": "v1.10.2",
-      "date": "16 April 2020",
+      "version": "v1.4.2",
+      "date": "18 September 2026",
       "notes": [
-        "Fixed minor visual issues.",
-        "Improved menu responsiveness.",
-        "Updated gameplay balance."
+        "Added three new night circuits.",
+        "Improved vehicle handling.",
+        "Updated multiplayer matchmaking."
       ]
     }
   },
   {
     "id": 2,
-    "title": "Elden Ring",
+    "title": "Ashen Crown",
     "genre": ["RPG", "Action"],
     "platforms": ["PC", "PlayStation", "Xbox"],
-    "rating": 9.5,
-    "releaseYear": 2022,
-    "developer": "FromSoftware",
+    "rating": 9.4,
+    "releaseYear": 2024,
+    "developer": "Iron Hollow Games",
     "favorite": true,
     "status": "Installed",
-    "playTime": "48 h 10 min",
+    "playTime": "57 h 16 min",
     "lastPlayed": "Yesterday",
-    "image": "https://placehold.co/500x500/d6b56b/111111?text=Elden+Ring",
-    "thumbnail": "https://placehold.co/100x100/d6b56b/111111?text=ER",
-    "description": "An open-world action RPG set in a dark fantasy world.",
+    "image": "/images/games/achen-crown.png",
+    "thumbnail": "/images/games/achen-crown.png",
+    "description": "A dark fantasy action RPG where a fallen knight journeys through a shattered kingdom consumed by ash and ancient curses.",
     "achievements": {
-      "unlocked": 28,
-      "total": 42
+      "unlocked": 35,
+      "total": 62
     },
     "addon": {
-      "title": "Shadow Expansion",
-      "description": "Explore new lands, discover new enemies and uncover another chapter of the Elden Ring.",
-      "price": "$14.99",
-      "image": "https://placehold.co/300x400/62533c/ffffff?text=Expansion"
+      "title": "The Ember Throne",
+      "description": "Travel beyond the ruined capital and face a forgotten ruler beneath the burning mountains.",
+      "price": "$12.99",
+      "image": "/images/games/achen-crown.png"
     },
     "update": {
-      "version": "v1.15",
-      "date": "12 March 2024",
+      "version": "v2.1",
+      "date": "29 August 2026",
       "notes": [
-        "Improved combat balancing.",
-        "Fixed several quest issues.",
-        "Updated multiplayer stability."
+        "Added new endgame bosses.",
+        "Improved combat responsiveness.",
+        "Balanced several legendary weapons."
       ]
     }
   },
   {
     "id": 3,
-    "title": "Hades",
-    "genre": ["Roguelike", "Action"],
-    "platforms": ["PC", "PlayStation", "Xbox", "Switch"],
-    "rating": 9.2,
-    "releaseYear": 2020,
-    "developer": "Supergiant Games",
+    "title": "Void Harvest",
+    "genre": ["Horror", "Survival"],
+    "platforms": ["PC", "PlayStation"],
+    "rating": 8.8,
+    "releaseYear": 2026,
+    "developer": "Black Signal Interactive",
     "favorite": true,
     "status": "Installed",
-    "playTime": "21 h 44 min",
+    "playTime": "11 h 27 min",
     "lastPlayed": "3 days ago",
-    "image": "https://placehold.co/500x500/9d2525/ffffff?text=Hades",
-    "thumbnail": "https://placehold.co/100x100/9d2525/ffffff?text=H",
-    "description": "A fast-paced roguelike action game inspired by Greek mythology.",
+    "image": "/images/games/void-harvest.png",
+    "thumbnail": "/images/games/void-harvest.png",
+    "description": "A sci-fi survival horror game aboard an abandoned research vessel overtaken by an unknown organic lifeform.",
     "achievements": {
-      "unlocked": 34,
-      "total": 49
+      "unlocked": 21,
+      "total": 44
     },
     "addon": {
-      "title": "Underworld Pack",
-      "description": "A collection of additional challenges and cosmetic rewards.",
-      "price": "$6.99",
-      "image": "https://placehold.co/300x400/6b1b1b/ffffff?text=Underworld"
+      "title": "Deep Signal",
+      "description": "Explore sealed research decks and uncover the origin of the signal that awakened the organism.",
+      "price": "$7.99",
+      "image": "/images/games/void-harvest.png"
     },
     "update": {
-      "version": "v1.8",
-      "date": "7 January 2023",
+      "version": "v1.2.3",
+      "date": "25 September 2026",
       "notes": [
-        "Improved controller support.",
-        "Updated enemy behavior.",
-        "Fixed minor visual bugs."
+        "Added a new nightmare difficulty.",
+        "Improved enemy pathfinding.",
+        "Fixed lighting issues in Sector 7."
       ]
     }
   },
   {
     "id": 4,
-    "title": "Red Dead Redemption 2",
-    "genre": ["Action", "Adventure"],
-    "platforms": ["PC", "PlayStation", "Xbox"],
-    "rating": 9.7,
-    "releaseYear": 2018,
-    "developer": "Rockstar Games",
+    "title": "Skyforge Tactics",
+    "genre": ["Strategy", "Tactical"],
+    "platforms": ["PC"],
+    "rating": 8.9,
+    "releaseYear": 2025,
+    "developer": "Brass Horizon",
     "favorite": false,
     "status": "Installed",
-    "playTime": "64 h 12 min",
+    "playTime": "26 h 51 min",
     "lastPlayed": "1 week ago",
-    "image": "https://placehold.co/500x500/b51d1d/ffffff?text=Red+Dead+2",
-    "thumbnail": "https://placehold.co/100x100/b51d1d/ffffff?text=RDR2",
-    "description": "An epic western adventure set in a detailed open world.",
+    "image": "/images/games/scyforce.png",
+    "thumbnail": "/images/games/scyforce.png",
+    "description": "Command vast fleets of steam-powered airships and fight tactical battles across floating kingdoms above the clouds.",
     "achievements": {
-      "unlocked": 39,
-      "total": 51
+      "unlocked": 31,
+      "total": 55
     },
     "addon": {
-      "title": "Frontier Pack",
-      "description": "Unlock bonus challenges and additional western-themed content.",
-      "price": "$7.99",
-      "image": "https://placehold.co/300x400/8e1717/ffffff?text=Frontier"
+      "title": "Empire of Storms",
+      "description": "Expand your fleet with new warships, commanders and storm-based battlefields.",
+      "price": "$10.99",
+      "image": "/images/games/scyforce.png"
     },
     "update": {
-      "version": "v1.31",
-      "date": "21 August 2023",
+      "version": "v1.8",
+      "date": "14 September 2026",
       "notes": [
-        "Improved online stability.",
-        "Fixed mission bugs.",
-        "Updated performance."
+        "Added two new fleet commanders.",
+        "Improved enemy tactical behavior.",
+        "Rebalanced heavy airships."
       ]
     }
   },
   {
     "id": 5,
-    "title": "Hollow Knight",
-    "genre": ["Metroidvania", "Adventure"],
-    "platforms": ["PC", "PlayStation", "Xbox", "Switch"],
-    "rating": 9.0,
-    "releaseYear": 2017,
-    "developer": "Team Cherry",
+    "title": "Moonlit Vale",
+    "genre": ["Adventure", "Fantasy"],
+    "platforms": ["PC", "PlayStation", "Switch"],
+    "rating": 9.3,
+    "releaseYear": 2026,
+    "developer": "Silver Lantern Studio",
     "favorite": false,
     "status": "Installed",
-    "playTime": "18 h 55 min",
-    "lastPlayed": "2 weeks ago",
-    "image": "https://placehold.co/500x500/33435b/ffffff?text=Hollow+Knight",
-    "thumbnail": "https://placehold.co/100x100/33435b/ffffff?text=HK",
-    "description": "Explore a mysterious underground kingdom filled with enemies and secrets.",
+    "playTime": "14 h 08 min",
+    "lastPlayed": "5 days ago",
+    "image": "/images/games/moonlkit-vale.png",
+    "thumbnail": "/images/games/moonlkit-vale.png",
+    "description": "A peaceful fantasy adventure about exploring a magical valley, helping villagers and discovering ancient secrets beneath the moonlight.",
     "achievements": {
-      "unlocked": 25,
-      "total": 63
+      "unlocked": 29,
+      "total": 48
     },
     "addon": {
-      "title": "Hallownest Pack",
-      "description": "Additional challenges inspired by the kingdom of Hallownest.",
-      "price": "$4.99",
-      "image": "https://placehold.co/300x400/27364e/ffffff?text=Hallownest"
+      "title": "Whispers of the Lake",
+      "description": "Discover a new lakeside region filled with spirits, hidden quests and rare magical creatures.",
+      "price": "$6.99",
+      "image": "/images/games/moonlkit-vale.png"
     },
     "update": {
-      "version": "v1.5",
-      "date": "3 June 2022",
+      "version": "v1.3",
+      "date": "20 September 2026",
       "notes": [
-        "Improved stability.",
-        "Fixed several collision issues.",
-        "Updated controller support."
+        "Added new village events.",
+        "Introduced additional wildlife.",
+        "Improved nighttime lighting."
       ]
     }
   },
   {
     "id": 6,
-    "title": "Baldur's Gate 3",
-    "genre": ["RPG", "Strategy"],
+    "title": "Rift Raiders",
+    "genre": ["Shooter", "Action"],
     "platforms": ["PC", "PlayStation", "Xbox"],
-    "rating": 9.8,
-    "releaseYear": 2023,
-    "developer": "Larian Studios",
+    "rating": 8.7,
+    "releaseYear": 2025,
+    "developer": "Fracture Works",
     "favorite": false,
     "status": "Installed",
-    "playTime": "52 h 40 min",
-    "lastPlayed": "4 days ago",
-    "image": "https://placehold.co/500x500/654d39/ffffff?text=Baldur's+Gate+3",
-    "thumbnail": "https://placehold.co/100x100/654d39/ffffff?text=BG3",
-    "description": "A story-rich fantasy RPG with tactical combat and deep player choice.",
+    "playTime": "33 h 19 min",
+    "lastPlayed": "2 days ago",
+    "image": "/images/games/rift-raiders.png",
+    "thumbnail": "/images/games/rift-raiders.png",
+    "description": "A squad-based sci-fi shooter where mercenaries travel through unstable dimensional rifts to fight alien armies and recover lost technology.",
     "achievements": {
-      "unlocked": 41,
-      "total": 54
+      "unlocked": 42,
+      "total": 81
     },
     "addon": {
-      "title": "Adventurer Pack",
-      "description": "Bonus cosmetic items and extra campaign content for your party.",
-      "price": "$8.99",
-      "image": "https://placehold.co/300x400/4d392e/ffffff?text=Adventure"
+      "title": "Beyond the Rift",
+      "description": "Enter a new dimension featuring additional missions, enemies, weapons and raid encounters.",
+      "price": "$11.99",
+      "image": "/images/games/rift-raiders.png"
     },
     "update": {
-      "version": "Patch 7",
-      "date": "5 September 2024",
+      "version": "v2.0",
+      "date": "30 September 2026",
       "notes": [
-        "Added new gameplay options.",
-        "Improved character interactions.",
-        "Fixed several quest issues."
+        "Added a new raid mission.",
+        "Introduced three new weapons.",
+        "Improved co-op matchmaking."
       ]
     }
   }
