@@ -1,0 +1,97 @@
+[
+  {
+    "id": "kyojuro-rengoku",
+    "name": "Kyojuro Rengoku",
+    "type": "slayer",
+    "rank": "Flame Hashira",
+    "breathingStyleIds": ["flame-breathing"],
+    "techniqueIds": [
+      "un-knowing-fire",
+      "rising-scorching-sun",
+      "flame-tiger"
+    ],
+    "relatedCharacterIds": [
+      "akaza",
+      "senjuro-rengoku"
+    ],
+    "description": "",
+    "stats": {
+      "power": 92,
+      "speed": 86,
+      "defense": 84
+    },
+    "image": "/images/slayers/kyojuro-rengoku.png"
+  },
+  {
+    "id": "giyu-tomioka",
+    "name": "Giyu Tomioka",
+    "type": "slayer",
+    "rank": "Water Hashira",
+    "breathingStyleIds": ["water-breathing"],
+    "techniqueIds": [
+      "water-surface-slash",
+      "striking-tide",
+      "dead-calm"
+    ],
+    "relatedCharacterIds": [
+      "tanjiro-kamado",
+      "shinobu-kocho"
+    ],
+    "description": "",
+    "stats": {
+      "power": 88,
+      "speed": 89,
+      "defense": 90
+    },
+    "image": "/images/slayers/giyu-tomioka.png"
+  },
+  {
+    "id": "tanjiro-kamado",
+    "name": "Tanjiro Kamado",
+    "type": "slayer",
+    "rank": "Demon Slayer",
+    "breathingStyleIds": [
+      "water-breathing",
+      "sun-breathing"
+    ],
+    "techniqueIds": [
+      "water-wheel",
+      "flowing-dance",
+      "dance"
+    ],
+    "relatedCharacterIds": [
+      "nezuko-kamado",
+      "giyu-tomioka",
+      "muzan-kibutsuji"
+    ],
+    "description": "",
+    "stats": {
+      "power": 84,
+      "speed": 82,
+      "defense": 80
+    },
+    "image": "/images/slayers/tanjiro-kamado.png"
+  },
+  {
+    "id": "shinobu-kocho",
+    "name": "Shinobu Kocho",
+    "type": "slayer",
+    "rank": "Insect Hashira",
+    "breathingStyleIds": ["insect-breathing"],
+    "techniqueIds": [
+      "butterfly-dance-caprice",
+      "dance-of-the-centipede"
+    ],
+    "relatedCharacterIds": [
+      "giyu-tomioka",
+      "doma"
+    ],
+    "description": "",
+    "stats": {
+      "power": 68,
+      "speed": 95,
+      "defense": 72
+    },
+    "image": "/images/slayers/shinobu-kocho.png"
+  }
+]
