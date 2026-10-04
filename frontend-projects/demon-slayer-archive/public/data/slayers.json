@@ -20,7 +20,7 @@
       "speed": 86,
       "defense": 84
     },
-    "image": "/images/slayers/kyojuro-rengoku.png"
+    "image": "/images/slayers/Kyojuro_anime_right_face.webp"
   },
   {
     "id": "giyu-tomioka",
@@ -43,7 +43,7 @@
       "speed": 89,
       "defense": 90
     },
-    "image": "/images/slayers/giyu-tomioka.png"
+    "image": "/images/slayers/Giyuu_anime_design.webp"
   },
   {
     "id": "tanjiro-kamado",
@@ -92,6 +92,6 @@
       "speed": 95,
       "defense": 72
     },
-    "image": "/images/slayers/shinobu-kocho.png"
+    "image": "/images/slayers/Shinobu_anime.webp"
   }
 ]
