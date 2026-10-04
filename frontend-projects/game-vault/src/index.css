@@ -100,9 +100,48 @@ button {
 
 .navbar__nav {
   height: 100%;
-
   display: flex;
   align-items: stretch;
+}
+
+.navbar__nav a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 17px;
+
+  color: #a6afc3;
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.navbar__nav a:hover {
+  color: white;
+}
+
+.navbar__nav a.active {
+  color: white;
+  font-weight: 700;
+}
+
+.navbar__nav a.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 15px;
+  right: 15px;
+  bottom: 0;
+
+  height: 3px;
+
+  background: #3f91ff;
 }
 
 .navbar__nav button {

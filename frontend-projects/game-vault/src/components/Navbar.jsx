@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import {
   Heart,
   ShoppingCart,
@@ -13,13 +14,42 @@ function Navbar() {
         </h1>
 
         <nav className="navbar__nav">
-          <button>HOME</button>
-          <button>STORE</button>
-          <button>COMMUNITY</button>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              isActive ? "active" : ""
+            }
+          >
+            HOME
+          </NavLink>
 
-          <button className="active">
+          <NavLink
+            to="/store"
+            className={({ isActive }) =>
+              isActive ? "active" : ""
+            }
+          >
+            STORE
+          </NavLink>
+
+          <NavLink
+            to="/community"
+            className={({ isActive }) =>
+              isActive ? "active" : ""
+            }
+          >
+            COMMUNITY
+          </NavLink>
+
+          <NavLink
+            to="/library"
+            className={({ isActive }) =>
+              isActive ? "active" : ""
+            }
+          >
             LIBRARY
-          </button>
+          </NavLink>
         </nav>
       </div>
 
