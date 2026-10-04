@@ -1,18 +1,97 @@
+import {
+  Settings,
+  Trophy,
+  Star
+} from "lucide-react";
+
 function GameDetails({ game }) {
   if (!game) {
     return (
       <section className="game-details empty-state">
-        <h2>Select a game</h2>
-        <p>Choose a game from your library.</p>
+        <div>
+          <h2>Select a game</h2>
+          <p>Choose a game from your library.</p>
+        </div>
       </section>
     );
   }
 
+  const achievementPercentage =
+    game.achievements.total > 0
+      ? Math.round(
+          (game.achievements.unlocked /
+            game.achievements.total) *
+            100
+        )
+      : 0;
+
+  const playingFriends = [
+    {
+      id: 1,
+      name: "Alex",
+      image:
+        "https://placehold.co/80x80/596b47/ffffff?text=A"
+    },
+    {
+      id: 2,
+      name: "Marcus",
+      image:
+        "https://placehold.co/80x80/3f5366/ffffff?text=M"
+    },
+    {
+      id: 3,
+      name: "John",
+      image:
+        "https://placehold.co/80x80/536475/ffffff?text=J"
+    },
+    {
+      id: 4,
+      name: "Sara",
+      image:
+        "https://placehold.co/80x80/744b5b/ffffff?text=S"
+    }
+  ];
+
+  const recentFriends = [
+    {
+      id: 5,
+      name: "Nova",
+      image:
+        "https://placehold.co/80x80/bb3de0/ffffff?text=N"
+    },
+    {
+      id: 6,
+      name: "David",
+      image:
+        "https://placehold.co/80x80/416f8d/ffffff?text=D"
+    },
+    {
+      id: 7,
+      name: "Emma",
+      image:
+        "https://placehold.co/80x80/625e73/ffffff?text=E"
+    },
+    {
+      id: 8,
+      name: "Mia",
+      image:
+        "https://placehold.co/80x80/684552/ffffff?text=M"
+    }
+  ];
+
+  const lockedAchievements = [
+    "⚡",
+    "☠",
+    "♛",
+    "★",
+    "⚔"
+  ];
+
   return (
     <section className="game-details">
+      {/* HERO */}
 
       <div className="game-hero">
-
         <img
           className="game-hero__cover"
           src={game.image}
@@ -20,105 +99,239 @@ function GameDetails({ game }) {
         />
 
         <div className="game-hero__info">
-
           <div className="game-title-row">
             <h2>{game.title}</h2>
 
-            <button className="favorite-button">
-              ☆
+            <button
+              className="favorite-button"
+              aria-label="Favorite"
+            >
+              <Star
+                size={22}
+                fill={
+                  game.favorite
+                    ? "currentColor"
+                    : "none"
+                }
+              />
             </button>
           </div>
 
-          <p className="game-developer">
-            {game.developer}
-          </p>
-
-          <div className="game-stats">
+          <div className="play-info">
             <div>
-              <span>Rating</span>
-              <strong>★ {game.rating}</strong>
+              <span>You've played</span>
+              <strong>{game.playTime}</strong>
             </div>
 
             <div>
-              <span>Released</span>
-              <strong>{game.releaseYear}</strong>
+              <span>Last played</span>
+              <strong>{game.lastPlayed}</strong>
             </div>
           </div>
 
-          <div className="game-genres">
-            {game.genre.map((genre) => (
-              <span key={genre}>
-                {genre}
-              </span>
-            ))}
+          <div className="hero-actions">
+            <button className="primary-button">
+              <span>▶</span>
+              PLAY
+            </button>
+
+            <button className="settings-button">
+              <Settings size={17} />
+            </button>
           </div>
-
-          <button className="primary-button">
-            ▶ PLAY
-          </button>
-
         </div>
       </div>
+
+      {/* TABS */}
 
       <nav className="game-tabs">
         <button className="active">
-          Overview
+          Store Page
         </button>
 
+        <button>News</button>
         <button>Game Info</button>
-        <button>Achievements</button>
-        <button>Notes</button>
+        <button>Reviews</button>
+        <button>Community</button>
+        <button>Support</button>
       </nav>
 
-      <div className="game-content-grid">
+      {/* CONTENT */}
 
-        <div className="content-panel">
-          <h3>About this game</h3>
+      <div className="game-dashboard">
+        <div className="game-dashboard__main">
+          {/* ADDONS */}
 
-          <p>
-            {game.description}
-          </p>
-        </div>
+          <article className="panel addon-panel">
+            <h3>Available Add-ons</h3>
 
-        <div className="content-panel">
-          <h3>Platforms</h3>
+            <div className="addon-card">
+              <img
+                src={game.addon.image}
+                alt={game.addon.title}
+              />
 
-          <div className="platform-list">
-            {game.platforms.map((platform) => (
-              <span key={platform}>
-                {platform}
+              <div className="addon-card__content">
+                <h4>
+                  {game.addon.title}
+                </h4>
+
+                <p>
+                  {game.addon.description}
+                </p>
+
+                <div className="addon-card__footer">
+                  <strong>
+                    {game.addon.price}
+                  </strong>
+
+                  <button>
+                    BUY NOW
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          {/* UPDATE */}
+
+          <article className="panel update-panel">
+            <div className="panel-heading">
+              <h3>
+                New Update{" "}
+                {game.update.version}
+              </h3>
+
+              <span>
+                {game.update.date}
               </span>
-            ))}
-          </div>
+            </div>
+
+            <ul>
+              {game.update.notes.map(
+                (note) => (
+                  <li key={note}>
+                    {note}
+                  </li>
+                )
+              )}
+            </ul>
+          </article>
         </div>
 
-        <div className="content-panel large">
-          <div className="panel-heading">
-            <h3>Your Activity</h3>
+        {/* RIGHT COLUMN */}
 
-            <span>Recently played</span>
-          </div>
+        <aside className="game-dashboard__side">
+          {/* FRIENDS */}
 
-          <div className="activity-placeholder">
-            <div>
-              <strong>0 hours</strong>
-              <span>Play time</span>
+          <article className="panel friends-panel">
+            <h3>Friends Who Play</h3>
+
+            <div className="friends-group">
+              <span className="friends-label">
+                Playing
+              </span>
+
+              <div className="friends-row">
+                {playingFriends.map(
+                  (friend) => (
+                    <div
+                      className="friend-avatar friend-avatar--online"
+                      key={friend.id}
+                      title={friend.name}
+                    >
+                      <img
+                        src={friend.image}
+                        alt={friend.name}
+                      />
+                    </div>
+                  )
+                )}
+              </div>
             </div>
 
-            <div>
-              <strong>0 / 50</strong>
-              <span>Achievements</span>
+            <div className="friends-group">
+              <span className="friends-label">
+                Played Recently
+              </span>
+
+              <div className="friends-row">
+                {recentFriends.map(
+                  (friend) => (
+                    <div
+                      className="friend-avatar"
+                      key={friend.id}
+                      title={friend.name}
+                    >
+                      <img
+                        src={friend.image}
+                        alt={friend.name}
+                      />
+                    </div>
+                  )
+                )}
+
+                <div className="friends-more">
+                  +2
+                </div>
+              </div>
+            </div>
+          </article>
+
+          {/* ACHIEVEMENTS */}
+
+          <article className="panel achievements-panel">
+            <div className="panel-heading">
+              <h3>
+                Achievement Progress
+              </h3>
+
+              <span className="achievement-count">
+                {game.achievements.unlocked}/
+                {game.achievements.total}
+              </span>
             </div>
 
-            <div>
-              <strong>—</strong>
-              <span>Last played</span>
-            </div>
-          </div>
-        </div>
+            <div className="achievement-score">
+              <Trophy size={17} />
 
+              <strong>
+                {achievementPercentage}%
+              </strong>
+            </div>
+
+            <div className="achievement-bar">
+              <div
+                className="achievement-bar__fill"
+                style={{
+                  width: `${achievementPercentage}%`
+                }}
+              />
+            </div>
+
+            <div className="locked-section">
+              <p>Locked Achievements</p>
+
+              <div className="locked-achievements">
+                {lockedAchievements.map(
+                  (achievement, index) => (
+                    <div
+                      className="achievement-icon"
+                      key={index}
+                    >
+                      {achievement}
+                    </div>
+                  )
+                )}
+
+                <div className="achievement-more">
+                  +51
+                </div>
+              </div>
+            </div>
+          </article>
+        </aside>
       </div>
-
     </section>
   );
 }
