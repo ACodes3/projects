@@ -1,0 +1,494 @@
+[
+  {
+    "id": "un-knowing-fire",
+    "name": "First Form: Unknowing Fire",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "The user charges forward at high speed and delivers a powerful horizontal slash."
+  },
+  {
+    "id": "rising-scorching-sun",
+    "name": "Second Form: Rising Scorching Sun",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "A rising sword slash delivered upward with great force."
+  },
+  {
+    "id": "blazing-universe",
+    "name": "Third Form: Blazing Universe",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "A powerful downward slash performed with the force and imagery of blazing flame."
+  },
+  {
+    "id": "blooming-flame-undulation",
+    "name": "Fourth Form: Blooming Flame Undulation",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "A defensive technique using sweeping circular sword movements to protect the user."
+  },
+  {
+    "id": "flame-tiger",
+    "name": "Fifth Form: Flame Tiger",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "A sequence of powerful sword strikes visually resembling a charging flame tiger."
+  },
+  {
+    "id": "rengoku",
+    "name": "Ninth Form: Rengoku",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "flame-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "description": "A devastating high-speed charge followed by an extremely powerful slash."
+  },
+
+  {
+    "id": "water-surface-slash",
+    "name": "First Form: Water Surface Slash",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "giyu-tomioka",
+      "tanjiro-kamado"
+    ],
+    "description": "A powerful horizontal slash performed with a smooth flowing motion."
+  },
+  {
+    "id": "water-wheel",
+    "name": "Second Form: Water Wheel",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "The user rotates vertically while delivering a circular sword attack."
+  },
+  {
+    "id": "flowing-dance",
+    "name": "Third Form: Flowing Dance",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A series of flowing movements and slashes that allow the user to move smoothly around opponents."
+  },
+  {
+    "id": "striking-tide",
+    "name": "Fourth Form: Striking Tide",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "giyu-tomioka",
+      "tanjiro-kamado"
+    ],
+    "description": "The user performs multiple flowing slashes against one or more targets."
+  },
+  {
+    "id": "blessed-rain-after-the-drought",
+    "name": "Fifth Form: Blessed Rain After the Drought",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A gentle decapitation technique intended to cause minimal pain to an opponent who willingly accepts defeat."
+  },
+  {
+    "id": "whirlpool",
+    "name": "Sixth Form: Whirlpool",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "The user twists their body and sword together to create a powerful circular cutting motion."
+  },
+  {
+    "id": "drop-ripple-thrust",
+    "name": "Seventh Form: Drop Ripple Thrust",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "giyu-tomioka"
+    ],
+    "description": "A fast and precise thrust aimed directly at the opponent."
+  },
+  {
+    "id": "waterfall-basin",
+    "name": "Eighth Form: Waterfall Basin",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A powerful downward sword strike resembling the force of a waterfall."
+  },
+  {
+    "id": "splashing-water-flow",
+    "name": "Ninth Form: Splashing Water Flow",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A movement-focused form designed to minimize the user's contact with the ground."
+  },
+  {
+    "id": "constant-flux",
+    "name": "Tenth Form: Constant Flux",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A continuous rotating attack that grows stronger as momentum increases."
+  },
+  {
+    "id": "dead-calm",
+    "name": "Eleventh Form: Dead Calm",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "water-breathing",
+    "userIds": [
+      "giyu-tomioka"
+    ],
+    "description": "Giyu's personal Water Breathing form, using extremely calm and precise movements to neutralize incoming attacks."
+  },
+
+  {
+    "id": "dance",
+    "name": "Dance",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A powerful vertical slash performed as part of Hinokami Kagura."
+  },
+  {
+    "id": "clear-blue-sky",
+    "name": "Clear Blue Sky",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "The user rotates their body to deliver a circular sword attack."
+  },
+  {
+    "id": "raging-sun",
+    "name": "Raging Sun",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A pair of rapid horizontal slashes used for both offense and defense."
+  },
+  {
+    "id": "burning-bones-summer-sun",
+    "name": "Burning Bones, Summer Sun",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A circular defensive slash used to counter attacks at close range."
+  },
+  {
+    "id": "setting-sun-transformation",
+    "name": "Setting Sun Transformation",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "The user flips into the air and delivers a powerful downward slash."
+  },
+  {
+    "id": "solar-heat-haze",
+    "name": "Solar Heat Haze",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A fast attack that makes the sword's movement difficult for the opponent to perceive."
+  },
+  {
+    "id": "beneficent-radiance",
+    "name": "Beneficent Radiance",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A spiraling aerial attack performed while moving toward the opponent."
+  },
+  {
+    "id": "sunflower-thrust",
+    "name": "Sunflower Thrust",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A direct thrust performed with the tip of the sword."
+  },
+  {
+    "id": "dragon-sun-halo-head-dance",
+    "name": "Dragon Sun Halo Head Dance",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A continuous sequence of fast slashes resembling a dragon moving around the opponent."
+  },
+  {
+    "id": "fire-wheel",
+    "name": "Fire Wheel",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "The user moves behind the opponent and performs a spinning vertical attack."
+  },
+  {
+    "id": "fake-rainbow",
+    "name": "Fake Rainbow",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A high-speed evasive movement that creates the impression of an afterimage."
+  },
+  {
+    "id": "flame-dance",
+    "name": "Flame Dance",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "sun-breathing",
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "description": "A two-part attack combining a vertical slash with an immediate horizontal strike."
+  },
+
+  {
+    "id": "butterfly-dance-caprice",
+    "name": "Butterfly Dance: Caprice",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "insect-breathing",
+    "userIds": [
+      "shinobu-kocho"
+    ],
+    "description": "Shinobu rapidly moves around the opponent and delivers multiple poison-infused thrusts."
+  },
+  {
+    "id": "bee-sting-true-flutter",
+    "name": "Dance of the Bee Sting: True Flutter",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "insect-breathing",
+    "userIds": [
+      "shinobu-kocho"
+    ],
+    "description": "A high-speed thrust aimed at injecting poison into the opponent."
+  },
+  {
+    "id": "dragonfly-compound-eye-hexagon",
+    "name": "Dance of the Dragonfly: Compound Eye Hexagon",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "insect-breathing",
+    "userIds": [
+      "shinobu-kocho"
+    ],
+    "description": "A rapid series of precise thrusts aimed at multiple vulnerable points."
+  },
+  {
+    "id": "centipede-hundred-legged-zigzag",
+    "name": "Dance of the Centipede: Hundred-Legged Zigzag",
+    "type": "technique",
+    "category": "breathing",
+    "parentId": "insect-breathing",
+    "userIds": [
+      "shinobu-kocho"
+    ],
+    "description": "An unpredictable zigzagging charge that builds speed before a powerful thrust."
+  },
+
+  {
+    "id": "compass-needle",
+    "name": "Compass Needle",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "destructive-death",
+    "userIds": [
+      "akaza"
+    ],
+    "description": "Akaza creates a compass-like field that helps him sense an opponent's fighting spirit and predict attacks."
+  },
+  {
+    "id": "air-type",
+    "name": "Air Type",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "destructive-death",
+    "userIds": [
+      "akaza"
+    ],
+    "description": "Akaza strikes the air and creates powerful long-range shockwaves."
+  },
+  {
+    "id": "disorder",
+    "name": "Disorder",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "destructive-death",
+    "userIds": [
+      "akaza"
+    ],
+    "description": "A rapid barrage of powerful punches that produces destructive shockwaves."
+  },
+  {
+    "id": "annihilation-type",
+    "name": "Annihilation Type",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "destructive-death",
+    "userIds": [
+      "akaza"
+    ],
+    "description": "One of Akaza's strongest close-range attacks, concentrating enormous force into a devastating strike."
+  },
+  {
+    "id": "blue-silver-chaotic-afterglow",
+    "name": "Blue Silver Chaotic Afterglow",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "destructive-death",
+    "userIds": [
+      "akaza"
+    ],
+    "description": "Akaza unleashes a large number of high-speed attacks and shockwaves across the surrounding area."
+  },
+
+  {
+    "id": "frozen-lotuses",
+    "name": "Frozen Lotuses",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "cryokinesis",
+    "userIds": [
+      "doma"
+    ],
+    "description": "Doma generates razor-sharp formations of ice shaped like lotus flowers."
+  },
+  {
+    "id": "barren-hanging-garden",
+    "name": "Barren Hanging Garden",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "cryokinesis",
+    "userIds": [
+      "doma"
+    ],
+    "description": "Doma produces large quantities of frozen structures to attack and restrict opponents."
+  },
+  {
+    "id": "freezing-clouds",
+    "name": "Freezing Clouds",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "cryokinesis",
+    "userIds": [
+      "doma"
+    ],
+    "description": "Doma releases freezing mist capable of damaging anyone who inhales or comes into contact with it."
+  },
+  {
+    "id": "cold-white-princesses",
+    "name": "Cold White Princesses",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "cryokinesis",
+    "userIds": [
+      "doma"
+    ],
+    "description": "Doma creates icy humanoid figures that release freezing air toward opponents."
+  },
+  {
+    "id": "rime-water-lily-bodhisattva",
+    "name": "Rime — Water Lily Bodhisattva",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "cryokinesis",
+    "userIds": [
+      "doma"
+    ],
+    "description": "Doma creates an enormous ice construct capable of launching powerful freezing attacks."
+  },
+
+  {
+    "id": "exploding-blood-ignition",
+    "name": "Exploding Blood",
+    "type": "technique",
+    "category": "blood-demon-art",
+    "parentId": "exploding-blood",
+    "userIds": [
+      "nezuko-kamado"
+    ],
+    "description": "Nezuko ignites her own blood into supernatural flames that damage demons while generally leaving humans unharmed."
+  }
+]

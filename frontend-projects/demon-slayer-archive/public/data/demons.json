@@ -1,0 +1,81 @@
+[
+  {
+    "id": "akaza",
+    "name": "Akaza",
+    "type": "demon",
+    "rank": "Upper Rank Three",
+    "bloodDemonArtIds": ["destructive-death"],
+    "abilityIds": [],
+    "relatedCharacterIds": [
+      "kyojuro-rengoku",
+      "muzan-kibutsuji"
+    ],
+    "description": "",
+    "stats": {
+      "power": 95,
+      "speed": 94,
+      "regeneration": 93
+    },
+    "image": "/images/demons/akaza.png"
+  },
+  {
+    "id": "doma",
+    "name": "Doma",
+    "type": "demon",
+    "rank": "Upper Rank Two",
+    "bloodDemonArtIds": ["cryokinesis"],
+    "abilityIds": [],
+    "relatedCharacterIds": [
+      "shinobu-kocho",
+      "akaza",
+      "muzan-kibutsuji"
+    ],
+    "description": "",
+    "stats": {
+      "power": 96,
+      "speed": 92,
+      "regeneration": 96
+    },
+    "image": "/images/demons/doma.png"
+  },
+  {
+    "id": "muzan-kibutsuji",
+    "name": "Muzan Kibutsuji",
+    "type": "demon",
+    "rank": "Demon King",
+    "bloodDemonArtIds": [],
+    "abilityIds": [],
+    "relatedCharacterIds": [
+      "tanjiro-kamado",
+      "nezuko-kamado",
+      "akaza",
+      "doma"
+    ],
+    "description": "",
+    "stats": {
+      "power": 100,
+      "speed": 100,
+      "regeneration": 100
+    },
+    "image": "/images/demons/muzan-kibutsuji.png"
+  },
+  {
+    "id": "nezuko-kamado",
+    "name": "Nezuko Kamado",
+    "type": "demon",
+    "rank": "Demon",
+    "bloodDemonArtIds": ["exploding-blood"],
+    "abilityIds": [],
+    "relatedCharacterIds": [
+      "tanjiro-kamado",
+      "muzan-kibutsuji"
+    ],
+    "description": "",
+    "stats": {
+      "power": 80,
+      "speed": 79,
+      "regeneration": 87
+    },
+    "image": "/images/demons/nezuko-kamado.png"
+  }
+]

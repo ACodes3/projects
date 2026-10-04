@@ -1,0 +1,118 @@
+[
+  {
+    "id": "sun-breathing",
+    "name": "Sun Breathing",
+    "type": "breathing-style",
+    "derivedFromId": null,
+    "userIds": [
+      "tanjiro-kamado"
+    ],
+    "techniqueIds": [
+      "dance",
+      "clear-blue-sky",
+      "raging-sun",
+      "burning-bones-summer-sun",
+      "setting-sun-transformation",
+      "solar-heat-haze",
+      "beneficent-radiance",
+      "sunflower-thrust",
+      "dragon-sun-halo-head-dance",
+      "fire-wheel",
+      "fake-rainbow",
+      "flame-dance"
+    ],
+    "description": "The original Breathing Style from which the major derivative styles developed. Its forms imitate the movement, heat and radiance of the sun.",
+    "theme": {
+      "primary": "#f59e0b",
+      "secondary": "#dc2626"
+    },
+    "image": "/images/breathing/sun-breathing.png"
+  },
+  {
+    "id": "water-breathing",
+    "name": "Water Breathing",
+    "type": "breathing-style",
+    "derivedFromId": "sun-breathing",
+    "userIds": [
+      "giyu-tomioka",
+      "tanjiro-kamado"
+    ],
+    "techniqueIds": [
+      "water-surface-slash",
+      "water-wheel",
+      "flowing-dance",
+      "striking-tide",
+      "blessed-rain-after-the-drought",
+      "whirlpool",
+      "drop-ripple-thrust",
+      "waterfall-basin",
+      "splashing-water-flow",
+      "constant-flux",
+      "dead-calm"
+    ],
+    "description": "A flowing Breathing Style that imitates the flexibility and adaptability of water. Its techniques emphasize smooth movement and continuous attacks.",
+    "theme": {
+      "primary": "#38bdf8",
+      "secondary": "#1d4ed8"
+    },
+    "image": "/images/breathing/water-breathing.png"
+  },
+  {
+    "id": "flame-breathing",
+    "name": "Flame Breathing",
+    "type": "breathing-style",
+    "derivedFromId": "sun-breathing",
+    "userIds": [
+      "kyojuro-rengoku"
+    ],
+    "techniqueIds": [
+      "un-knowing-fire",
+      "rising-scorching-sun",
+      "blazing-universe",
+      "blooming-flame-undulation",
+      "flame-tiger",
+      "rengoku"
+    ],
+    "description": "A powerful offensive Breathing Style that imitates flames through explosive sword movements and forceful attacks.",
+    "theme": {
+      "primary": "#f97316",
+      "secondary": "#dc2626"
+    },
+    "image": "/images/breathing/flame-breathing.png"
+  },
+  {
+    "id": "flower-breathing",
+    "name": "Flower Breathing",
+    "type": "breathing-style",
+    "derivedFromId": "water-breathing",
+    "userIds": [],
+    "techniqueIds": [],
+    "description": "A graceful derivative of Water Breathing that emphasizes agility, flowing swordsmanship and highly refined visual perception.",
+    "theme": {
+      "primary": "#f9a8d4",
+      "secondary": "#db2777"
+    },
+    "image": "/images/breathing/flower-breathing.png"
+  },
+  {
+    "id": "insect-breathing",
+    "name": "Insect Breathing",
+    "type": "breathing-style",
+    "derivedFromId": "flower-breathing",
+    "userIds": [
+      "shinobu-kocho"
+    ],
+    "techniqueIds": [
+      "butterfly-dance-caprice",
+      "bee-sting-true-flutter",
+      "dragonfly-compound-eye-hexagon",
+      "centipede-hundred-legged-zigzag"
+    ],
+    "description": "A specialized Breathing Style created for rapid thrusting attacks and poison delivery rather than conventional decapitation.",
+    "theme": {
+      "primary": "#c084fc",
+      "secondary": "#7c3aed"
+    },
+    "image": "/images/breathing/insect-breathing.png"
+  }
+]
