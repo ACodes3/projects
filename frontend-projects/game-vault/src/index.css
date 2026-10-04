@@ -8,7 +8,7 @@ html,
 body,
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
 :root {
@@ -18,14 +18,12 @@ body,
     sans-serif;
 
   color: #f4f6fc;
-  background: #131a2b;
+  background: #151d30;
 }
 
 body {
   margin: 0;
-  overflow: hidden;
-
-  font-size: 14px;
+  background: #151d30;
 }
 
 button,
@@ -41,17 +39,37 @@ button {
 }
 
 /* =========================
-   APP
+   ROOT LAYOUT
 ========================= */
 
-.app {
-  width: 100vw;
-  height: 100vh;
+.root-layout {
+  width: 100%;
+  min-height: 100vh;
 
   display: flex;
   flex-direction: column;
 
-  overflow: hidden;
+  background: #151d30;
+}
+
+.root-layout__content {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   APP
+========================= */
+
+.app {
+  width: 100%;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
 
   background: #151d30;
 }
@@ -100,6 +118,7 @@ button {
 
 .navbar__nav {
   height: 100%;
+
   display: flex;
   align-items: stretch;
 }
@@ -138,50 +157,6 @@ button {
   left: 15px;
   right: 15px;
   bottom: 0;
-
-  height: 3px;
-
-  background: #3f91ff;
-}
-
-.navbar__nav button {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 17px;
-
-  border: none;
-
-  color: #a6afc3;
-  background: transparent;
-
-  font-size: 13px;
-  font-weight: 500;
-
-  cursor: pointer;
-}
-
-.navbar__nav button:hover {
-  color: white;
-}
-
-.navbar__nav button.active {
-  color: white;
-
-  font-weight: 700;
-}
-
-.navbar__nav button.active::after {
-  content: "";
-
-  position: absolute;
-
-  bottom: 0;
-
-  left: 15px;
-  right: 15px;
 
   height: 3px;
 
@@ -392,7 +367,7 @@ button {
 }
 
 /* =========================
-   LAYOUT
+   LIBRARY LAYOUT
 ========================= */
 
 .library-layout {
@@ -404,6 +379,8 @@ button {
 
   grid-template-columns:
     300px minmax(0, 1fr);
+
+  overflow: hidden;
 }
 
 /* =========================
@@ -450,7 +427,7 @@ button {
 
   border: none;
 
-  color: #ffffff;
+  color: white;
   background: #394563;
 
   border-bottom:
@@ -983,7 +960,7 @@ button {
 }
 
 /* =========================
-   FRIENDS PANEL
+   FRIENDS
 ========================= */
 
 .friends-panel {
@@ -1147,6 +1124,7 @@ button {
   border-radius: 4px;
 
   color: #262812;
+
   background:
     linear-gradient(
       135deg,
@@ -1176,13 +1154,58 @@ button {
 }
 
 /* =========================
+   FOOTER
+========================= */
+
+.app-footer {
+  min-height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.05);
+
+  color: #7f8ba1;
+  background: #111827;
+
+  font-size: 12px;
+}
+
+.app-footer__left,
+.app-footer__right {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.app-footer__left > span:first-child {
+  color: #aeb8c8;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+.app-footer__dot {
+  opacity: 0.4;
+}
+
+/* =========================
    STATES
 ========================= */
 
 .status-screen,
 .empty-state {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 
   display: grid;
   place-items: center;
