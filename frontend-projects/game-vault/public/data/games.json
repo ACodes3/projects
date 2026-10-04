@@ -1,25 +1,73 @@
 [
   {
     "id": 1,
-    "title": "Elden Ring",
-    "genre": ["RPG", "Action"],
-    "platforms": ["PC", "PlayStation", "Xbox"],
-    "rating": 9.5,
-    "releaseYear": 2022,
-    "developer": "FromSoftware",
-    "image": "https://placehold.co/400x550?text=Elden+Ring",
-    "description": "An open-world action RPG set in a dark fantasy world."
-  },
-  {
-    "id": 2,
     "title": "Cyberpunk 2077",
     "genre": ["RPG", "Action"],
     "platforms": ["PC", "PlayStation", "Xbox"],
     "rating": 8.7,
     "releaseYear": 2020,
     "developer": "CD Projekt Red",
-    "image": "https://placehold.co/400x550?text=Cyberpunk+2077",
-    "description": "A futuristic open-world RPG set in Night City."
+    "favorite": true,
+    "status": "Installed",
+    "playTime": "32 h 30 min",
+    "lastPlayed": "Today",
+    "image": "https://placehold.co/500x500/f5df13/111111?text=Cyberpunk+2077",
+    "thumbnail": "https://placehold.co/100x100/f5df13/111111?text=C",
+    "description": "A futuristic open-world RPG set in Night City.",
+    "achievements": {
+      "unlocked": 61,
+      "total": 118
+    },
+    "addon": {
+      "title": "Implant Psychosis",
+      "description": "Unlock a new story mission, discover hidden secrets and expand your journey through Night City.",
+      "price": "$9.99",
+      "image": "https://placehold.co/300x400/1686cc/ffffff?text=Addon"
+    },
+    "update": {
+      "version": "v1.10.2",
+      "date": "16 April 2020",
+      "notes": [
+        "Fixed minor visual issues.",
+        "Improved menu responsiveness.",
+        "Updated gameplay balance."
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "title": "Elden Ring",
+    "genre": ["RPG", "Action"],
+    "platforms": ["PC", "PlayStation", "Xbox"],
+    "rating": 9.5,
+    "releaseYear": 2022,
+    "developer": "FromSoftware",
+    "favorite": true,
+    "status": "Installed",
+    "playTime": "48 h 10 min",
+    "lastPlayed": "Yesterday",
+    "image": "https://placehold.co/500x500/d6b56b/111111?text=Elden+Ring",
+    "thumbnail": "https://placehold.co/100x100/d6b56b/111111?text=ER",
+    "description": "An open-world action RPG set in a dark fantasy world.",
+    "achievements": {
+      "unlocked": 28,
+      "total": 42
+    },
+    "addon": {
+      "title": "Shadow Expansion",
+      "description": "Explore new lands, discover new enemies and uncover another chapter of the Elden Ring.",
+      "price": "$14.99",
+      "image": "https://placehold.co/300x400/62533c/ffffff?text=Expansion"
+    },
+    "update": {
+      "version": "v1.15",
+      "date": "12 March 2024",
+      "notes": [
+        "Improved combat balancing.",
+        "Fixed several quest issues.",
+        "Updated multiplayer stability."
+      ]
+    }
   },
   {
     "id": 3,
@@ -29,8 +77,32 @@
     "rating": 9.2,
     "releaseYear": 2020,
     "developer": "Supergiant Games",
-    "image": "https://placehold.co/400x550?text=Hades",
-    "description": "A fast-paced roguelike action game inspired by Greek mythology."
+    "favorite": true,
+    "status": "Installed",
+    "playTime": "21 h 44 min",
+    "lastPlayed": "3 days ago",
+    "image": "https://placehold.co/500x500/9d2525/ffffff?text=Hades",
+    "thumbnail": "https://placehold.co/100x100/9d2525/ffffff?text=H",
+    "description": "A fast-paced roguelike action game inspired by Greek mythology.",
+    "achievements": {
+      "unlocked": 34,
+      "total": 49
+    },
+    "addon": {
+      "title": "Underworld Pack",
+      "description": "A collection of additional challenges and cosmetic rewards.",
+      "price": "$6.99",
+      "image": "https://placehold.co/300x400/6b1b1b/ffffff?text=Underworld"
+    },
+    "update": {
+      "version": "v1.8",
+      "date": "7 January 2023",
+      "notes": [
+        "Improved controller support.",
+        "Updated enemy behavior.",
+        "Fixed minor visual bugs."
+      ]
+    }
   },
   {
     "id": 4,
@@ -40,8 +112,32 @@
     "rating": 9.7,
     "releaseYear": 2018,
     "developer": "Rockstar Games",
-    "image": "https://placehold.co/400x550?text=Red+Dead+Redemption+2",
-    "description": "An epic western adventure set in a detailed open world."
+    "favorite": false,
+    "status": "Installed",
+    "playTime": "64 h 12 min",
+    "lastPlayed": "1 week ago",
+    "image": "https://placehold.co/500x500/b51d1d/ffffff?text=Red+Dead+2",
+    "thumbnail": "https://placehold.co/100x100/b51d1d/ffffff?text=RDR2",
+    "description": "An epic western adventure set in a detailed open world.",
+    "achievements": {
+      "unlocked": 39,
+      "total": 51
+    },
+    "addon": {
+      "title": "Frontier Pack",
+      "description": "Unlock bonus challenges and additional western-themed content.",
+      "price": "$7.99",
+      "image": "https://placehold.co/300x400/8e1717/ffffff?text=Frontier"
+    },
+    "update": {
+      "version": "v1.31",
+      "date": "21 August 2023",
+      "notes": [
+        "Improved online stability.",
+        "Fixed mission bugs.",
+        "Updated performance."
+      ]
+    }
   },
   {
     "id": 5,
@@ -51,8 +147,32 @@
     "rating": 9.0,
     "releaseYear": 2017,
     "developer": "Team Cherry",
-    "image": "https://placehold.co/400x550?text=Hollow+Knight",
-    "description": "Explore a mysterious underground kingdom filled with enemies and secrets."
+    "favorite": false,
+    "status": "Installed",
+    "playTime": "18 h 55 min",
+    "lastPlayed": "2 weeks ago",
+    "image": "https://placehold.co/500x500/33435b/ffffff?text=Hollow+Knight",
+    "thumbnail": "https://placehold.co/100x100/33435b/ffffff?text=HK",
+    "description": "Explore a mysterious underground kingdom filled with enemies and secrets.",
+    "achievements": {
+      "unlocked": 25,
+      "total": 63
+    },
+    "addon": {
+      "title": "Hallownest Pack",
+      "description": "Additional challenges inspired by the kingdom of Hallownest.",
+      "price": "$4.99",
+      "image": "https://placehold.co/300x400/27364e/ffffff?text=Hallownest"
+    },
+    "update": {
+      "version": "v1.5",
+      "date": "3 June 2022",
+      "notes": [
+        "Improved stability.",
+        "Fixed several collision issues.",
+        "Updated controller support."
+      ]
+    }
   },
   {
     "id": 6,
@@ -62,7 +182,31 @@
     "rating": 9.8,
     "releaseYear": 2023,
     "developer": "Larian Studios",
-    "image": "https://placehold.co/400x550?text=Baldurs+Gate+3",
-    "description": "A story-rich fantasy RPG with tactical combat and deep player choice."
+    "favorite": false,
+    "status": "Installed",
+    "playTime": "52 h 40 min",
+    "lastPlayed": "4 days ago",
+    "image": "https://placehold.co/500x500/654d39/ffffff?text=Baldur's+Gate+3",
+    "thumbnail": "https://placehold.co/100x100/654d39/ffffff?text=BG3",
+    "description": "A story-rich fantasy RPG with tactical combat and deep player choice.",
+    "achievements": {
+      "unlocked": 41,
+      "total": 54
+    },
+    "addon": {
+      "title": "Adventurer Pack",
+      "description": "Bonus cosmetic items and extra campaign content for your party.",
+      "price": "$8.99",
+      "image": "https://placehold.co/300x400/4d392e/ffffff?text=Adventure"
+    },
+    "update": {
+      "version": "Patch 7",
+      "date": "5 September 2024",
+      "notes": [
+        "Added new gameplay options.",
+        "Improved character interactions.",
+        "Fixed several quest issues."
+      ]
+    }
   }
 ]

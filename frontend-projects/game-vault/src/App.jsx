@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import {
+  SlidersHorizontal,
+  List,
+  Grid2X2
+} from "lucide-react";
+
 import { getGames } from "./services/gameService";
 
 import Navbar from "./components/Navbar";
@@ -8,6 +14,8 @@ import GameDetails from "./components/GameDetails";
 function App() {
   const [games, setGames] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,11 +27,9 @@ function App() {
 
         setGames(data);
 
-        // Automatically select first game
         if (data.length > 0) {
           setSelectedGame(data[0]);
         }
-
       } catch (error) {
         console.error(error);
         setError("Could not load games.");
@@ -34,6 +40,12 @@ function App() {
 
     fetchGames();
   }, []);
+
+  const filteredGames = games.filter((game) =>
+    game.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -53,25 +65,49 @@ function App() {
 
   return (
     <div className="app">
+      <Navbar />
 
-      <div className="launcher">
+      <div className="library-toolbar">
+        <div className="library-toolbar__left">
+          <div className="toolbar-search">
+            <input
+              type="text"
+              placeholder="Search my games..."
+              value={searchTerm}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+            />
+          </div>
 
-        <Navbar />
+          <button className="toolbar-button">
+            <SlidersHorizontal size={15} />
+          </button>
 
-        <main className="launcher__content">
+          <button className="toolbar-button active">
+            <List size={16} />
+          </button>
 
-          <Sidebar
-            games={games}
-            selectedGame={selectedGame}
-            onSelectGame={setSelectedGame}
-          />
+          <button className="toolbar-button">
+            <Grid2X2 size={15} />
+          </button>
+        </div>
 
-          <GameDetails game={selectedGame} />
-
-        </main>
-
+        <button className="activate-button">
+          ACTIVATE KEY
+        </button>
       </div>
 
+      <main className="library-layout">
+        <Sidebar
+          games={filteredGames}
+          allGames={games}
+          selectedGame={selectedGame}
+          onSelectGame={setSelectedGame}
+        />
+
+        <GameDetails game={selectedGame} />
+      </main>
     </div>
   );
 }

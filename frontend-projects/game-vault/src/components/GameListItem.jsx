@@ -1,22 +1,26 @@
-function GameListItem({ game, selectedGame, onSelect }) {
-  const isSelected = selectedGame?.id === game.id;
+function GameListItem({
+  game,
+  selectedGame,
+  onSelect
+}) {
+  const isSelected =
+    selectedGame?.id === game.id;
 
   return (
     <button
-      className={`game-list-item ${isSelected ? "selected" : ""}`}
+      className={`game-list-item ${
+        isSelected ? "selected" : ""
+      }`}
       onClick={() => onSelect(game)}
     >
-      <img src={game.image} alt="" />
+      <img
+        src={game.thumbnail || game.image}
+        alt=""
+      />
 
-      <div>
-        <span className="game-list-item__title">
-          {game.title}
-        </span>
-
-        <span className="game-list-item__developer">
-          {game.developer}
-        </span>
-      </div>
+      <span className="game-list-item__title">
+        {game.title}
+      </span>
     </button>
   );
 }
