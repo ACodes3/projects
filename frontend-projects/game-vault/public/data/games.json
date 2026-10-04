@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "Elden Ring",
+    "genre": ["RPG", "Action"],
+    "platforms": ["PC", "PlayStation", "Xbox"],
+    "rating": 9.5,
+    "releaseYear": 2022,
+    "developer": "FromSoftware",
+    "image": "https://placehold.co/400x550?text=Elden+Ring",
+    "description": "An open-world action RPG set in a dark fantasy world."
+  },
+  {
+    "id": 2,
+    "title": "Cyberpunk 2077",
+    "genre": ["RPG", "Action"],
+    "platforms": ["PC", "PlayStation", "Xbox"],
+    "rating": 8.7,
+    "releaseYear": 2020,
+    "developer": "CD Projekt Red",
+    "image": "https://placehold.co/400x550?text=Cyberpunk+2077",
+    "description": "A futuristic open-world RPG set in Night City."
+  },
+  {
+    "id": 3,
+    "title": "Hades",
+    "genre": ["Roguelike", "Action"],
+    "platforms": ["PC", "PlayStation", "Xbox", "Switch"],
+    "rating": 9.2,
+    "releaseYear": 2020,
+    "developer": "Supergiant Games",
+    "image": "https://placehold.co/400x550?text=Hades",
+    "description": "A fast-paced roguelike action game inspired by Greek mythology."
+  },
+  {
+    "id": 4,
+    "title": "Red Dead Redemption 2",
+    "genre": ["Action", "Adventure"],
+    "platforms": ["PC", "PlayStation", "Xbox"],
+    "rating": 9.7,
+    "releaseYear": 2018,
+    "developer": "Rockstar Games",
+    "image": "https://placehold.co/400x550?text=Red+Dead+Redemption+2",
+    "description": "An epic western adventure set in a detailed open world."
+  },
+  {
+    "id": 5,
+    "title": "Hollow Knight",
+    "genre": ["Metroidvania", "Adventure"],
+    "platforms": ["PC", "PlayStation", "Xbox", "Switch"],
+    "rating": 9.0,
+    "releaseYear": 2017,
+    "developer": "Team Cherry",
+    "image": "https://placehold.co/400x550?text=Hollow+Knight",
+    "description": "Explore a mysterious underground kingdom filled with enemies and secrets."
+  },
+  {
+    "id": 6,
+    "title": "Baldur's Gate 3",
+    "genre": ["RPG", "Strategy"],
+    "platforms": ["PC", "PlayStation", "Xbox"],
+    "rating": 9.8,
+    "releaseYear": 2023,
+    "developer": "Larian Studios",
+    "image": "https://placehold.co/400x550?text=Baldurs+Gate+3",
+    "description": "A story-rich fantasy RPG with tactical combat and deep player choice."
+  }
+]
