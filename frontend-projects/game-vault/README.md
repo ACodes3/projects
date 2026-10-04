@@ -39,14 +39,13 @@ No external game API is required. The application uses local JSON data and Axios
 
 ## Project Structure
 
+```text
 game-vault/
 ├── public/
 │   ├── data/
 │   │   └── games.json
-│   │
 │   └── images/
 │       ├── avatar.png
-│       │
 │       └── games/
 │           ├── neon-drift.png
 │           ├── achen-crown.png
@@ -79,24 +78,33 @@ game-vault/
 │
 ├── package.json
 └── vite.config.js
+```
 
 ## Installation
 
 Clone the repository:
 
+```bash
 git clone <your-repository-url>
+```
 
 Enter the project directory:
 
+```bash
 cd game-vault
+```
 
 Install dependencies:
 
+```bash
 npm install
+```
 
 Start the development server:
 
+```bash
 npm run dev
+```
 
 Vite will display the local development URL in the terminal.
 
@@ -104,23 +112,28 @@ Vite will display the local development URL in the terminal.
 
 The project uses the following main dependencies:
 
+```bash
 npm install axios react-router-dom lucide-react
+```
 
 ## Local Data
 
 Game data is stored inside:
 
+```text
 public/data/games.json
+```
 
 The application fetches this file using Axios:
 
+```js
 import axios from "axios";
 
 export const getGames = async () => {
   const response = await axios.get("/data/games.json");
-
   return response.data;
 };
+```
 
 This allows the frontend to behave similarly to an application consuming a real REST API while remaining completely frontend-only.
 
@@ -130,31 +143,38 @@ The application uses React Router.
 
 Main routes:
 
+```text
 /                  Home
 /store             Store
 /community         Community
 /library           Game Library
 /play/:gameId      Individual game play page
+```
 
-Routing is configured in main.jsx.
+Routing is configured in `main.jsx`.
 
 ## Game Images
 
 Game artwork is stored locally in:
 
+```text
 public/images/games/
+```
 
-Each game object in games.json references its image using a public path:
+Each game object in `games.json` references its image using a public path:
 
+```json
 {
   "title": "Neon Drift",
   "image": "/images/games/neon-drift.png"
 }
+```
 
-Because Vite serves everything inside public from the root URL, /public should not be included in image paths.
+Because Vite serves everything inside `public` from the root URL, `/public` should not be included in image paths.
 
 ## Example Game Data
 
+```json
 {
   "id": 1,
   "title": "Neon Drift",
@@ -174,6 +194,7 @@ Because Vite serves everything inside public from the root URL, /public should n
     "total": 78
   }
 }
+```
 
 ## Pages
 
@@ -199,7 +220,9 @@ The library contains:
 
 Each game has its own route:
 
+```text
 /play/:gameId
+```
 
 The play page displays game information and includes a simulated launch process.
 
@@ -244,7 +267,7 @@ The goal of the project is to practice frontend development concepts such as:
 Possible additions include:
 
 - Working favorite toggles
-- Persistent favorites with localStorage
+- Persistent favorites with `localStorage`
 - Cart functionality
 - Game filters and sorting
 - Grid/list switching
