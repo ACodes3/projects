@@ -4,13 +4,19 @@ import {
   Star
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 function GameDetails({ game }) {
+  const navigate = useNavigate();
+
   if (!game) {
     return (
       <section className="game-details empty-state">
         <div>
           <h2>Select a game</h2>
-          <p>Choose a game from your library.</p>
+          <p>
+            Choose a game from your library.
+          </p>
         </div>
       </section>
     );
@@ -19,9 +25,10 @@ function GameDetails({ game }) {
   const achievementPercentage =
     game.achievements.total > 0
       ? Math.round(
-          (game.achievements.unlocked /
-            game.achievements.total) *
-            100
+          (
+            game.achievements.unlocked /
+            game.achievements.total
+          ) * 100
         )
       : 0;
 
@@ -87,10 +94,12 @@ function GameDetails({ game }) {
     "⚔"
   ];
 
+  const handlePlay = () => {
+    navigate(`/play/${game.id}`);
+  };
+
   return (
     <section className="game-details">
-      {/* HERO */}
-
       <div className="game-hero">
         <img
           className="game-hero__cover"
@@ -120,17 +129,24 @@ function GameDetails({ game }) {
           <div className="play-info">
             <div>
               <span>You've played</span>
-              <strong>{game.playTime}</strong>
+              <strong>
+                {game.playTime}
+              </strong>
             </div>
 
             <div>
               <span>Last played</span>
-              <strong>{game.lastPlayed}</strong>
+              <strong>
+                {game.lastPlayed}
+              </strong>
             </div>
           </div>
 
           <div className="hero-actions">
-            <button className="primary-button">
+            <button
+              className="primary-button"
+              onClick={handlePlay}
+            >
               <span>▶</span>
               PLAY
             </button>
@@ -141,8 +157,6 @@ function GameDetails({ game }) {
           </div>
         </div>
       </div>
-
-      {/* TABS */}
 
       <nav className="game-tabs">
         <button className="active">
@@ -156,14 +170,12 @@ function GameDetails({ game }) {
         <button>Support</button>
       </nav>
 
-      {/* CONTENT */}
-
       <div className="game-dashboard">
         <div className="game-dashboard__main">
-          {/* ADDONS */}
-
           <article className="panel addon-panel">
-            <h3>Available Add-ons</h3>
+            <h3>
+              Available Add-ons
+            </h3>
 
             <div className="addon-card">
               <img
@@ -193,8 +205,6 @@ function GameDetails({ game }) {
             </div>
           </article>
 
-          {/* UPDATE */}
-
           <article className="panel update-panel">
             <div className="panel-heading">
               <h3>
@@ -219,13 +229,11 @@ function GameDetails({ game }) {
           </article>
         </div>
 
-        {/* RIGHT COLUMN */}
-
         <aside className="game-dashboard__side">
-          {/* FRIENDS */}
-
           <article className="panel friends-panel">
-            <h3>Friends Who Play</h3>
+            <h3>
+              Friends Who Play
+            </h3>
 
             <div className="friends-group">
               <span className="friends-label">
@@ -278,8 +286,6 @@ function GameDetails({ game }) {
             </div>
           </article>
 
-          {/* ACHIEVEMENTS */}
-
           <article className="panel achievements-panel">
             <div className="panel-heading">
               <h3>
@@ -310,7 +316,9 @@ function GameDetails({ game }) {
             </div>
 
             <div className="locked-section">
-              <p>Locked Achievements</p>
+              <p>
+                Locked Achievements
+              </p>
 
               <div className="locked-achievements">
                 {lockedAchievements.map(
