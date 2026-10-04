@@ -56,7 +56,10 @@ function Navbar() {
       <div className="navbar__right">
         <div className="navbar__icons">
           <button className="navbar-icon-button">
-            <Heart size={15} fill="currentColor" />
+            <Heart
+              size={15}
+              fill="currentColor"
+            />
           </button>
 
           <button className="navbar-icon-button">
@@ -64,7 +67,10 @@ function Navbar() {
           </button>
 
           <button className="navbar-icon-button">
-            <MessageSquare size={15} fill="currentColor" />
+            <MessageSquare
+              size={15}
+              fill="currentColor"
+            />
           </button>
         </div>
 
@@ -75,7 +81,7 @@ function Navbar() {
 
           <div className="profile-avatar-wrapper">
             <img
-              src="/images/avatar.jpg"
+              src="/images/avatar.png"
               alt="User avatar"
               className="profile-avatar"
             />
