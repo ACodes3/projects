@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
-  Flame,
   Sword,
   Shield,
-  Zap
+  Zap,
+  Activity,
+  Wind,
+  ArrowUpRight
 } from "lucide-react";
 
 import {
@@ -16,17 +19,20 @@ import {
 
 import {
   getSlayerBreathingStyles,
-  getSlayerTechniques
+  getBreathingStyleTechniques
 } from "../utils/dataHelpers";
 
 import "./SlayersPage.css";
 
 function SlayersPage() {
+  const navigate = useNavigate();
+
   const [slayers, setSlayers] = useState([]);
   const [breathingStyles, setBreathingStyles] = useState([]);
   const [techniques, setTechniques] = useState([]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -48,7 +54,10 @@ function SlayersPage() {
         setTechniques(techniqueData);
       } catch (error) {
         console.error(error);
-        setError("Could not load Demon Slayer data.");
+
+        setError(
+          "Could not load Demon Slayer data."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -57,7 +66,8 @@ function SlayersPage() {
     loadData();
   }, []);
 
-  const selectedSlayer = slayers[selectedIndex] || null;
+  const selectedSlayer =
+    slayers[selectedIndex] || null;
 
   const selectedBreathingStyles = useMemo(() => {
     if (!selectedSlayer) {
@@ -73,26 +83,26 @@ function SlayersPage() {
     breathingStyles
   ]);
 
-  const selectedTechniques = useMemo(() => {
-    if (!selectedSlayer) {
-      return [];
-    }
-
-    return getSlayerTechniques(
-      selectedSlayer,
-      techniques
-    );
-  }, [
-    selectedSlayer,
-    techniques
-  ]);
-
   const primaryBreathingStyle =
     selectedBreathingStyles[0] || null;
 
+  const breathingTechniques = useMemo(() => {
+    if (!primaryBreathingStyle) {
+      return [];
+    }
+
+    return getBreathingStyleTechniques(
+      primaryBreathingStyle,
+      techniques
+    );
+  }, [
+    primaryBreathingStyle,
+    techniques
+  ]);
+
   const handlePrevious = () => {
     setSelectedIndex((current) => {
-      if (slayers.length === 0) {
+      if (!slayers.length) {
         return 0;
       }
 
@@ -104,7 +114,7 @@ function SlayersPage() {
 
   const handleNext = () => {
     setSelectedIndex((current) => {
-      if (slayers.length === 0) {
+      if (!slayers.length) {
         return 0;
       }
 
@@ -138,224 +148,366 @@ function SlayersPage() {
     );
   }
 
-  const firstName =
-    selectedSlayer.name.split(" ")[0];
+  const nameParts =
+    selectedSlayer.name.split(" ");
 
-  const lastName =
-    selectedSlayer.name
-      .split(" ")
-      .slice(1)
-      .join(" ");
+  const mainName =
+    nameParts[0];
+
+  const secondaryName =
+    nameParts.slice(1).join(" ");
+
+  const accentPrimary =
+    primaryBreathingStyle?.theme?.primary ||
+    "#4f9cff";
+
+  const accentSecondary =
+    primaryBreathingStyle?.theme?.secondary ||
+    "#2348a8";
 
   return (
     <section
       className="slayers-showcase"
       style={{
-        "--accent-primary":
-          primaryBreathingStyle?.theme?.primary ||
-          "#ff7b42",
-        "--accent-secondary":
-          primaryBreathingStyle?.theme?.secondary ||
-          "#b91c1c"
+        "--slayer-primary": accentPrimary,
+        "--slayer-secondary": accentSecondary
       }}
     >
-      <div className="slayers-showcase__ambient" />
+      <div className="slayers-showcase__mist" />
+      <div className="slayers-showcase__light" />
 
-      <div className="slayers-showcase__selector">
-        <button
-          className="slayers-showcase__back"
-          type="button"
-          onClick={handlePrevious}
-          aria-label="Previous slayer"
-        >
-          <ChevronLeft size={19} />
-        </button>
+      {/* TOP SELECTOR */}
 
-        <div className="slayers-showcase__category">
-          <span className="slayers-showcase__ring" />
-          <span>DEMON SLAYERS</span>
+      <div className="slayers-selector">
+
+        <div className="slayers-selector__label">
+
+          <span className="slayers-selector__mark">
+            <Sword size={15} />
+          </span>
+
+          <span>
+            DEMON SLAYERS
+          </span>
+
         </div>
 
-        <div className="slayers-showcase__names">
+        <div className="slayers-selector__characters">
+
           {slayers.map((slayer, index) => (
             <button
               key={slayer.id}
+              type="button"
+              onClick={() =>
+                setSelectedIndex(index)
+              }
               className={
                 index === selectedIndex
                   ? "slayer-selector active"
                   : "slayer-selector"
               }
-              type="button"
-              onClick={() => setSelectedIndex(index)}
             >
-              {slayer.name.split(" ")[0]}
+              {slayer.name}
             </button>
           ))}
+
         </div>
+
       </div>
 
-      <div className="slayers-showcase__main">
-        <div className="slayers-showcase__info">
-          <div className="slayer-heading">
-            <h1>{firstName}</h1>
+      {/* MAIN */}
 
-            {lastName && (
-              <span>{lastName}</span>
-            )}
+      <div className="slayers-showcase__main">
+
+        {/* LEFT INFORMATION */}
+
+        <div className="slayer-info">
+
+          <div className="slayer-rank">
+
+            <span className="slayer-rank__line" />
+
+            <span>
+              {selectedSlayer.rank}
+            </span>
+
           </div>
+
+          <header className="slayer-heading">
+
+            <h1>
+              {mainName}
+            </h1>
+
+            {secondaryName && (
+              <span>
+                {secondaryName}
+              </span>
+            )}
+
+          </header>
 
           <p className="slayer-description">
             {selectedSlayer.description ||
-              "A member of the Demon Slayer Corps, trained to battle demons using specialized swordsmanship and breathing techniques."}
+              "A member of the Demon Slayer Corps trained in specialized swordsmanship and Total Concentration Breathing to battle demons."}
           </p>
 
+          {/* STATS */}
+
           <div className="slayer-stats">
-            <div className="slayer-stat">
-              <strong>
-                {selectedSlayer.stats?.power || 0}
-              </strong>
-              <span>PWR</span>
-            </div>
 
             <div className="slayer-stat">
-              <strong>
-                {selectedSlayer.stats?.speed || 0}
-              </strong>
-              <span>SPD</span>
-            </div>
 
-            <div className="slayer-stat">
-              <strong>
-                {selectedSlayer.stats?.defense || 0}
-              </strong>
-              <span>DEF</span>
-            </div>
-          </div>
-
-          <div className="slayer-lower">
-            <div className="slayer-feature-card">
-              <div className="slayer-feature-card__visual">
-                {primaryBreathingStyle?.image ? (
-                  <img
-                    src={primaryBreathingStyle.image}
-                    alt={primaryBreathingStyle.name}
-                  />
-                ) : (
-                  <div className="slayer-feature-card__placeholder">
-                    <Flame size={38} />
-                  </div>
-                )}
+              <div className="slayer-stat__icon">
+                <Sword size={15} />
               </div>
-
-              <div className="slayer-feature-card__content">
-                <span className="slayer-feature-card__label">
-                  PRIMARY STYLE
-                </span>
-
-                <strong>
-                  {primaryBreathingStyle?.name ||
-                    "Unknown Style"}
-                </strong>
-
-                <span>
-                  {selectedTechniques.length} techniques
-                </span>
-              </div>
-            </div>
-
-            <div className="slayer-technique-summary">
-              <span className="slayer-technique-summary__orb" />
 
               <div>
-                <span className="slayer-technique-summary__label">
-                  TECHNIQUE
-                </span>
-
                 <strong>
-                  {primaryBreathingStyle?.name ||
-                    "Breathing Style"}
+                  {selectedSlayer.stats?.power || 0}
                 </strong>
-              </div>
 
-              <div className="slayer-technique-summary__count">
-                <Sword size={15} />
                 <span>
-                  {selectedTechniques.length} SKILLS
+                  POWER
                 </span>
               </div>
+
             </div>
+
+            <div className="slayer-stat">
+
+              <div className="slayer-stat__icon">
+                <Zap size={15} />
+              </div>
+
+              <div>
+                <strong>
+                  {selectedSlayer.stats?.speed || 0}
+                </strong>
+
+                <span>
+                  SPEED
+                </span>
+              </div>
+
+            </div>
+
+            <div className="slayer-stat">
+
+              <div className="slayer-stat__icon">
+                <Shield size={15} />
+              </div>
+
+              <div>
+                <strong>
+                  {selectedSlayer.stats?.defense || 0}
+                </strong>
+
+                <span>
+                  DEFENSE
+                </span>
+              </div>
+
+            </div>
+
           </div>
+
+          {/* BREATHING STYLE PANEL */}
+
+          <div className="breathing-style-panel">
+
+            <div className="breathing-style-panel__header">
+
+              <div className="breathing-style-panel__symbol">
+                <Wind size={21} />
+              </div>
+
+              <div className="breathing-style-panel__heading">
+
+                <span>
+                  BREATHING STYLE
+                </span>
+
+                <button
+                  type="button"
+                  disabled={!primaryBreathingStyle}
+                  onClick={() => {
+                    if (primaryBreathingStyle) {
+                      navigate(
+                        `/breathing/${primaryBreathingStyle.id}`
+                      );
+                    }
+                  }}
+                >
+                  {primaryBreathingStyle?.name ||
+                    "Unknown"}
+
+                  {primaryBreathingStyle && (
+                    <ArrowUpRight size={14} />
+                  )}
+                </button>
+
+              </div>
+
+            </div>
+
+            <p className="breathing-style-panel__description">
+              {primaryBreathingStyle?.description ||
+                "No Breathing Style information is available."}
+            </p>
+
+            <div className="breathing-style-panel__techniques">
+
+              {breathingTechniques.length > 0 ? (
+                breathingTechniques
+                  .slice(0, 4)
+                  .map((technique, index) => (
+                    <button
+                      key={technique.id}
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/techniques/${technique.id}`
+                        )
+                      }
+                      className="breathing-technique"
+                    >
+                      <span className="breathing-technique__number">
+                        {String(index + 1).padStart(
+                          2,
+                          "0"
+                        )}
+                      </span>
+
+                      <span className="breathing-technique__name">
+                        {technique.name}
+                      </span>
+
+                      <ChevronRight size={14} />
+                    </button>
+                  ))
+              ) : (
+                <span className="breathing-style-panel__empty">
+                  No recorded techniques.
+                </span>
+              )}
+
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="slayers-showcase__character">
-          <div className="slayers-showcase__sun-ring" />
-          <div className="slayers-showcase__glow" />
+        {/* CHARACTER */}
+
+        <div className="slayer-character">
+
+          <div className="slayer-character__circle" />
+
+          <div className="slayer-character__rings">
+            <span />
+            <span />
+            <span />
+          </div>
+
+          <div className="slayer-character__glow" />
 
           <img
-            className="slayers-showcase__character-image"
+            className="slayer-character__image"
             src={selectedSlayer.image}
             alt={selectedSlayer.name}
+            onError={(event) => {
+              event.currentTarget.style.display =
+                "none";
+            }}
           />
+
+          <div className="slayer-character__ground" />
+
         </div>
 
-        <div className="slayers-showcase__abilities">
-          <span className="slayers-showcase__abilities-title">
+        {/* RIGHT ABILITY RAIL */}
+
+        <aside className="slayer-rail">
+
+          <div className="slayer-rail__title">
             ABILITY
-          </span>
+          </div>
 
-          <div className="ability-orbs">
-            <button
-              className="ability-orb"
-              type="button"
-              title="Power"
-            >
-              <Flame size={15} />
-            </button>
+          <div className="slayer-rail__items">
 
             <button
-              className="ability-orb"
               type="button"
-              title="Speed"
-            >
-              <Zap size={15} />
-            </button>
-
-            <button
-              className="ability-orb active"
-              type="button"
-              title="Defense"
-            >
-              <Shield size={15} />
-            </button>
-
-            <button
-              className="ability-orb"
-              type="button"
+              className="slayer-rail__button active"
               title="Swordsmanship"
             >
-              <Sword size={15} />
+              <Sword size={14} />
             </button>
+
+            <button
+              type="button"
+              className="slayer-rail__button"
+              title="Speed"
+            >
+              <Zap size={14} />
+            </button>
+
+            <button
+              type="button"
+              className="slayer-rail__button"
+              title="Defense"
+            >
+              <Shield size={14} />
+            </button>
+
+            <button
+              type="button"
+              className="slayer-rail__button"
+              title="Endurance"
+            >
+              <Activity size={14} />
+            </button>
+
           </div>
-        </div>
+
+          <div className="slayer-rail__style">
+
+            <span>
+              STYLE
+            </span>
+
+            <strong>
+              {String(
+                selectedBreathingStyles.length
+              ).padStart(2, "0")}
+            </strong>
+
+          </div>
+
+        </aside>
+
       </div>
 
+      {/* SIDE NAVIGATION */}
+
       <button
-        className="slayers-showcase__nav slayers-showcase__nav--left"
         type="button"
+        className="slayer-nav slayer-nav--left"
         onClick={handlePrevious}
         aria-label="Previous slayer"
       >
-        <ChevronLeft size={23} />
+        <ChevronLeft size={22} />
       </button>
 
       <button
-        className="slayers-showcase__nav slayers-showcase__nav--right"
         type="button"
+        className="slayer-nav slayer-nav--right"
         onClick={handleNext}
         aria-label="Next slayer"
       >
-        <ChevronRight size={23} />
+        <ChevronRight size={22} />
       </button>
+
     </section>
   );
 }
