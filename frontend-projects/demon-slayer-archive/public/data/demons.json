@@ -16,7 +16,7 @@
       "speed": 94,
       "regeneration": 93
     },
-    "image": "/images/demons/akaza.png"
+    "image": "/images/demons/Akaza_IC_anime_render.webp"
   },
   {
     "id": "doma",
@@ -36,7 +36,7 @@
       "speed": 92,
       "regeneration": 96
     },
-    "image": "/images/demons/doma.png"
+    "image": "/images/demons/Doma_29.webp"
   },
   {
     "id": "muzan-kibutsuji",
@@ -57,7 +57,7 @@
       "speed": 100,
       "regeneration": 100
     },
-    "image": "/images/demons/muzan-kibutsuji.png"
+    "image": "/images/demons/Muzan_Anime_2_29.webp"
   },
   {
     "id": "nezuko-kamado",
@@ -76,6 +76,6 @@
       "speed": 79,
       "regeneration": 87
     },
-    "image": "/images/demons/nezuko-kamado.png"
+    "image": "/images/demons/Nezuko_anime_right_face.webp"
   }
 ]
