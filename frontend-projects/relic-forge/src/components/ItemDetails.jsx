@@ -1,209 +1,242 @@
+
 import {
-  Backpack,
-  Sparkles,
   Shield,
-  Check,
-  ChevronRight
-} from "lucide-react";
+  Sword,
+  Heart,
+  Sparkles,
+  Diamond,
+  Star,
+} from 'lucide-react';
 
-import ItemArtwork from "./ItemArtwork";
+import ItemArtwork from './ItemArtwork';
 
-const STAT_CONFIG = [
-  { key: "attack", label: "Attack" },
-  { key: "defense", label: "Defense" },
-  { key: "health", label: "Vitality" },
-  { key: "crit", label: "Critical" }
+const statLabels = [
+  { key: 'attack', label: 'Attack', icon: Sword },
+  { key: 'defense', label: 'Defense', icon: Shield },
+  { key: 'health', label: 'Health', icon: Heart },
+  { key: 'crit', label: 'Critical Chance', icon: Sparkles },
 ];
 
-function formatStat(value, key) {
-  return key === "crit" ? `${value}%` : value;
-}
-
-function ItemDetails({
+export default function ItemDetails({
   item,
   rarity,
-  slot,
-  comparison,
-  equippedItem,
-  equippedSlotId,
+  characterLevel,
+  equipped,
+  comparedItem,
+  favorite,
   onEquip,
-  onUnequip
+  onUnequip,
+  onFavorite,
 }) {
   if (!item) {
     return (
-      <aside className="forge-panel forge-panel--details">
-        <div className="forge-panel__heading">
-          <div>
-            <p>03 / INSPECTION</p>
-            <h2>Item Details</h2>
-          </div>
+      <aside className="details-panel panel">
+        <div className="details-empty">
+          Select an item to inspect its details.
         </div>
-
-        <p className="item-details__hint">
-          Select an item to inspect its attributes.
-        </p>
       </aside>
     );
   }
 
-  const isEquipped = Boolean(equippedSlotId);
+  const canEquip = Boolean(item.slotId);
+  const levelLocked = canEquip && item.level > characterLevel;
+
+  const power = Math.round(
+    (item.stats?.attack || 0) * 12 +
+    (item.stats?.defense || 0) * 8 +
+    (item.stats?.health || 0) * 1.5 +
+    (item.stats?.crit || 0) * 15
+  );
+
+  const statLines = statLabels.filter(
+    (stat) => (item.stats?.[stat.key] || 0) !== 0
+  );
+
+  const displayPower =
+    power || (item.category === 'consumable' ? 10 : 5);
 
   return (
-    <aside className="forge-panel forge-panel--details">
-      <div className="forge-panel__heading">
-        <div>
-          <p>03 / INSPECTION</p>
-          <h2>Item Details</h2>
+    <aside
+      className="details-panel panel"
+      aria-label="Selected item details"
+      style={{
+        '--detail-accent': rarity?.color || '#c9a677',
+      }}
+    >
+      <div className="details-panel__body">
+
+        {/* Item heading */}
+        <div className="details-heading">
+          <div>
+            <h2>{item.name}</h2>
+
+            <p style={{ color: rarity?.color }}>
+              {rarity?.name || 'Common'}{' '}
+              {item.slotId || item.category}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className={`details-favorite ${
+              favorite ? 'details-favorite--on' : ''
+            }`}
+            onClick={() => onFavorite(item.id)}
+            title="Toggle favorite"
+            aria-label={
+              favorite ? 'Remove favorite' : 'Mark favorite'
+            }
+          >
+            <Star
+              size={18}
+              fill={favorite ? 'currentColor' : 'none'}
+            />
+          </button>
         </div>
 
-        <span className="forge-panel__heading-icon">
-          <Sparkles size={18} />
-        </span>
-      </div>
+        {/* Item artwork and power */}
+        <div className="details-hero">
+          <div className="details-hero__power">
+            <strong>{displayPower}</strong>
 
-      <div
-        className="item-details"
-        style={{
-          "--rarity-color": rarity?.color || "#9ba3ad"
-        }}
-      >
-        <div className="item-details__visual">
-          <div className="item-details__glow" />
-          <div className="item-details__ring" />
+            <span>
+              {item.slotId === 'weapon'
+                ? 'Weapon Power'
+                : item.slotId
+                ? 'Item Power'
+                : 'Item Value'}
+            </span>
+          </div>
 
           <ItemArtwork
             item={item}
-            size={78}
-            className="item-details__artwork"
+            className="details-hero__art"
           />
-
-          <span className="item-details__level">
-            LVL {item.level}
-          </span>
         </div>
 
-        <div className="item-details__rarity">
-          <Sparkles size={13} />
+        {/* Main attributes */}
+        <div className="details-statblock">
+          <h3>
+            {item.slotId === 'weapon'
+              ? `${Math.round(power * 1.14)} – ${Math.round(
+                  power * 1.39
+                )} Damage`
+              : item.category === 'consumable'
+              ? 'Restorative Alchemy'
+              : item.category === 'material'
+              ? 'Crafting Material'
+              : 'Equipment Attributes'}
+          </h3>
 
-          {(rarity?.name || "Common").toUpperCase()}
+          {item.slotId === 'weapon' && (
+            <p>1.20 Attacks per Second</p>
+          )}
         </div>
 
-        <h3>{item.name}</h3>
+        <div className="details-divider" />
 
-        <span className="item-details__slot">
-          {(slot?.name || item.slotId).toUpperCase()}
-          {" · "}
-          {item.category.toUpperCase()}
-        </span>
+        {/* Item bonuses */}
+        <div className="details-bonuses">
+          {statLines.length > 0 ? (
+            statLines.map((stat) => {
+              const Icon = stat.icon;
 
-        <p className="item-details__description">
+              const currentValue = item.stats[stat.key];
+              const previousValue =
+                comparedItem?.stats?.[stat.key] || 0;
+
+              const difference = currentValue - previousValue;
+
+              const showComparison =
+                comparedItem &&
+                comparedItem.id !== item.id;
+
+              return (
+                <div key={stat.key}>
+                  <Icon size={13} />
+
+                  <span>
+                    +{currentValue} {stat.label}
+                    {stat.key === 'crit' ? '%' : ''}
+                  </span>
+
+                  {showComparison && (
+                    <small
+                      className={
+                        difference >= 0
+                          ? 'bonus-up'
+                          : 'bonus-down'
+                      }
+                    >
+                      {difference > 0 ? '+' : ''}
+                      {difference !== 0 ? difference : '—'}
+                    </small>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <p className="details-bonuses__empty">
+              A rare find from the outer kingdoms.
+            </p>
+          )}
+        </div>
+
+        {/* Item description */}
+        <p className="details-flavor">
+          <Diamond size={14} />
           {item.description}
         </p>
 
-        <div className="item-details__divider" />
-
-        <div className="item-details__section-title">
-          <span>ITEM ATTRIBUTES</span>
+        {/* Requirements */}
+        <div className="details-requirements">
+          <span>Required Level: {item.level}</span>
 
           <span>
-            {isEquipped ? "EQUIPPED" : "VS EQUIPPED"}
+            Durability:{' '}
+            {item.category === 'material'
+              ? '—'
+              : '98 / 100'}
           </span>
         </div>
 
-        <div className="item-attributes">
-          {STAT_CONFIG.map((stat) => {
-            const value = Number(
-              item.stats?.[stat.key] || 0
-            );
-
-            const difference =
-              comparison?.[stat.key]?.difference || 0;
-
-            let differenceLabel = "—";
-
-            if (isEquipped) {
-              differenceLabel = "ACTIVE";
-            } else if (difference > 0) {
-              differenceLabel =
-                `+${formatStat(difference, stat.key)}`;
-            } else if (difference < 0) {
-              differenceLabel =
-                formatStat(difference, stat.key);
-            }
-
-            return (
-              <div
-                key={stat.key}
-                className="item-attribute"
-              >
-                <span>{stat.label}</span>
-
-                <strong>
-                  {value > 0 ? "+" : ""}
-                  {formatStat(value, stat.key)}
-                </strong>
-
-                <small
-                  className={
-                    !isEquipped && difference > 0
-                      ? "positive"
-                      : !isEquipped && difference < 0
-                        ? "negative"
-                        : ""
-                  }
-                >
-                  {differenceLabel}
-                </small>
-              </div>
-            );
-          })}
-        </div>
-
-        {equippedItem && !isEquipped && (
-          <div className="item-comparison-note">
-            <Shield size={14} />
-
-            <span>
-              Comparing against{" "}
-              <strong>{equippedItem.name}</strong>
-            </span>
-          </div>
-        )}
-
-        <button
-          type="button"
-          className="item-details__equip"
-          onClick={() => {
-            if (isEquipped) {
-              onUnequip(equippedSlotId);
-            } else {
-              onEquip(item.id);
-            }
-          }}
-        >
-          {isEquipped ? (
-            <>
-              <Backpack size={17} />
-              UNEQUIP ITEM
-            </>
-          ) : (
-            <>
-              <Check size={17} />
-              EQUIP ITEM
-            </>
-          )}
-
-          <ChevronRight size={17} />
-        </button>
-
-        <p className="item-details__hint">
-          {isEquipped
-            ? "Unequipping returns this item to the backpack."
-            : "Equipping replaces the item currently occupying this slot."}
+        {/* Lore text */}
+        <p className="details-lore">
+          “Every relic carries a story, and every story begins
+          with a single flame.”
         </p>
       </div>
+
+      {/* Equip / Unequip */}
+      <div className="details-actions">
+        <button
+          type="button"
+          className={`main-action ${
+            levelLocked ? 'main-action--disabled' : ''
+          }`}
+          disabled={!canEquip || levelLocked}
+          onClick={() =>
+            equipped
+              ? onUnequip(item.slotId)
+              : onEquip(item.id)
+          }
+        >
+          {equipped
+            ? 'Unequip'
+            : !canEquip
+            ? 'Not equippable'
+            : levelLocked
+            ? `Requires level ${item.level}`
+            : 'Equip item'}
+        </button>
+
+        {equipped && (
+          <span className="details-actions__equipped">
+            ◆ Currently Equipped
+          </span>
+        )}
+      </div>
+
     </aside>
   );
 }
-
-export default ItemDetails;

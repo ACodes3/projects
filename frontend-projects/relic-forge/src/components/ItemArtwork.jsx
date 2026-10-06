@@ -1,51 +1,53 @@
+
 import {
+  Gem,
+  Shield,
+  Sword,
+  FlaskConical,
+  Package,
+  CircleDot,
   Crown,
-  Shirt,
   Hand,
   Footprints,
-  Swords,
-  CircleDot,
-  Gem
-} from "lucide-react";
+} from 'lucide-react';
 
-const SLOT_ICONS = {
+const icons = {
+  weapon: Sword,
+  chest: Shield,
   head: Crown,
-  chest: Shirt,
   hands: Hand,
   feet: Footprints,
-  weapon: Swords,
   ring: CircleDot,
-  amulet: Gem
+  amulet: Gem,
+  consumable: FlaskConical,
+  material: Package,
 };
 
-function ItemArtwork({
-  item = null,
-  slotId = null,
-  size = 30,
-  className = ""
+export default function ItemArtwork({
+  item,
+  slotId,
+  className = '',
 }) {
-  const currentSlot = item?.slotId || slotId;
-
-  const Icon = SLOT_ICONS[currentSlot] || Gem;
+  const Icon =
+    icons[item?.slotId || item?.category || slotId] || Gem;
 
   return (
-    <span className={`item-artwork ${className}`}>
-      <Icon size={size} strokeWidth={1.5} />
+    <span className={`item-art ${className}`}>
+      {/* Fallback icon */}
+      <Icon
+        className="item-art__fallback"
+        aria-hidden="true"
+        strokeWidth={1.25}
+      />
 
+      {/* Item artwork */}
       {item?.image && (
         <img
-          key={item.id}
           src={item.image}
           alt=""
-          className="item-artwork__image"
-          draggable={false}
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
+          loading="lazy"
         />
       )}
     </span>
   );
 }
-
-export default ItemArtwork;

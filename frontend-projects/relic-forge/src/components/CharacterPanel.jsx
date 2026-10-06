@@ -1,173 +1,127 @@
+
 import {
-  Crown,
-  Shield,
-  Swords,
   Sword,
+  Shield,
+  Sparkles,
   Heart,
-  Crosshair,
-  Sparkles
-} from "lucide-react";
+  Diamond,
+  Eye,
+  Clover,
+  HeartPulse,
+} from 'lucide-react';
 
-import EquipmentPanel from "./EquipmentPanel";
-
-const STAT_CONFIG = [
+const secondaryStats = [
   {
-    key: "attack",
-    label: "Attack",
-    icon: Sword
+    label: 'Strength',
+    icon: Diamond,
+    value: (stats) => Math.round(stats.attack / 5),
   },
   {
-    key: "defense",
-    label: "Defense",
-    icon: Shield
+    label: 'Dexterity',
+    icon: Eye,
+    value: (stats) => Math.round(stats.crit + 18),
   },
   {
-    key: "health",
-    label: "Vitality",
-    icon: Heart
+    label: 'Intelligence',
+    icon: Sparkles,
+    value: (stats) => Math.round(stats.defense / 4),
   },
   {
-    key: "crit",
-    label: "Critical",
-    icon: Crosshair
-  }
+    label: 'Vitality',
+    icon: HeartPulse,
+    value: (stats) => Math.round(stats.health / 3),
+  },
+  {
+    label: 'Luck',
+    icon: Clover,
+    value: (stats) => Math.max(10, stats.crit * 2),
+  },
 ];
 
-function formatStat(value, key) {
-  return key === "crit" ? `${value}%` : value;
-}
-
-function CharacterPanel({
+export default function CharacterPanel({
   character,
   stats,
-  equipmentSlots,
-  equipment,
-  items,
-  rarities,
-  draggedId,
-  dropTarget,
-  onSelectItem,
-  onEmptySlot,
-  onDragStart,
-  onDragEnd,
-  onDragEnterSlot,
-  onDragLeaveSlot,
-  onDropItem
 }) {
-  const experience = Math.min(
-    100,
-    Math.max(0, Number(character?.experience || 0))
-  );
-
   return (
-    <section className="forge-panel forge-panel--character">
-      <div className="forge-panel__heading">
-        <div>
-          <p>01 / HERO</p>
-          <h2>Character</h2>
-        </div>
+    <section className="character-panel panel">
 
-        <span className="forge-panel__heading-icon">
-          <Crown size={18} />
-        </span>
+      {/* Character artwork */}
+      <div className="character-stage">
+        <div className="character-stage__halo" />
+
+        <img
+          src={character.image}
+          alt={`${character.name} in full armor`}
+          className="character-stage__portrait"
+        />
+
+        <div className="character-stage__vignette" />
       </div>
 
-      <div className="hero-profile">
-        <div className="hero-profile__crest">
-          <div className="hero-profile__outer-ring" />
-          <div className="hero-profile__inner-ring" />
-
-          <Shield size={100} strokeWidth={0.8} />
-
-          <Swords
-            className="hero-profile__swords"
-            size={55}
-            strokeWidth={1.2}
-          />
-
-          {character?.image && (
-            <img
-              key={character.id}
-              className="hero-profile__portrait"
-              src={character.image}
-              alt={character.name}
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
-            />
-          )}
-        </div>
-
-        <span className="hero-profile__class">
-          {character.class || "ADVENTURER"}
-        </span>
-
-        <h3>{character.name}</h3>
-
-        <div className="hero-profile__level">
-          <span>LEVEL {character.level}</span>
-
-          <div className="hero-profile__experience">
-            <span
-              style={{
-                width: `${experience}%`
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <EquipmentPanel
-        equipmentSlots={equipmentSlots}
-        equipment={equipment}
-        items={items}
-        rarities={rarities}
-        draggedId={draggedId}
-        dropTarget={dropTarget}
-        onSelectItem={onSelectItem}
-        onEmptySlot={onEmptySlot}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragEnterSlot={onDragEnterSlot}
-        onDragLeaveSlot={onDragLeaveSlot}
-        onDropItem={onDropItem}
-      />
-
+      {/* Character statistics */}
       <div className="character-stats">
-        <div className="character-stats__heading">
-          <span>CHARACTER ATTRIBUTES</span>
 
-          <Sparkles size={15} />
+        {/* Primary stats */}
+        <div className="character-stats__primary">
+
+          <div>
+            <span>
+              <Sword size={14} />
+              Attack
+            </span>
+            <strong>{stats.attack.toLocaleString()}</strong>
+          </div>
+
+          <div>
+            <span>
+              <Shield size={14} />
+              Defense
+            </span>
+            <strong>{stats.defense.toLocaleString()}</strong>
+          </div>
+
+          <div>
+            <span>
+              <Sparkles size={14} />
+              Magic
+            </span>
+            <strong>
+              {Math.round(stats.crit * 42).toLocaleString()}
+            </strong>
+          </div>
+
         </div>
 
-        <div className="character-stats__grid">
-          {STAT_CONFIG.map((stat) => {
+        {/* Health */}
+        <div className="character-stats__health">
+          <Heart size={12} />
+
+          <span className="character-stats__health-line" />
+
+          <span>{stats.health} HP</span>
+        </div>
+
+        {/* Secondary stats */}
+        <div className="character-stats__secondary">
+          {secondaryStats.map((stat) => {
             const Icon = stat.icon;
 
             return (
-              <div
-                className="character-stat"
-                key={stat.key}
-              >
-                <Icon size={15} />
+              <div key={stat.label}>
+                <span>
+                  <Icon size={13} />
+                  {stat.label}
+                </span>
 
-                <div>
-                  <span>{stat.label}</span>
-
-                  <strong>
-                    {formatStat(
-                      stats[stat.key] || 0,
-                      stat.key
-                    )}
-                  </strong>
-                </div>
+                <strong>
+                  {stat.value(stats)}
+                </strong>
               </div>
             );
           })}
         </div>
+
       </div>
     </section>
   );
 }
-
-export default CharacterPanel;
