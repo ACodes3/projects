@@ -604,6 +604,7 @@ select {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 
   color: #e0d3bd;
   font-size: 10px;
