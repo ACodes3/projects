@@ -1,0 +1,45 @@
+
+[
+  {
+    "id": "head",
+    "name": "Head",
+    "category": "armor",
+    "icon": "crown"
+  },
+  {
+    "id": "chest",
+    "name": "Chest",
+    "category": "armor",
+    "icon": "shirt"
+  },
+  {
+    "id": "hands",
+    "name": "Hands",
+    "category": "armor",
+    "icon": "hand"
+  },
+  {
+    "id": "feet",
+    "name": "Feet",
+    "category": "armor",
+    "icon": "footprints"
+  },
+  {
+    "id": "weapon",
+    "name": "Main Hand",
+    "category": "weapon",
+    "icon": "swords"
+  },
+  {
+    "id": "ring",
+    "name": "Ring",
+    "category": "accessory",
+    "icon": "circle-dot"
+  },
+  {
+    "id": "amulet",
+    "name": "Amulet",
+    "category": "accessory",
+    "icon": "gem"
+  }
+]

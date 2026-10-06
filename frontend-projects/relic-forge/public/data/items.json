@@ -1,0 +1,291 @@
+
+[
+  {
+    "id": "old-iron-sword",
+    "name": "Old Iron Sword",
+    "category": "weapon",
+    "slotId": "weapon",
+    "rarityId": "common",
+    "level": 1,
+    "description": "A weathered blade that has seen countless battles. Its edge is dull, but its balance remains reliable.",
+    "stats": {
+      "attack": 10,
+      "defense": 0,
+      "health": 0,
+      "crit": 0
+    },
+    "image": "/images/weapons/old-iron-sword.png"
+  },
+  {
+    "id": "kingsfall",
+    "name": "Kingsfall",
+    "category": "weapon",
+    "slotId": "weapon",
+    "rarityId": "epic",
+    "level": 26,
+    "description": "A royal greatsword recovered from a forgotten battlefield. Its enchanted edge strikes with tremendous force.",
+    "stats": {
+      "attack": 29,
+      "defense": 0,
+      "health": 0,
+      "crit": 4
+    },
+    "image": "/images/weapons/kingsfall.png"
+  },
+  {
+    "id": "duskreaver",
+    "name": "Duskreaver",
+    "category": "weapon",
+    "slotId": "weapon",
+    "rarityId": "legendary",
+    "level": 35,
+    "description": "Forged in the dying light of an ancient star, this blade hums with power and thirsts for worthy opponents.",
+    "stats": {
+      "attack": 42,
+      "defense": 0,
+      "health": 0,
+      "crit": 8
+    },
+    "image": "/images/weapons/duskreaver.png"
+  },
+  {
+    "id": "frostbound-spear",
+    "name": "Frostbound Spear",
+    "category": "weapon",
+    "slotId": "weapon",
+    "rarityId": "rare",
+    "level": 20,
+    "description": "An elegant spear carrying the cold of the northern mountains. Its icy presence steadies the wielder.",
+    "stats": {
+      "attack": 22,
+      "defense": 0,
+      "health": 14,
+      "crit": 2
+    },
+    "image": "/images/weapons/frostbound-spear.png"
+  },
+  {
+    "id": "iron-hood",
+    "name": "Iron Hood",
+    "category": "armor",
+    "slotId": "head",
+    "rarityId": "common",
+    "level": 3,
+    "description": "Simple reinforced headgear commonly worn by novice adventurers.",
+    "stats": {
+      "attack": 0,
+      "defense": 6,
+      "health": 0,
+      "crit": 0
+    },
+    "image": "/images/armor/iron-hood.png"
+  },
+  {
+    "id": "sentinel-helm",
+    "name": "Sentinel Helm",
+    "category": "armor",
+    "slotId": "head",
+    "rarityId": "rare",
+    "level": 21,
+    "description": "A steel helm blessed by the sentinels who once protected the great northern gates.",
+    "stats": {
+      "attack": 0,
+      "defense": 15,
+      "health": 18,
+      "crit": 0
+    },
+    "image": "/images/armor/sentinel-helm.png"
+  },
+  {
+    "id": "broken-crown",
+    "name": "Crown of Ashes",
+    "category": "armor",
+    "slotId": "head",
+    "rarityId": "epic",
+    "level": 29,
+    "description": "A shattered crown whose mysterious enchantments still protect its wearer.",
+    "stats": {
+      "attack": 4,
+      "defense": 11,
+      "health": 30,
+      "crit": 0
+    },
+    "image": "/images/armor/broken-crown.png"
+  },
+  {
+    "id": "warden-plate",
+    "name": "Warden Plate",
+    "category": "armor",
+    "slotId": "chest",
+    "rarityId": "uncommon",
+    "level": 12,
+    "description": "A dependable breastplate made for the wardens of the western fortress.",
+    "stats": {
+      "attack": 0,
+      "defense": 18,
+      "health": 20,
+      "crit": 0
+    },
+    "image": "/images/armor/warden-plate.png"
+  },
+  {
+    "id": "dragonscale-armor",
+    "name": "Dragonscale Armor",
+    "category": "armor",
+    "slotId": "chest",
+    "rarityId": "legendary",
+    "level": 38,
+    "description": "Armor crafted from the scales of an ancient dragon, offering extraordinary protection.",
+    "stats": {
+      "attack": 0,
+      "defense": 42,
+      "health": 40,
+      "crit": 0
+    },
+    "image": "/images/armor/dragonscale-armor.png"
+  },
+  {
+    "id": "knights-grip",
+    "name": "Knight's Grip",
+    "category": "armor",
+    "slotId": "hands",
+    "rarityId": "uncommon",
+    "level": 12,
+    "description": "Reinforced gauntlets designed to keep a firm grip in the fiercest battles.",
+    "stats": {
+      "attack": 3,
+      "defense": 9,
+      "health": 0,
+      "crit": 0
+    },
+    "image": "/images/armor/knights-grip.png"
+  },
+  {
+    "id": "shadow-gauntlets",
+    "name": "Shadow Gauntlets",
+    "category": "armor",
+    "slotId": "hands",
+    "rarityId": "epic",
+    "level": 27,
+    "description": "These dark leather gauntlets enhance precision and strike from the shadows.",
+    "stats": {
+      "attack": 9,
+      "defense": 7,
+      "health": 0,
+      "crit": 5
+    },
+    "image": "/images/armor/shadow-gauntlets.png"
+  },
+  {
+    "id": "wanderer-boots",
+    "name": "Wanderer's Boots",
+    "category": "armor",
+    "slotId": "feet",
+    "rarityId": "common",
+    "level": 2,
+    "description": "Well-worn boots suited for long journeys across dangerous lands.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "health": 8,
+      "crit": 0
+    },
+    "image": "/images/armor/wanderer-boots.png"
+  },
+  {
+    "id": "phantom-greaves",
+    "name": "Phantom Greaves",
+    "category": "armor",
+    "slotId": "feet",
+    "rarityId": "rare",
+    "level": 24,
+    "description": "Lightweight enchanted boots that help their wearer move with supernatural precision.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "health": 0,
+      "crit": 3
+    },
+    "image": "/images/armor/phantom-greaves.png"
+  },
+  {
+    "id": "moonstone-loop",
+    "name": "Moonstone Loop",
+    "category": "accessory",
+    "slotId": "ring",
+    "rarityId": "rare",
+    "level": 18,
+    "description": "A silver ring containing a pale moonstone that strengthens its wearer's vitality.",
+    "stats": {
+      "attack": 0,
+      "defense": 6,
+      "health": 25,
+      "crit": 0
+    },
+    "image": "/images/accessories/moonstone-loop.png"
+  },
+  {
+    "id": "ember-sigil",
+    "name": "Ember Sigil",
+    "category": "accessory",
+    "slotId": "ring",
+    "rarityId": "epic",
+    "level": 28,
+    "description": "A glowing ring filled with dormant fire magic, increasing offensive power and precision.",
+    "stats": {
+      "attack": 11,
+      "defense": 0,
+      "health": 0,
+      "crit": 5
+    },
+    "image": "/images/accessories/ember-sigil.png"
+  },
+  {
+    "id": "shattered-talisman",
+    "name": "Shattered Talisman",
+    "category": "accessory",
+    "slotId": "amulet",
+    "rarityId": "uncommon",
+    "level": 10,
+    "description": "An old protective charm whose faded enchantment remains surprisingly useful.",
+    "stats": {
+      "attack": 0,
+      "defense": 0,
+      "health": 18,
+      "crit": 2
+    },
+    "image": "/images/accessories/shattered-talisman.png"
+  },
+  {
+    "id": "emerald-tear",
+    "name": "Emerald Tear",
+    "category": "accessory",
+    "slotId": "amulet",
+    "rarityId": "rare",
+    "level": 22,
+    "description": "A green gemstone containing the essence of a forgotten forest spirit.",
+    "stats": {
+      "attack": 0,
+      "defense": 7,
+      "health": 26,
+      "crit": 0
+    },
+    "image": "/images/accessories/emerald-tear.png"
+  },
+  {
+    "id": "oathkeeper-charm",
+    "name": "Oathkeeper's Charm",
+    "category": "accessory",
+    "slotId": "amulet",
+    "rarityId": "legendary",
+    "level": 36,
+    "description": "A sacred pendant carried by the champions of an ancient order. Its magic empowers body and spirit.",
+    "stats": {
+      "attack": 10,
+      "defense": 8,
+      "health": 45,
+      "crit": 0
+    },
+    "image": "/images/accessories/oathkeeper-charm.png"
+  }
+]

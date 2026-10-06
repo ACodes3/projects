@@ -1,0 +1,38 @@
+
+[
+  {
+    "id": "common",
+    "name": "Common",
+    "tier": 1,
+    "color": "#9ba3ad",
+    "description": "Standard equipment with basic attributes."
+  },
+  {
+    "id": "uncommon",
+    "name": "Uncommon",
+    "tier": 2,
+    "color": "#67c59a",
+    "description": "Improved equipment offering useful bonuses."
+  },
+  {
+    "id": "rare",
+    "name": "Rare",
+    "tier": 3,
+    "color": "#5aaaff",
+    "description": "Valuable equipment with powerful enchantments."
+  },
+  {
+    "id": "epic",
+    "name": "Epic",
+    "tier": 4,
+    "color": "#bb84ff",
+    "description": "Exceptional equipment carrying extraordinary power."
+  },
+  {
+    "id": "legendary",
+    "name": "Legendary",
+    "tier": 5,
+    "color": "#f0b969",
+    "description": "Ancient artifacts of incredible power and rarity."
+  }
+]
