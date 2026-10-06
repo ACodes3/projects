@@ -1,0 +1,48 @@
+
+[
+  {
+    "id": "ashen-knight",
+    "name": "Ashen Knight",
+    "class": "Oathbound",
+    "title": "The Last Warden",
+    "level": 27,
+    "experience": 68,
+    "description": "A wandering knight bound by an ancient oath, carrying the remnants of a fallen kingdom into battle.",
+    "baseStats": {
+      "attack": 24,
+      "defense": 16,
+      "health": 120,
+      "crit": 3
+    },
+    "startingEquipment": {
+      "head": null,
+      "chest": "warden-plate",
+      "hands": null,
+      "feet": "wanderer-boots",
+      "weapon": "old-iron-sword",
+      "ring": "moonstone-loop",
+      "amulet": null
+    },
+    "startingInventoryItemIds": [
+      "old-iron-sword",
+      "kingsfall",
+      "duskreaver",
+      "frostbound-spear",
+      "iron-hood",
+      "sentinel-helm",
+      "broken-crown",
+      "warden-plate",
+      "dragonscale-armor",
+      "knights-grip",
+      "shadow-gauntlets",
+      "wanderer-boots",
+      "phantom-greaves",
+      "moonstone-loop",
+      "ember-sigil",
+      "shattered-talisman",
+      "emerald-tear",
+      "oathkeeper-charm"
+    ],
+    "image": "/images/characters/ashen-knight.png"
+  }
+]
