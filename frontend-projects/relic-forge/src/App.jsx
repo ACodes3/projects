@@ -1,719 +1,430 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Sword,
-  Shield,
-  Sparkles,
-  Search,
-  ChevronDown,
-  Crown,
-  Shirt,
-  Hand,
-  Footprints,
-  CircleDot,
-  Gem,
-  Coins,
-  Droplets,
-  X,
-  User
-} from "lucide-react";
 
-import { getAllGameData } from "./services/dataService";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Compass, ChevronLeft } from 'lucide-react';
+
+import { getAllGameData } from './services/dataService';
+
 import {
   findById,
   getItemRarity,
   getBackpackItems,
   getCharacterStats,
-  getItemComparison,
   getEquippedItem,
   filterAndSortItems,
   loadInventoryState,
   saveInventoryState,
   equipItem,
-  unequipItem
-} from "./utils/inventoryHelpers";
+  unequipItem,
+} from './utils/inventoryHelpers';
 
-const SLOT_ICONS = {
-  head: Crown,
-  chest: Shirt,
-  hands: Hand,
-  feet: Footprints,
-  weapon: Sword,
-  ring: CircleDot,
-  amulet: Gem
+import TopBar from './components/TopBar';
+import EquipmentSidebar from './components/EquipmentSidebar';
+import CharacterPanel from './components/CharacterPanel';
+import InventoryPanel from './components/InventoryPanel';
+import ItemDetails from './components/ItemDetails';
+import BottomBar from './components/BottomBar';
+
+const initialFilters = {
+  search: '',
+  category: 'all',
+  rarity: 'all',
+  sortBy: 'rarity',
 };
 
-const TOP_MENU = [
-  "Inventory",
-  "Character",
-  "Skills",
-  "Map",
-  "Quests",
-  "Codex",
-  "System"
-];
-
-const INITIAL_FILTERS = {
-  search: "",
-  category: "all",
-  rarity: "all",
-  sortBy: "rarity"
-};
-
-function formatStat(value, key) {
-  return key === "crit" ? `${value}%` : value;
+function readLocal(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-function getItemPower(item) {
-  if (!item) return 0;
+export default function App() {
+  const [data, setData] = useState(null);
+  const [inventory, setInventory] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [activeTab, setActiveTab] = useState('Inventory');
+  const [filters, setFilters] = useState(initialFilters);
 
-  const attack = Number(item.stats?.attack || 0);
-  const defense = Number(item.stats?.defense || 0);
-  const health = Number(item.stats?.health || 0);
-  const crit = Number(item.stats?.crit || 0);
-
-  return Math.round(
-    attack * 12 + defense * 8 + health * 1.5 + crit * 15
+  const [favorites, setFavorites] = useState(() =>
+    readLocal('relic-forge-favorites', [])
   );
-}
 
-function getSlotLabel(slotId) {
-  const labels = {
-    weapon: "Weapon",
-    head: "Head",
-    chest: "Chest",
-    hands: "Hands",
-    feet: "Feet",
-    ring: "Ring",
-    amulet: "Amulet"
-  };
-
-  return labels[slotId] || slotId;
-}
-
-function ItemThumb({
-  item = null,
-  slotId = null,
-  size = "small"
-}) {
-  const currentSlot = item?.slotId || slotId;
-  const Icon = SLOT_ICONS[currentSlot] || Sword;
-
-  return (
-    <div className={`rf-thumb rf-thumb--${size}`}>
-      <Icon
-        className="rf-thumb__icon"
-        size={size === "large" ? 64 : size === "detail" ? 92 : 24}
-        strokeWidth={1.65}
-      />
-
-      {item?.image && (
-        <img
-          src={item.image}
-          alt={item.name}
-          className="rf-thumb__image"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
-        />
-      )}
-    </div>
+  const [salvage, setSalvage] = useState(() =>
+    readLocal('relic-forge-salvage', 1250)
   );
-}
 
-function App() {
-  const [gameData, setGameData] = useState(null);
-  const [inventoryState, setInventoryState] = useState(null);
-  const [selectedItemId, setSelectedItemId] = useState(null);
-  const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [notice, setNotice] = useState(
-    "Select an item to inspect, equip, or unequip it."
+    'Select an item to inspect its attributes.'
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
+  const [error, setError] = useState('');
+
+  // Load game data
   useEffect(() => {
-    let active = true;
+    let isActive = true;
 
-    const loadData = async () => {
-      try {
-        const data = await getAllGameData();
+    getAllGameData()
+      .then((result) => {
+        if (!isActive) return;
 
-        if (!active) return;
-
-        const character = data.characters[0];
+        const character = result.characters[0];
 
         if (!character) {
-          throw new Error("No character found in characters.json.");
+          throw new Error('No character available.');
         }
 
-        const savedState = loadInventoryState(
+        const state = loadInventoryState(
           character,
-          data.items,
-          data.equipmentSlots
+          result.items,
+          result.equipmentSlots
         );
 
-        const firstSelectedId =
-          savedState.ownedItemIds.includes("duskreaver")
-            ? "duskreaver"
-            : savedState.ownedItemIds[0] || null;
+        setData(result);
+        setInventory(state);
 
-        setGameData(data);
-        setInventoryState(savedState);
-        setSelectedItemId(firstSelectedId);
-      } catch (loadError) {
-        console.error(loadError);
-        setError("Could not load Relic Forge data.");
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    };
-
-    loadData();
+        setSelectedId(
+          state.equipment.weapon ||
+          state.ownedItemIds[0] ||
+          null
+        );
+      })
+      .catch((e) => {
+        if (isActive) {
+          setError(e.message || 'Could not load inventory.');
+        }
+      });
 
     return () => {
-      active = false;
+      isActive = false;
     };
   }, []);
 
+  // Save inventory changes
   useEffect(() => {
-    if (inventoryState) {
-      saveInventoryState(inventoryState);
+    if (inventory) {
+      saveInventoryState(inventory);
     }
-  }, [inventoryState]);
+  }, [inventory]);
 
-  const character = gameData?.characters?.[0] || null;
-  const items = gameData?.items || [];
-  const equipmentSlots = gameData?.equipmentSlots || [];
-  const rarities = gameData?.rarities || [];
-
-  const selectedItem = useMemo(() => {
-    return findById(items, selectedItemId);
-  }, [items, selectedItemId]);
-
-  const selectedRarity = useMemo(() => {
-    return getItemRarity(selectedItem, rarities);
-  }, [selectedItem, rarities]);
-
-  const backpackItems = useMemo(() => {
-    if (!inventoryState) return [];
-    return getBackpackItems(inventoryState, items);
-  }, [inventoryState, items]);
-
-  const visibleItems = useMemo(() => {
-    return filterAndSortItems(backpackItems, filters, rarities);
-  }, [backpackItems, filters, rarities]);
-
-  const characterStats = useMemo(() => {
-    if (!character || !inventoryState) {
-      return {
-        attack: 0,
-        defense: 0,
-        health: 0,
-        crit: 0
-      };
-    }
-
-    return getCharacterStats(character, inventoryState, items);
-  }, [character, inventoryState, items]);
-
-  const equippedSlotId = useMemo(() => {
-    if (!selectedItem || !inventoryState) return null;
-
-    const entry = Object.entries(inventoryState.equipment || {}).find(
-      ([, itemId]) => itemId === selectedItem.id
+  useEffect(() => {
+    localStorage.setItem(
+      'relic-forge-favorites',
+      JSON.stringify(favorites)
     );
+  }, [favorites]);
 
-    return entry?.[0] || null;
-  }, [selectedItem, inventoryState]);
-
-  const currentlyEquippedItem = useMemo(() => {
-    if (!selectedItem || !inventoryState) return null;
-
-    return getEquippedItem(
-      inventoryState,
-      selectedItem.slotId,
-      items
+  useEffect(() => {
+    localStorage.setItem(
+      'relic-forge-salvage',
+      JSON.stringify(salvage)
     );
-  }, [selectedItem, inventoryState, items]);
+  }, [salvage]);
 
-  const comparison = useMemo(() => {
-    if (!selectedItem) return null;
-    return getItemComparison(selectedItem, currentlyEquippedItem);
-  }, [selectedItem, currentlyEquippedItem]);
+  // Character and inventory data
+  const character = data?.characters[0];
 
-  const equippedItems = useMemo(() => {
-    return equipmentSlots.map((slot) => {
-      const itemId = inventoryState?.equipment?.[slot.id] || null;
-      const item = findById(items, itemId);
-      const rarity = getItemRarity(item, rarities);
+  const items = useMemo(() => data?.items || [], [data]);
+  const rarities = useMemo(() => data?.rarities || [], [data]);
 
-      return {
-        slot,
-        item,
-        rarity
-      };
-    });
-  }, [equipmentSlots, inventoryState, items, rarities]);
+  const selected = useMemo(
+    () => findById(items, selectedId),
+    [items, selectedId]
+  );
 
-  const handleFilterChange = (key, value) => {
+  const rarity = getItemRarity(selected, rarities);
+
+  const isEquipped = Boolean(
+    selected &&
+    Object.values(inventory?.equipment || {}).includes(selected.id)
+  );
+
+  const compared = selected?.slotId
+    ? getEquippedItem(inventory, selected.slotId, items)
+    : null;
+
+  const backpack = useMemo(
+    () => inventory ? getBackpackItems(inventory, items) : [],
+    [inventory, items]
+  );
+
+  const filteredItems = useMemo(
+    () => filterAndSortItems(backpack, filters, rarities),
+    [backpack, filters, rarities]
+  );
+
+  const stats = useMemo(
+    () => character && inventory
+      ? getCharacterStats(character, inventory, items)
+      : null,
+    [character, inventory, items]
+  );
+
+  const favorite = selected
+    ? favorites.includes(selected.id)
+    : false;
+
+  const canDismantle = Boolean(
+    selected &&
+    !isEquipped &&
+    inventory?.ownedItemIds.includes(selected.id)
+  );
+
+  // Inventory interactions
+  const handleFilter = (key, value) => {
     setFilters((current) => ({
       ...current,
-      [key]: value
+      [key]: value,
     }));
   };
 
-  const handleEquip = (itemId) => {
-    if (!inventoryState) return;
+  const handleEquip = useCallback((itemId) => {
+    const item = findById(items, itemId);
+
+    if (!item || !inventory || !character) return;
+
+    if (!item.slotId) {
+      setNotice('This item cannot be equipped.');
+      return;
+    }
+
+    if (item.level > character.level) {
+      setNotice(
+        `Requires level ${item.level} to equip ${item.name}.`
+      );
+      return;
+    }
 
     const result = equipItem(
-      inventoryState,
+      inventory,
       itemId,
       items,
-      equipmentSlots
+      data.equipmentSlots
     );
 
     setNotice(result.message);
 
     if (result.success) {
-      setInventoryState(result.state);
-      setSelectedItemId(itemId);
+      setInventory(result.state);
+      setSelectedId(itemId);
     }
-  };
+  }, [inventory, items, data, character]);
 
-  const handleUnequip = (slotId) => {
-    if (!inventoryState) return;
-
-    const currentItemId = inventoryState.equipment?.[slotId];
+  const handleUnequip = useCallback((slotId) => {
+    if (!inventory || !slotId) return;
 
     const result = unequipItem(
-      inventoryState,
+      inventory,
       slotId,
       items,
-      equipmentSlots
+      data.equipmentSlots
     );
 
     setNotice(result.message);
 
     if (result.success) {
-      setInventoryState(result.state);
-
-      if (currentItemId) {
-        setSelectedItemId(currentItemId);
-      }
+      setInventory(result.state);
     }
+  }, [inventory, items, data]);
+
+  const toggleFavorite = useCallback((itemId) => {
+    if (!itemId) return;
+
+    setFavorites((old) =>
+      old.includes(itemId)
+        ? old.filter((id) => id !== itemId)
+        : [...old, itemId]
+    );
+  }, []);
+
+  const handleDismantle = () => {
+    if (!canDismantle || !selected) return;
+
+    const confirmed = window.confirm(
+      `Dismantle ${selected.name} for 75 salvage coins? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setInventory((old) => ({
+      ...old,
+      ownedItemIds: old.ownedItemIds.filter(
+        (id) => id !== selected.id
+      ),
+    }));
+
+    setFavorites((old) =>
+      old.filter((id) => id !== selected.id)
+    );
+
+    setSalvage((old) => old + 75);
+    setNotice(`${selected.name} dismantled. +75 salvage coins.`);
+
+    setSelectedId(
+      inventory.ownedItemIds.find(
+        (id) => id !== selected.id
+      ) || null
+    );
   };
 
-  if (isLoading) {
+  const handleBack = useCallback(() => {
+    setActiveTab('Inventory');
+    setNotice('Inventory ready.');
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (
+        ['INPUT', 'SELECT', 'TEXTAREA'].includes(
+          event.target?.tagName
+        )
+      ) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleBack();
+      }
+
+      if (activeTab !== 'Inventory') return;
+
+      if (event.key.toLowerCase() === 'f' && selectedId) {
+        event.preventDefault();
+        toggleFavorite(selectedId);
+      }
+
+      if (
+        event.key.toLowerCase() === 'r' &&
+        isEquipped &&
+        selected?.slotId
+      ) {
+        event.preventDefault();
+        handleUnequip(selected.slotId);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [
+    activeTab,
+    selectedId,
+    selected,
+    isEquipped,
+    handleBack,
+    handleUnequip,
+    toggleFavorite,
+  ]);
+
+  if (error) {
     return (
-      <div className="rf-app">
-        <div className="rf-state-screen">
-          <h1>Loading Armory...</h1>
-          <p>Preparing Relic Forge.</p>
-        </div>
-      </div>
+      <main className="app-feedback">
+        <h1>Relic Forge</h1>
+        <p>{error}</p>
+      </main>
     );
   }
 
-  if (error || !gameData || !character || !inventoryState) {
+  if (!data || !character || !inventory || !stats) {
     return (
-      <div className="rf-app">
-        <div className="rf-state-screen">
-          <h1>Archive Error</h1>
-          <p>{error || "Could not initialize the inventory."}</p>
-        </div>
-      </div>
+      <main className="app-feedback">
+        <h1>Relic Forge</h1>
+        <p>Opening the armory…</p>
+      </main>
     );
   }
 
   return (
-    <div className="rf-app">
-      {/* TOP BAR */}
-      <header className="rf-topbar">
-        <div className="rf-player">
-          <div className="rf-player__portrait">
-            {character.image ? (
-              <img
-                src={character.image}
-                alt={character.name}
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <User size={22} />
-            )}
+    <div className="relic-app">
+      <TopBar
+        character={character}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      {activeTab === 'Inventory' ? (
+        <main className="main-layout">
+          <EquipmentSidebar
+            slots={data.equipmentSlots}
+            items={items}
+            equipment={inventory.equipment}
+            rarities={rarities}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+
+          <CharacterPanel
+            character={character}
+            stats={stats}
+          />
+
+          <InventoryPanel
+            items={filteredItems}
+            rarities={rarities}
+            selectedId={selectedId}
+            filters={filters}
+            onFilterChange={handleFilter}
+            onSelect={setSelectedId}
+            favorites={favorites}
+            onFavorite={toggleFavorite}
+            capacity={backpack.length}
+          />
+
+          <ItemDetails
+            item={selected}
+            rarity={rarity}
+            characterLevel={character.level}
+            equipped={isEquipped}
+            comparedItem={compared}
+            favorite={favorite}
+            onEquip={handleEquip}
+            onUnequip={handleUnequip}
+            onFavorite={toggleFavorite}
+          />
+        </main>
+      ) : (
+        <main className="other-section">
+          <div className="other-section__crest">
+            <Compass size={46} strokeWidth={1} />
           </div>
 
-          <div className="rf-player__meta">
-            <strong>{character.name.toUpperCase()}</strong>
+          <span className="other-section__eyebrow">
+            Relic Forge
+          </span>
 
-            <div className="rf-player__subline">
-              <span>Level {character.level}</span>
-              <span>{Math.round((character.experience || 68) * 270)}/27,000</span>
-            </div>
+          <h1>
+            {activeTab === 'Home' ? 'The Armory' : activeTab}
+          </h1>
 
-            <div className="rf-player__xp">
-              <span
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.max(0, character.experience || 68)
-                  )}%`
-                }}
-              />
-            </div>
-          </div>
-        </div>
+          <p>
+            {activeTab === 'Home'
+              ? 'Your adventure awaits. Return to your inventory to prepare for battle.'
+              : `The ${activeTab.toLowerCase()} section is not part of this inventory demo yet.`}
+          </p>
 
-        <nav className="rf-nav">
-          {TOP_MENU.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`rf-nav__button ${
-                item === "Inventory" ? "active" : ""
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-
-        <div className="rf-topbar__right">
-          <div className="rf-currency">
-            <span>
-              <Coins size={13} />
-              128,467
-            </span>
-            <span>
-              <Gem size={13} />
-              2,850
-            </span>
-            <span>
-              <Droplets size={13} />
-              640
-            </span>
-          </div>
-
-          <button type="button" className="rf-close">
-            <X size={14} />
+          <button type="button" onClick={handleBack}>
+            <ChevronLeft size={16} />
+            Return to inventory
           </button>
-        </div>
-      </header>
+        </main>
+      )}
 
-      {/* MAIN LAYOUT */}
-      <main className="rf-layout">
-        {/* EQUIPPED */}
-        <aside className="rf-panel rf-equipped">
-          <div className="rf-panel__title">Equipped</div>
-
-          <div className="rf-equipped__list">
-            {equippedItems.map(({ slot, item, rarity }) => (
-              <button
-                key={slot.id}
-                type="button"
-                className={`rf-equipped-card ${
-                  selectedItemId === item?.id ? "selected" : ""
-                }`}
-                onClick={() => {
-                  if (item) setSelectedItemId(item.id);
-                }}
-              >
-                <div
-                  className="rf-equipped-card__thumb"
-                  style={{
-                    "--rarity-color": rarity?.color || "#7c725f"
-                  }}
-                >
-                  <ItemThumb item={item} slotId={slot.id} size="small" />
-                </div>
-
-                <div className="rf-equipped-card__content">
-                  <strong>{item?.name || `Empty ${slot.name}`}</strong>
-                  <small>
-                    {item
-                      ? `${rarity?.name || "Common"} ${item.category}`
-                      : getSlotLabel(slot.id)}
-                  </small>
-                  <span>
-                    {item
-                      ? `${
-                          item.slotId === "weapon"
-                            ? item.stats?.attack || 0
-                            : item.stats?.defense ||
-                              item.stats?.health ||
-                              item.stats?.crit ||
-                              0
-                        } ${item.slotId === "weapon" ? "Power" : "Armor"}`
-                      : "—"}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* CHARACTER */}
-        <section className="rf-panel rf-character">
-          <div className="rf-character__stage">
-            {character.image ? (
-              <img
-                src={character.image}
-                alt={character.name}
-                className="rf-character__image"
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="rf-character__placeholder">
-                <User size={92} />
-              </div>
-            )}
-          </div>
-
-          <div className="rf-character__stats">
-            <div className="rf-primary-stats">
-              <div>
-                <span>
-                  <Sword size={13} />
-                  Attack
-                </span>
-                <strong>{characterStats.attack}</strong>
-              </div>
-
-              <div>
-                <span>
-                  <Shield size={13} />
-                  Defense
-                </span>
-                <strong>{characterStats.defense}</strong>
-              </div>
-
-              <div>
-                <span>
-                  <Sparkles size={13} />
-                  Magic
-                </span>
-                <strong>{Math.round(characterStats.crit * 42)}</strong>
-              </div>
-            </div>
-
-            <div className="rf-secondary-stats">
-              <div><span>Strength</span><strong>{Math.round(characterStats.attack / 5)}</strong></div>
-              <div><span>Dexterity</span><strong>{Math.round(characterStats.crit + 18)}</strong></div>
-              <div><span>Intelligence</span><strong>{Math.round(characterStats.defense / 4)}</strong></div>
-              <div><span>Vitality</span><strong>{Math.round(characterStats.health / 3)}</strong></div>
-              <div><span>Luck</span><strong>{Math.max(10, characterStats.crit * 2)}</strong></div>
-            </div>
-          </div>
-        </section>
-
-        {/* INVENTORY */}
-        <section className="rf-panel rf-inventory">
-          <div className="rf-panel__title rf-panel__title--inventory">
-            <span>Inventory</span>
-
-            <div className="rf-panel__filters">
-              <div className="rf-select">
-                <select
-                  value={filters.category}
-                  onChange={(event) =>
-                    handleFilterChange("category", event.target.value)
-                  }
-                >
-                  <option value="all">All</option>
-                  <option value="weapon">Weapons</option>
-                  <option value="armor">Armor</option>
-                  <option value="accessory">Accessories</option>
-                </select>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="rf-select">
-                <select
-                  value={filters.rarity}
-                  onChange={(event) =>
-                    handleFilterChange("rarity", event.target.value)
-                  }
-                >
-                  <option value="all">All Rarities</option>
-                  {rarities.map((rarity) => (
-                    <option key={rarity.id} value={rarity.id}>
-                      {rarity.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="rf-select">
-                <select
-                  value={filters.sortBy}
-                  onChange={(event) =>
-                    handleFilterChange("sortBy", event.target.value)
-                  }
-                >
-                  <option value="rarity">Sort Rarity</option>
-                  <option value="level">Sort Level</option>
-                  <option value="name">Sort Name</option>
-                </select>
-                <ChevronDown size={14} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rf-searchbar">
-            <Search size={15} />
-            <input
-              type="text"
-              placeholder="Search inventory..."
-              value={filters.search}
-              onChange={(event) =>
-                handleFilterChange("search", event.target.value)
-              }
-            />
-          </div>
-
-          <div className="rf-grid">
-            {visibleItems.length > 0 ? (
-              visibleItems.map((item) => {
-                const rarity = getItemRarity(item, rarities);
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`rf-grid__item ${
-                      selectedItemId === item.id ? "selected" : ""
-                    }`}
-                    style={{
-                      "--rarity-color": rarity?.color || "#7f7560"
-                    }}
-                    onClick={() => setSelectedItemId(item.id)}
-                  >
-                    <div className="rf-grid__thumb">
-                      <ItemThumb item={item} size="large" />
-                    </div>
-
-                    <div className="rf-grid__value">
-                      {getItemPower(item)}
-                    </div>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="rf-grid__empty">
-                No items match your filters.
-              </div>
-            )}
-          </div>
-
-          <div className="rf-grid__footer">
-            <span>{backpackItems.length} / 100</span>
-            <span>{filters.sortBy.toUpperCase()}</span>
-          </div>
-        </section>
-
-        {/* DETAILS */}
-        <aside className="rf-panel rf-details">
-          <div className="rf-panel__title">Item Details</div>
-
-          {selectedItem ? (
-            <div className="rf-details__content">
-              <div className="rf-details__header">
-                <div>
-                  <h2>{selectedItem.name}</h2>
-                  <p>
-                    {(selectedRarity?.name || "Common")}{" "}
-                    {selectedItem.category}
-                  </p>
-                </div>
-
-                <div className="rf-details__art">
-                  <ItemThumb item={selectedItem} size="detail" />
-                </div>
-              </div>
-
-              <div className="rf-details__power">
-                <strong>{getItemPower(selectedItem)}</strong>
-                <span>
-                  {selectedItem.slotId === "weapon"
-                    ? "Weapon Power"
-                    : "Equipment Rating"}
-                </span>
-              </div>
-
-              <div className="rf-details__stats">
-                <div><span>Attack</span><strong>{selectedItem.stats?.attack || 0}</strong></div>
-                <div><span>Defense</span><strong>{selectedItem.stats?.defense || 0}</strong></div>
-                <div><span>Health</span><strong>{selectedItem.stats?.health || 0}</strong></div>
-                <div><span>Crit</span><strong>{formatStat(selectedItem.stats?.crit || 0, "crit")}</strong></div>
-              </div>
-
-              <ul className="rf-details__comparison">
-                {Object.entries(comparison || {}).map(([key, value]) => {
-                  const diff = value?.difference || 0;
-
-                  return (
-                    <li
-                      key={key}
-                      className={
-                        diff > 0 ? "positive" : diff < 0 ? "negative" : ""
-                      }
-                    >
-                      {diff > 0 ? "+" : ""}
-                      {formatStat(diff, key)} {key}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <div className="rf-details__meta">
-                <span>Required Level {selectedItem.level}</span>
-                <span>Slot: {getSlotLabel(selectedItem.slotId)}</span>
-              </div>
-
-              <div className="rf-details__description">
-                {selectedItem.description}
-              </div>
-
-              {equippedSlotId ? (
-                <button
-                  type="button"
-                  className="rf-details__button rf-details__button--equipped"
-                  onClick={() => handleUnequip(equippedSlotId)}
-                >
-                  Equipped
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="rf-details__button"
-                  onClick={() => handleEquip(selectedItem.id)}
-                >
-                  Equip
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="rf-details__empty">
-              Select an item.
-            </div>
-          )}
-        </aside>
-      </main>
-
-      {/* FOOTER */}
-      <footer className="rf-footer">
-        <div className="rf-footer__shortcut"><span>Esc</span>Back</div>
-        <div className="rf-footer__shortcut"><span>R</span>Unequip</div>
-        <div className="rf-footer__shortcut"><span>F</span>Favorite</div>
-
-        <div className="rf-footer__notice">{notice}</div>
-      </footer>
+      <BottomBar
+        notice={notice}
+        isEquipped={isEquipped && activeTab === 'Inventory'}
+        canDismantle={canDismantle && activeTab === 'Inventory'}
+        favorite={favorite}
+        salvage={salvage}
+        onBack={handleBack}
+        onUnequip={() =>
+          selected?.slotId && handleUnequip(selected.slotId)
+        }
+        onFavorite={() => toggleFavorite(selectedId)}
+        onDismantle={handleDismantle}
+      />
     </div>
   );
 }
-
-export default App;
