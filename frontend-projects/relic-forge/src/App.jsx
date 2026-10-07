@@ -1,8 +1,7 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Compass, ChevronLeft } from "lucide-react";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Compass, ChevronLeft } from 'lucide-react';
-
-import { getAllGameData } from './services/dataService';
+import { getAllGameData } from "./services/dataService";
 
 import {
   findById,
@@ -15,20 +14,25 @@ import {
   saveInventoryState,
   equipItem,
   unequipItem,
-} from './utils/inventoryHelpers';
+} from "./utils/inventoryHelpers";
 
-import TopBar from './components/TopBar';
-import EquipmentSidebar from './components/EquipmentSidebar';
-import CharacterPanel from './components/CharacterPanel';
-import InventoryPanel from './components/InventoryPanel';
-import ItemDetails from './components/ItemDetails';
-import BottomBar from './components/BottomBar';
+// Main components
+import TopBar from "./components/TopBar";
+import EquipmentSidebar from "./components/EquipmentSidebar";
+import CharacterPanel from "./components/CharacterPanel";
+import InventoryPanel from "./components/InventoryPanel";
+import ItemDetails from "./components/ItemDetails";
+import BottomBar from "./components/BottomBar";
+
+// Pages
+import CharacterPage from "./pages/CharacterPage";
+import SkillsPage from "./pages/SkillsPage";
 
 const initialFilters = {
-  search: '',
-  category: 'all',
-  rarity: 'all',
-  sortBy: 'rarity',
+  search: "",
+  category: "all",
+  rarity: "all",
+  sortBy: "rarity",
 };
 
 function readLocal(key, fallback) {
@@ -44,24 +48,28 @@ export default function App() {
   const [data, setData] = useState(null);
   const [inventory, setInventory] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [activeTab, setActiveTab] = useState('Inventory');
+
+  const [activeTab, setActiveTab] = useState("Inventory");
   const [filters, setFilters] = useState(initialFilters);
 
   const [favorites, setFavorites] = useState(() =>
-    readLocal('relic-forge-favorites', [])
+    readLocal("relic-forge-favorites", []),
   );
 
   const [salvage, setSalvage] = useState(() =>
-    readLocal('relic-forge-salvage', 1250)
+    readLocal("relic-forge-salvage", 1250),
   );
 
   const [notice, setNotice] = useState(
-    'Select an item to inspect its attributes.'
+    "Select an item to inspect its attributes.",
   );
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // Load game data
+  // =========================================
+  // LOAD GAME DATA
+  // =========================================
+
   useEffect(() => {
     let isActive = true;
 
@@ -72,27 +80,23 @@ export default function App() {
         const character = result.characters[0];
 
         if (!character) {
-          throw new Error('No character available.');
+          throw new Error("No character available.");
         }
 
         const state = loadInventoryState(
           character,
           result.items,
-          result.equipmentSlots
+          result.equipmentSlots,
         );
 
         setData(result);
         setInventory(state);
 
-        setSelectedId(
-          state.equipment.weapon ||
-          state.ownedItemIds[0] ||
-          null
-        );
+        setSelectedId(state.equipment.weapon || state.ownedItemIds[0] || null);
       })
       .catch((e) => {
         if (isActive) {
-          setError(e.message || 'Could not load inventory.');
+          setError(e.message || "Could not load inventory.");
         }
       });
 
@@ -101,7 +105,10 @@ export default function App() {
     };
   }, []);
 
-  // Save inventory changes
+  // =========================================
+  // LOCAL STORAGE
+  // =========================================
+
   useEffect(() => {
     if (inventory) {
       saveInventoryState(inventory);
@@ -109,35 +116,32 @@ export default function App() {
   }, [inventory]);
 
   useEffect(() => {
-    localStorage.setItem(
-      'relic-forge-favorites',
-      JSON.stringify(favorites)
-    );
+    localStorage.setItem("relic-forge-favorites", JSON.stringify(favorites));
   }, [favorites]);
 
   useEffect(() => {
-    localStorage.setItem(
-      'relic-forge-salvage',
-      JSON.stringify(salvage)
-    );
+    localStorage.setItem("relic-forge-salvage", JSON.stringify(salvage));
   }, [salvage]);
 
-  // Character and inventory data
+  // =========================================
+  // GAME DATA
+  // =========================================
+
   const character = data?.characters[0];
 
   const items = useMemo(() => data?.items || [], [data]);
+
   const rarities = useMemo(() => data?.rarities || [], [data]);
 
   const selected = useMemo(
     () => findById(items, selectedId),
-    [items, selectedId]
+    [items, selectedId],
   );
 
   const rarity = getItemRarity(selected, rarities);
 
   const isEquipped = Boolean(
-    selected &&
-    Object.values(inventory?.equipment || {}).includes(selected.id)
+    selected && Object.values(inventory?.equipment || {}).includes(selected.id),
   );
 
   const compared = selected?.slotId
@@ -145,33 +149,56 @@ export default function App() {
     : null;
 
   const backpack = useMemo(
-    () => inventory ? getBackpackItems(inventory, items) : [],
-    [inventory, items]
+    () => (inventory ? getBackpackItems(inventory, items) : []),
+    [inventory, items],
   );
 
   const filteredItems = useMemo(
     () => filterAndSortItems(backpack, filters, rarities),
-    [backpack, filters, rarities]
+    [backpack, filters, rarities],
   );
 
   const stats = useMemo(
-    () => character && inventory
-      ? getCharacterStats(character, inventory, items)
-      : null,
-    [character, inventory, items]
+    () =>
+      character && inventory
+        ? getCharacterStats(character, inventory, items)
+        : null,
+    [character, inventory, items],
   );
 
-  const favorite = selected
-    ? favorites.includes(selected.id)
-    : false;
+  const favorite = selected ? favorites.includes(selected.id) : false;
 
   const canDismantle = Boolean(
-    selected &&
-    !isEquipped &&
-    inventory?.ownedItemIds.includes(selected.id)
+    selected && !isEquipped && inventory?.ownedItemIds.includes(selected.id),
   );
 
-  // Inventory interactions
+  // =========================================
+  // NAVIGATION
+  // =========================================
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const handleBack = useCallback(() => {
+    setActiveTab("Inventory");
+    setNotice("Inventory ready.");
+  }, []);
+
+  // Open an equipment item from Character page
+  const handleInspectItem = (itemId) => {
+    setSelectedId(itemId);
+    setActiveTab("Inventory");
+
+    setFilters(initialFilters);
+
+    setNotice("Inspecting equipped item.");
+  };
+
+  // =========================================
+  // INVENTORY FILTERS
+  // =========================================
+
   const handleFilter = (key, value) => {
     setFilters((current) => ({
       ...current,
@@ -179,54 +206,60 @@ export default function App() {
     }));
   };
 
-  const handleEquip = useCallback((itemId) => {
-    const item = findById(items, itemId);
+  // =========================================
+  // EQUIP ITEMS
+  // =========================================
 
-    if (!item || !inventory || !character) return;
+  const handleEquip = useCallback(
+    (itemId) => {
+      const item = findById(items, itemId);
 
-    if (!item.slotId) {
-      setNotice('This item cannot be equipped.');
-      return;
-    }
+      if (!item || !inventory || !character) return;
 
-    if (item.level > character.level) {
-      setNotice(
-        `Requires level ${item.level} to equip ${item.name}.`
-      );
-      return;
-    }
+      if (!item.slotId) {
+        setNotice("This item cannot be equipped.");
+        return;
+      }
 
-    const result = equipItem(
-      inventory,
-      itemId,
-      items,
-      data.equipmentSlots
-    );
+      if (item.level > character.level) {
+        setNotice(`Requires level ${item.level} to equip ${item.name}.`);
+        return;
+      }
 
-    setNotice(result.message);
+      const result = equipItem(inventory, itemId, items, data.equipmentSlots);
 
-    if (result.success) {
-      setInventory(result.state);
-      setSelectedId(itemId);
-    }
-  }, [inventory, items, data, character]);
+      setNotice(result.message);
 
-  const handleUnequip = useCallback((slotId) => {
-    if (!inventory || !slotId) return;
+      if (result.success) {
+        setInventory(result.state);
+        setSelectedId(itemId);
+      }
+    },
+    [inventory, items, data, character],
+  );
 
-    const result = unequipItem(
-      inventory,
-      slotId,
-      items,
-      data.equipmentSlots
-    );
+  // =========================================
+  // UNEQUIP ITEMS
+  // =========================================
 
-    setNotice(result.message);
+  const handleUnequip = useCallback(
+    (slotId) => {
+      if (!inventory || !slotId) return;
 
-    if (result.success) {
-      setInventory(result.state);
-    }
-  }, [inventory, items, data]);
+      const result = unequipItem(inventory, slotId, items, data.equipmentSlots);
+
+      setNotice(result.message);
+
+      if (result.success) {
+        setInventory(result.state);
+      }
+    },
+    [inventory, items, data],
+  );
+
+  // =========================================
+  // FAVORITES
+  // =========================================
 
   const toggleFavorite = useCallback((itemId) => {
     if (!itemId) return;
@@ -234,80 +267,72 @@ export default function App() {
     setFavorites((old) =>
       old.includes(itemId)
         ? old.filter((id) => id !== itemId)
-        : [...old, itemId]
+        : [...old, itemId],
     );
   }, []);
+
+  // =========================================
+  // DISMANTLE
+  // =========================================
 
   const handleDismantle = () => {
     if (!canDismantle || !selected) return;
 
     const confirmed = window.confirm(
-      `Dismantle ${selected.name} for 75 salvage coins? This cannot be undone.`
+      `Dismantle ${selected.name} for 75 salvage coins? This cannot be undone.`,
     );
 
     if (!confirmed) return;
 
+    const remainingItems = inventory.ownedItemIds.filter(
+      (id) => id !== selected.id,
+    );
+
     setInventory((old) => ({
       ...old,
-      ownedItemIds: old.ownedItemIds.filter(
-        (id) => id !== selected.id
-      ),
+      ownedItemIds: remainingItems,
     }));
 
-    setFavorites((old) =>
-      old.filter((id) => id !== selected.id)
-    );
+    setFavorites((old) => old.filter((id) => id !== selected.id));
 
     setSalvage((old) => old + 75);
+
     setNotice(`${selected.name} dismantled. +75 salvage coins.`);
 
-    setSelectedId(
-      inventory.ownedItemIds.find(
-        (id) => id !== selected.id
-      ) || null
-    );
+    setSelectedId(remainingItems[0] || null);
   };
 
-  const handleBack = useCallback(() => {
-    setActiveTab('Inventory');
-    setNotice('Inventory ready.');
-  }, []);
+  // =========================================
+  // KEYBOARD SHORTCUTS
+  // =========================================
 
-  // Keyboard shortcuts
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (
-        ['INPUT', 'SELECT', 'TEXTAREA'].includes(
-          event.target?.tagName
-        )
-      ) return;
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(event.target?.tagName))
+        return;
 
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         event.preventDefault();
         handleBack();
       }
 
-      if (activeTab !== 'Inventory') return;
+      if (activeTab !== "Inventory") return;
 
-      if (event.key.toLowerCase() === 'f' && selectedId) {
+      if (event.key.toLowerCase() === "f" && selectedId) {
         event.preventDefault();
         toggleFavorite(selectedId);
       }
 
-      if (
-        event.key.toLowerCase() === 'r' &&
-        isEquipped &&
-        selected?.slotId
-      ) {
+      if (event.key.toLowerCase() === "r" && isEquipped && selected?.slotId) {
         event.preventDefault();
         handleUnequip(selected.slotId);
       }
     };
 
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [
     activeTab,
@@ -318,6 +343,10 @@ export default function App() {
     handleUnequip,
     toggleFavorite,
   ]);
+
+  // =========================================
+  // LOADING / ERRORS
+  // =========================================
 
   if (error) {
     return (
@@ -337,15 +366,21 @@ export default function App() {
     );
   }
 
+  // =========================================
+  // MAIN APP
+  // =========================================
+
   return (
     <div className="relic-app">
+      {/* NAVBAR */}
       <TopBar
         character={character}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
       />
 
-      {activeTab === 'Inventory' ? (
+      {/* INVENTORY PAGE */}
+      {activeTab === "Inventory" && (
         <main className="main-layout">
           <EquipmentSidebar
             slots={data.equipmentSlots}
@@ -356,10 +391,7 @@ export default function App() {
             onSelect={setSelectedId}
           />
 
-          <CharacterPanel
-            character={character}
-            stats={stats}
-          />
+          <CharacterPanel character={character} stats={stats} />
 
           <InventoryPanel
             items={filteredItems}
@@ -385,43 +417,57 @@ export default function App() {
             onFavorite={toggleFavorite}
           />
         </main>
-      ) : (
+      )}
+
+      {/* CHARACTER PAGE */}
+      {activeTab === "Character" && (
+        <CharacterPage
+          character={character}
+          stats={stats}
+          equipment={inventory.equipment}
+          items={items}
+          slots={data.equipmentSlots}
+          rarities={rarities}
+          onInspectItem={handleInspectItem}
+          onOpenInventory={handleBack}
+        />
+      )}
+
+      {/* SKILLS PAGE */}
+      {activeTab === "Skills" && <SkillsPage character={character} />}
+
+      {/* FUTURE PAGES */}
+      {!["Inventory", "Character", "Skills"].includes(activeTab) && (
         <main className="other-section">
           <div className="other-section__crest">
             <Compass size={46} strokeWidth={1} />
           </div>
 
-          <span className="other-section__eyebrow">
-            Relic Forge
-          </span>
+          <span className="other-section__eyebrow">Relic Forge</span>
 
-          <h1>
-            {activeTab === 'Home' ? 'The Armory' : activeTab}
-          </h1>
+          <h1>{activeTab === "Home" ? "The Armory" : activeTab}</h1>
 
           <p>
-            {activeTab === 'Home'
-              ? 'Your adventure awaits. Return to your inventory to prepare for battle.'
-              : `The ${activeTab.toLowerCase()} section is not part of this inventory demo yet.`}
+            This section is currently being forged. Return to your inventory to
+            prepare for battle.
           </p>
 
           <button type="button" onClick={handleBack}>
             <ChevronLeft size={16} />
-            Return to inventory
+            Return to Inventory
           </button>
         </main>
       )}
 
+      {/* FOOTER */}
       <BottomBar
         notice={notice}
-        isEquipped={isEquipped && activeTab === 'Inventory'}
-        canDismantle={canDismantle && activeTab === 'Inventory'}
+        isEquipped={isEquipped && activeTab === "Inventory"}
+        canDismantle={canDismantle && activeTab === "Inventory"}
         favorite={favorite}
         salvage={salvage}
         onBack={handleBack}
-        onUnequip={() =>
-          selected?.slotId && handleUnequip(selected.slotId)
-        }
+        onUnequip={() => selected?.slotId && handleUnequip(selected.slotId)}
         onFavorite={() => toggleFavorite(selectedId)}
         onDismantle={handleDismantle}
       />

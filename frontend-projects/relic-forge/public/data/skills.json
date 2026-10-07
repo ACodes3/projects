@@ -1,0 +1,236 @@
+
+{
+  "trees": [
+    {
+      "id": "bladecraft",
+      "name": "Bladecraft",
+      "subtitle": "Mastery of Steel",
+      "description": "The ancient discipline of swordsmanship. Master devastating strikes, precise attacks, and techniques capable of overwhelming even the strongest enemies.",
+      "icon": "swords",
+      "skills": [
+        {
+          "id": "power-strike",
+          "name": "Power Strike",
+          "icon": "swords",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 1,
+          "description": "Channel your strength into a devastating melee attack that deals increased damage to a single enemy.",
+          "effect": "Increases melee attack damage by 8% per rank."
+        },
+        {
+          "id": "keen-edge",
+          "name": "Keen Edge",
+          "icon": "crosshair",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 3,
+          "description": "Through relentless training, your weapon strikes become more precise, exposing weaknesses in enemy defenses.",
+          "effect": "Increases critical hit chance by 2% per rank."
+        },
+        {
+          "id": "whirlwind",
+          "name": "Whirlwind",
+          "icon": "wind",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 10,
+          "requires": "power-strike",
+          "requiresRank": 2,
+          "description": "Spin your weapon in a deadly arc, striking nearby enemies with a powerful sweeping attack.",
+          "effect": "Deals 110% weapon damage to nearby enemies, increasing by 20% per rank."
+        },
+        {
+          "id": "executioner",
+          "name": "Executioner",
+          "icon": "skull",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 14,
+          "requires": "keen-edge",
+          "requiresRank": 2,
+          "description": "Learn to recognize the final moments of a weakened enemy and deliver a decisive finishing blow.",
+          "effect": "Deals 12% additional damage per rank to enemies below 30% health."
+        },
+        {
+          "id": "blade-storm",
+          "name": "Blade Storm",
+          "icon": "zap",
+          "tier": 3,
+          "maxRank": 3,
+          "requiredLevel": 22,
+          "requires": "whirlwind",
+          "requiresRank": 2,
+          "description": "Unleash a relentless storm of steel, striking multiple times with extraordinary speed and precision.",
+          "effect": "Performs 4 rapid strikes. Each rank increases total damage by 25%."
+        },
+        {
+          "id": "kingslayer",
+          "name": "Kingslayer",
+          "icon": "crown",
+          "tier": 3,
+          "maxRank": 1,
+          "requiredLevel": 30,
+          "requires": "executioner",
+          "requiresRank": 3,
+          "description": "The legendary technique of ancient swordmasters, capable of bringing even mighty kings to their knees.",
+          "effect": "Unleashes a devastating attack dealing 350% weapon damage and ignoring 20% enemy defense."
+        }
+      ]
+    },
+    {
+      "id": "guardian",
+      "name": "Guardian",
+      "subtitle": "The Unbroken Shield",
+      "description": "A discipline devoted to endurance, defense, and unwavering courage. Become an unstoppable protector capable of surviving the deadliest battles.",
+      "icon": "shield",
+      "skills": [
+        {
+          "id": "iron-skin",
+          "name": "Iron Skin",
+          "icon": "shield",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 1,
+          "description": "Harden your body and armor through rigorous training, reducing damage from enemy attacks.",
+          "effect": "Increases total defense by 5% per rank."
+        },
+        {
+          "id": "vitality",
+          "name": "Vitality",
+          "icon": "heart",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 3,
+          "description": "Strengthen your physical endurance and increase your ability to withstand prolonged combat.",
+          "effect": "Increases maximum health by 7% per rank."
+        },
+        {
+          "id": "shield-bash",
+          "name": "Shield Bash",
+          "icon": "swords",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 10,
+          "requires": "iron-skin",
+          "requiresRank": 2,
+          "description": "Strike an enemy with overwhelming defensive force, interrupting their attack and briefly stunning them.",
+          "effect": "Deals 80% defense-based damage and stuns the target for 1 second, increasing by 0.5 seconds per rank."
+        },
+        {
+          "id": "second-wind",
+          "name": "Second Wind",
+          "icon": "heart",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 14,
+          "requires": "vitality",
+          "requiresRank": 2,
+          "description": "Draw upon your last reserves of strength when close to defeat, recovering your fighting spirit.",
+          "effect": "Restores 10% maximum health per rank when health falls below 25%. Activates once per battle."
+        },
+        {
+          "id": "fortress",
+          "name": "Living Fortress",
+          "icon": "shield",
+          "tier": 3,
+          "maxRank": 3,
+          "requiredLevel": 22,
+          "requires": "shield-bash",
+          "requiresRank": 2,
+          "description": "Become an immovable fortress, reducing incoming damage while standing your ground against overwhelming enemies.",
+          "effect": "Reduces incoming damage by 10% per rank for 8 seconds."
+        },
+        {
+          "id": "last-stand",
+          "name": "Last Stand",
+          "icon": "crown",
+          "tier": 3,
+          "maxRank": 1,
+          "requiredLevel": 30,
+          "requires": "second-wind",
+          "requiresRank": 3,
+          "description": "Refuse to fall when others would perish. Through sheer determination, withstand a fatal blow and continue fighting.",
+          "effect": "Survive one fatal attack with 20% maximum health remaining. Activates once per battle."
+        }
+      ]
+    },
+    {
+      "id": "ember-arts",
+      "name": "Ember Arts",
+      "subtitle": "Flames of the Ancients",
+      "description": "Wield the forgotten power of primordial flame. Infuse weapons with fire, unleash devastating magic, and command the destructive force of the ancient embers.",
+      "icon": "flame",
+      "skills": [
+        {
+          "id": "ember-touch",
+          "name": "Ember Touch",
+          "icon": "flame",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 1,
+          "description": "Infuse your weapon with magical embers, allowing each strike to carry additional fire damage.",
+          "effect": "Adds 6% fire damage to weapon attacks per rank."
+        },
+        {
+          "id": "arcane-focus",
+          "name": "Arcane Focus",
+          "icon": "sparkles",
+          "tier": 1,
+          "maxRank": 5,
+          "requiredLevel": 3,
+          "description": "Improve your control over ancient magical energies, strengthening elemental attacks and abilities.",
+          "effect": "Increases elemental ability damage by 5% per rank."
+        },
+        {
+          "id": "flame-wave",
+          "name": "Flame Wave",
+          "icon": "flame",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 10,
+          "requires": "ember-touch",
+          "requiresRank": 2,
+          "description": "Release a blazing wave of fire that burns enemies standing in front of you.",
+          "effect": "Deals 100% fire damage in a frontal cone, increasing by 25% per rank."
+        },
+        {
+          "id": "lightning-brand",
+          "name": "Lightning Brand",
+          "icon": "zap",
+          "tier": 2,
+          "maxRank": 3,
+          "requiredLevel": 14,
+          "requires": "arcane-focus",
+          "requiresRank": 2,
+          "description": "Charge your weapon with volatile arcane electricity, causing attacks to release bursts of lightning.",
+          "effect": "Grants a 10% chance per rank to deal bonus lightning damage."
+        },
+        {
+          "id": "inferno",
+          "name": "Inferno",
+          "icon": "flame",
+          "tier": 3,
+          "maxRank": 3,
+          "requiredLevel": 22,
+          "requires": "flame-wave",
+          "requiresRank": 2,
+          "description": "Summon an expanding inferno that engulfs surrounding enemies in searing magical flames.",
+          "effect": "Deals 150% fire damage over 5 seconds, increasing by 30% per rank."
+        },
+        {
+          "id": "phoenix-soul",
+          "name": "Phoenix Soul",
+          "icon": "crown",
+          "tier": 3,
+          "maxRank": 1,
+          "requiredLevel": 30,
+          "requires": "inferno",
+          "requiresRank": 3,
+          "description": "Awaken the mythical essence of the phoenix, surrounding yourself with sacred flames that restore life and burn nearby enemies.",
+          "effect": "Restores 40% maximum health and unleashes a fiery explosion dealing 250% elemental damage."
+        }
+      ]
+    }
+  ]
+}
