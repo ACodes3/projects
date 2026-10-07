@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Compass, ChevronLeft } from "lucide-react";
 
 import { getAllGameData } from "./services/dataService";
 
@@ -29,8 +28,10 @@ import CharacterPage from "./pages/CharacterPage";
 import SkillsPage from "./pages/SkillsPage";
 import MapPage from "./pages/MapPage";
 import QuestsPage from "./pages/QuestsPage";
-import CodexPage from './pages/CodexPage';
-import SystemPage from './pages/SystemPage';
+import CodexPage from "./pages/CodexPage";
+import SystemPage from "./pages/SystemPage";
+
+import ArmoryPage from "./pages/ArmoryPage";
 
 const initialFilters = {
   search: "",
@@ -382,6 +383,18 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />
+      {/* ARMORY / HOME PAGE */}
+      {activeTab === "Home" && (
+        <ArmoryPage
+          character={character}
+          stats={stats}
+          items={items}
+          inventory={inventory}
+          rarities={rarities}
+          onNavigate={handleTabChange}
+          onInspectItem={handleInspectItem}
+        />
+      )}
 
       {/* INVENTORY PAGE */}
       {activeTab === "Inventory" && (
@@ -451,29 +464,6 @@ export default function App() {
 
       {/* SYSTEM PAGE */}
       {activeTab === "System" && <SystemPage character={character} />}
-
-      {/* FUTURE PAGES */}
-      {!["Inventory", "Character", "Skills", "Map", "Quests", "Codex", "System"].includes(activeTab) && (
-        <main className="other-section">
-          <div className="other-section__crest">
-            <Compass size={46} strokeWidth={1} />
-          </div>
-
-          <span className="other-section__eyebrow">Relic Forge</span>
-
-          <h1>{activeTab === "Home" ? "The Armory" : activeTab}</h1>
-
-          <p>
-            This section is currently being forged. Return to your inventory to
-            prepare for battle.
-          </p>
-
-          <button type="button" onClick={handleBack}>
-            <ChevronLeft size={16} />
-            Return to Inventory
-          </button>
-        </main>
-      )}
 
       {/* FOOTER */}
       <BottomBar
