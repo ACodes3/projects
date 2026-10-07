@@ -1,0 +1,390 @@
+{
+  "quests": [
+    {
+      "id": "ashes-of-the-road",
+      "name": "Ashes of the Road",
+      "subtitle": "The first trail beyond the keep",
+      "category": "Main Quest",
+      "type": "Story",
+      "status": "active",
+      "requiredLevel": 1,
+      "recommendedLevel": 3,
+      "difficulty": "Easy",
+      "region": "Ashen Keep",
+      "description": "Bandits have begun attacking travelers near the western road. The captain of Ashen Keep has asked you to clear the route and discover who is organizing the raids.",
+      "objectives": [
+        {
+          "id": "bandits",
+          "text": "Defeat Roadside Bandits",
+          "current": 6,
+          "required": 10
+        },
+        {
+          "id": "captain",
+          "text": "Speak with Captain Varyn",
+          "current": 1,
+          "required": 1
+        },
+        {
+          "id": "camp",
+          "text": "Locate the Bandit Camp",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "850"
+        },
+        {
+          "type": "xp",
+          "name": "Experience",
+          "amount": "1,200 XP"
+        },
+        {
+          "type": "weapon",
+          "name": "Warden Blade",
+          "amount": "Rare Weapon"
+        }
+      ],
+      "lore": "The roads were once guarded by the king's riders. Now only ashes remain."
+    },
+    {
+      "id": "whispers-among-the-roots",
+      "name": "Whispers Among the Roots",
+      "subtitle": "Something watches from the forest",
+      "category": "Side Quest",
+      "type": "Exploration",
+      "status": "active",
+      "requiredLevel": 6,
+      "recommendedLevel": 8,
+      "difficulty": "Moderate",
+      "region": "Whispering Woods",
+      "description": "Travelers speak of voices coming from beneath the ancient trees. An old hunter believes the forest itself has awakened and asks you to investigate the source.",
+      "objectives": [
+        {
+          "id": "shrines",
+          "text": "Inspect Ancient Shrines",
+          "current": 2,
+          "required": 4
+        },
+        {
+          "id": "wraiths",
+          "text": "Defeat Forest Wraiths",
+          "current": 3,
+          "required": 6
+        },
+        {
+          "id": "heart",
+          "text": "Find the Heartroot",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "1,150"
+        },
+        {
+          "type": "gem",
+          "name": "Moonstone",
+          "amount": "2"
+        },
+        {
+          "type": "armor",
+          "name": "Barkbound Mantle",
+          "amount": "Rare Armor"
+        }
+      ],
+      "lore": "Some forests remember every footstep."
+    },
+    {
+      "id": "forgemaster-lost",
+      "name": "The Lost Forgemaster",
+      "subtitle": "A hammer silent beneath the mountain",
+      "category": "Main Quest",
+      "type": "Dungeon",
+      "status": "available",
+      "requiredLevel": 12,
+      "recommendedLevel": 14,
+      "difficulty": "Moderate",
+      "region": "Ironspine Peaks",
+      "description": "The master smith of Ashen Keep vanished while searching for an abandoned dwarven forge. Follow his trail into Ironspine and uncover what happened.",
+      "objectives": [
+        {
+          "id": "mine",
+          "text": "Enter the Abandoned Mine",
+          "current": 0,
+          "required": 1
+        },
+        {
+          "id": "golems",
+          "text": "Defeat Stone Guardians",
+          "current": 0,
+          "required": 5
+        },
+        {
+          "id": "forgemaster",
+          "text": "Find the Forgemaster",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "1,900"
+        },
+        {
+          "type": "xp",
+          "name": "Experience",
+          "amount": "2,500 XP"
+        },
+        {
+          "type": "relic",
+          "name": "Forgemaster's Sigil",
+          "amount": "Epic Relic"
+        }
+      ],
+      "lore": "Steel remembers the hands that shaped it."
+    },
+    {
+      "id": "drowned-crown",
+      "name": "The Drowned Crown",
+      "subtitle": "A dead king still waits below",
+      "category": "Main Quest",
+      "type": "Dungeon",
+      "status": "available",
+      "requiredLevel": 17,
+      "recommendedLevel": 20,
+      "difficulty": "Hard",
+      "region": "Sunken Reach",
+      "description": "A crown belonging to a forgotten ruler is said to rest beneath the flooded ruins of the Sunken Reach. Recover it before the marsh cult finds it first.",
+      "objectives": [
+        {
+          "id": "temple",
+          "text": "Reach the Drowned Temple",
+          "current": 0,
+          "required": 1
+        },
+        {
+          "id": "revenants",
+          "text": "Defeat Marsh Revenants",
+          "current": 0,
+          "required": 8
+        },
+        {
+          "id": "crown",
+          "text": "Recover the Drowned Crown",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "2,800"
+        },
+        {
+          "type": "gem",
+          "name": "Black Pearl",
+          "amount": "3"
+        },
+        {
+          "type": "relic",
+          "name": "Drowned Crown",
+          "amount": "Epic Relic"
+        }
+      ],
+      "lore": "Kings drown like any other man. Their curses do not."
+    },
+    {
+      "id": "winter-hunt",
+      "name": "The Winter Hunt",
+      "subtitle": "Track the beast beneath the snow",
+      "category": "Hunt",
+      "type": "Boss",
+      "status": "available",
+      "requiredLevel": 22,
+      "recommendedLevel": 25,
+      "difficulty": "Hard",
+      "region": "Frostveil",
+      "description": "A monstrous frost warg has been hunting caravans crossing Frostveil. Track the creature through the blizzard and end its reign.",
+      "objectives": [
+        {
+          "id": "tracks",
+          "text": "Follow the Frost Warg Tracks",
+          "current": 0,
+          "required": 3
+        },
+        {
+          "id": "pack",
+          "text": "Defeat the Warg Pack",
+          "current": 0,
+          "required": 6
+        },
+        {
+          "id": "alpha",
+          "text": "Slay the Frostveil Alpha",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "3,600"
+        },
+        {
+          "type": "armor",
+          "name": "Frostfang Mantle",
+          "amount": "Epic Armor"
+        },
+        {
+          "type": "xp",
+          "name": "Experience",
+          "amount": "4,100 XP"
+        }
+      ],
+      "lore": "In Frostveil, hunger is stronger than fear."
+    },
+    {
+      "id": "ember-heart",
+      "name": "Heart of the Ember",
+      "subtitle": "The fire beneath the broken world",
+      "category": "Main Quest",
+      "type": "Boss",
+      "status": "available",
+      "requiredLevel": 27,
+      "recommendedLevel": 30,
+      "difficulty": "Severe",
+      "region": "Ember Wastes",
+      "description": "The ancient furnaces beneath the Ember Wastes have awakened. Descend into the volcanic temple and destroy the creature feeding upon its eternal flame.",
+      "objectives": [
+        {
+          "id": "temple",
+          "text": "Enter the Ember Temple",
+          "current": 0,
+          "required": 1
+        },
+        {
+          "id": "cores",
+          "text": "Destroy Molten Cores",
+          "current": 0,
+          "required": 4
+        },
+        {
+          "id": "guardian",
+          "text": "Defeat the Ember Guardian",
+          "current": 0,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "5,200"
+        },
+        {
+          "type": "weapon",
+          "name": "Emberfang",
+          "amount": "Legendary Weapon"
+        },
+        {
+          "type": "gem",
+          "name": "Ember Core",
+          "amount": "1"
+        }
+      ],
+      "lore": "Some flames were never meant to be extinguished."
+    },
+    {
+      "id": "first-blood",
+      "name": "First Blood",
+      "subtitle": "Every warrior begins somewhere",
+      "category": "Tutorial",
+      "type": "Story",
+      "status": "completed",
+      "requiredLevel": 1,
+      "recommendedLevel": 1,
+      "difficulty": "Easy",
+      "region": "Ashen Keep",
+      "description": "You completed your first combat trial and proved yourself worthy of carrying a blade beyond the walls of Ashen Keep.",
+      "objectives": [
+        {
+          "id": "dummy",
+          "text": "Defeat Training Dummy",
+          "current": 3,
+          "required": 3
+        },
+        {
+          "id": "trainer",
+          "text": "Speak with the Combat Trainer",
+          "current": 1,
+          "required": 1
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "250"
+        },
+        {
+          "type": "weapon",
+          "name": "Old Iron Sword",
+          "amount": "Common Weapon"
+        }
+      ],
+      "lore": "The first victory is rarely glorious, but it is never forgotten."
+    },
+    {
+      "id": "old-road",
+      "name": "The Old Road",
+      "subtitle": "Restore the forgotten passage",
+      "category": "Side Quest",
+      "type": "Exploration",
+      "status": "completed",
+      "requiredLevel": 4,
+      "recommendedLevel": 5,
+      "difficulty": "Easy",
+      "region": "Ashen Keep",
+      "description": "You cleared the collapsed road east of Ashen Keep and reopened a safe path for merchants and travelers.",
+      "objectives": [
+        {
+          "id": "debris",
+          "text": "Clear the Fallen Debris",
+          "current": 5,
+          "required": 5
+        },
+        {
+          "id": "wolves",
+          "text": "Defeat Road Wolves",
+          "current": 4,
+          "required": 4
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "name": "Iron Coins",
+          "amount": "450"
+        },
+        {
+          "type": "xp",
+          "name": "Experience",
+          "amount": "600 XP"
+        }
+      ],
+      "lore": "A road is only forgotten until someone walks it again."
+    }
+  ]
+}

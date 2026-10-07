@@ -28,6 +28,7 @@ import BottomBar from "./components/BottomBar";
 import CharacterPage from "./pages/CharacterPage";
 import SkillsPage from "./pages/SkillsPage";
 import MapPage from "./pages/MapPage";
+import QuestsPage from "./pages/QuestsPage";
 
 const initialFilters = {
   search: "",
@@ -439,8 +440,11 @@ export default function App() {
       {/* MAP PAGE */}
       {activeTab === "Map" && <MapPage character={character} />}
 
+      {/* QUESTS PAGE */}
+      {activeTab === "Quests" && <QuestsPage character={character} />}
+
       {/* FUTURE PAGES */}
-      {!["Inventory", "Character", "Skills", "Map"].includes(activeTab) && (
+      {!["Inventory", "Character", "Skills", "Map", "Quests"].includes(activeTab) && (
         <main className="other-section">
           <div className="other-section__crest">
             <Compass size={46} strokeWidth={1} />
