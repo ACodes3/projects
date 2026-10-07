@@ -2310,3 +2310,9 @@ select {
     margin-top: 8px;
   }
 }
+
+.relic-app {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}

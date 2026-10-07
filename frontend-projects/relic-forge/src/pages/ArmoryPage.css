@@ -1,0 +1,1039 @@
+/* =========================================
+   RELIC FORGE — ARMORY PAGE
+========================================= */
+
+.armory-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 14px 18px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+
+  color: #c7c3b7;
+
+  background:
+    radial-gradient(
+      ellipse at 48% 38%,
+      rgba(34, 51, 63, 0.24),
+      transparent 68%
+    );
+}
+
+/* =========================================
+   HERO
+========================================= */
+
+.armory-page__hero {
+  display: grid;
+
+  grid-template-columns:
+    minmax(250px, 1fr)
+    minmax(320px, 1.2fr)
+    minmax(230px, 0.9fr);
+
+  gap: 12px;
+
+  min-height: 430px;
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      rgba(49, 71, 84, 0.34),
+      transparent 60%
+    ),
+    linear-gradient(
+      145deg,
+      #0d1822,
+      #081119
+    );
+}
+
+/* =========================================
+   LEFT INTRO
+========================================= */
+
+.armory-page__intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-width: 0;
+  padding: 32px 25px;
+}
+
+.armory-page__eyebrow {
+  color: #a08863;
+
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.armory-page__intro h1 {
+  margin: 10px 0 15px;
+
+  color: #e8d5af;
+
+  font-size: clamp(35px, 4vw, 58px);
+  line-height: 0.98;
+  font-weight: normal;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.armory-page__intro h1 span {
+  color: #cfa568;
+}
+
+.armory-page__intro-text {
+  max-width: 440px;
+
+  margin: 0;
+
+  color: #9ea3a0;
+
+  font-size: 12px;
+  line-height: 1.85;
+}
+
+/* Hero buttons */
+
+.armory-page__hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  flex-wrap: wrap;
+
+  margin-top: 23px;
+}
+
+.armory-page__primary,
+.armory-page__secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 41px;
+
+  padding: 0 15px;
+
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  transition: 0.2s;
+}
+
+.armory-page__primary {
+  border: 1px solid #a27e4c;
+
+  background:
+    linear-gradient(
+      180deg,
+      #493923,
+      #1c1d1a
+    );
+
+  color: #efd39f;
+}
+
+.armory-page__primary:hover {
+  border-color: #dfb06d;
+
+  background:
+    linear-gradient(
+      180deg,
+      #62492b,
+      #2a231b
+    );
+
+  color: #fff0c8;
+}
+
+.armory-page__secondary {
+  border: 1px solid #465159;
+
+  background: #0d161e;
+  color: #9da4a2;
+}
+
+.armory-page__secondary:hover {
+  border-color: #867151;
+  color: #d7c2a0;
+}
+
+/* Character summary */
+
+.armory-page__character-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+
+  margin-top: 27px;
+}
+
+.armory-page__character-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-width: 0;
+
+  padding: 10px;
+
+  border: 1px solid #343f45;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(27, 39, 47, 0.7),
+      rgba(8, 15, 22, 0.6)
+    );
+}
+
+.armory-page__character-summary span {
+  color: #7f898a;
+
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.armory-page__character-summary strong {
+  color: #dbc49b;
+
+  font-size: 18px;
+  font-weight: normal;
+}
+
+/* =========================================
+   CENTER CHARACTER
+========================================= */
+
+.armory-page__character {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+
+  min-width: 0;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 42%,
+      rgba(90, 94, 86, 0.17),
+      transparent 56%
+    );
+}
+
+.armory-page__character-glow {
+  position: absolute;
+  inset: 7% 5%;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(147, 115, 66, 0.1),
+      transparent 65%
+    );
+
+  pointer-events: none;
+}
+
+.armory-page__crest {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  display: grid;
+  place-items: center;
+
+  width: 53px;
+  height: 53px;
+
+  border: 1px solid rgba(180, 145, 86, 0.35);
+  border-radius: 50%;
+
+  color: #b99a66;
+  opacity: 0.55;
+}
+
+.armory-page__character-image {
+  position: absolute;
+  inset: 10px 0 0;
+
+  width: 100%;
+  height: calc(100% - 48px);
+
+  object-fit: contain;
+  object-position: center bottom;
+
+  filter:
+    contrast(1.05)
+    drop-shadow(
+      0 14px 22px rgba(0, 0, 0, 0.62)
+    );
+}
+
+.armory-page__character-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 55px 15px 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(5, 11, 17, 0.96) 70%
+    );
+
+  text-align: center;
+}
+
+.armory-page__character-name span {
+  color: #ad946b;
+
+  font-size: 8px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.armory-page__character-name strong {
+  margin-top: 5px;
+
+  color: #ead7b3;
+
+  font-size: 18px;
+  font-weight: normal;
+
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.armory-page__character-name small {
+  margin-top: 4px;
+
+  color: #838a88;
+
+  font-size: 9px;
+  font-style: italic;
+}
+
+/* =========================================
+   RIGHT STATS
+========================================= */
+
+.armory-page__stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-width: 0;
+
+  padding: 24px 18px;
+
+  border-left: 1px solid rgba(68, 76, 79, 0.4);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(9, 17, 24, 0.45),
+      rgba(5, 11, 17, 0.75)
+    );
+}
+
+.armory-page__stats-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+
+  border-bottom: 1px solid #3a413f;
+}
+
+.armory-page__stats-heading span {
+  color: #9c8766;
+
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.armory-page__stats-heading strong {
+  color: #d4ba8d;
+
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.armory-page__stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  min-height: 48px;
+
+  border-bottom: 1px solid rgba(96, 105, 105, 0.18);
+}
+
+.armory-page__stat span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #9ba09b;
+
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.armory-page__stat svg {
+  color: #b0986e;
+}
+
+.armory-page__stat strong {
+  color: #e3d4b8;
+
+  font-size: 16px;
+  font-weight: normal;
+}
+
+/* Experience */
+
+.armory-page__xp {
+  margin-top: 18px;
+}
+
+.armory-page__xp > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 7px;
+}
+
+.armory-page__xp span {
+  color: #949b98;
+  font-size: 9px;
+}
+
+.armory-page__xp strong {
+  color: #d5bb89;
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.armory-page__xp-track {
+  height: 5px;
+
+  background: #283239;
+  overflow: hidden;
+}
+
+.armory-page__xp-track > span {
+  display: block;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #7e6039,
+      #d5af6c
+    );
+
+  box-shadow:
+    0 0 7px rgba(214, 162, 79, 0.3);
+}
+
+.armory-page__xp small {
+  display: block;
+  margin-top: 7px;
+
+  color: #717c80;
+  font-size: 8px;
+}
+
+/* =========================================
+   LOWER AREA
+========================================= */
+
+.armory-page__lower {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(270px, 0.85fr);
+
+  gap: 12px;
+
+  /* IMPORTANT */
+  flex: 0 0 auto;
+  min-height: 360px;
+}
+
+/* =========================================
+   SHARED SECTION HEADING
+========================================= */
+
+.armory-page__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  flex-shrink: 0;
+
+  padding: 13px 14px;
+
+  border-bottom: 1px solid #3a403e;
+}
+
+.armory-page__section-heading > div {
+  min-width: 0;
+}
+
+.armory-page__section-heading span {
+  color: #8f7b60;
+
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.armory-page__section-heading h2 {
+  margin: 4px 0 0;
+
+  color: #dfcaa5;
+
+  font-size: 13px;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.armory-page__section-heading > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #a99169;
+
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.armory-page__section-heading > button:hover {
+  color: #e0bf86;
+}
+
+/* =========================================
+   FEATURED RELICS
+========================================= */
+
+.armory-page__featured {
+  min-width: 0;
+  min-height: 360px;
+
+  overflow: hidden;
+}
+
+.armory-page__relic-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 7px;
+
+  padding: 10px;
+}
+
+.armory-page__relic {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 185px;
+
+  padding: 7px;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--relic-color) 45%,
+      #313c43
+    );
+
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      color-mix(
+        in srgb,
+        var(--relic-color) 12%,
+        transparent
+      ),
+      transparent 70%
+    ),
+    linear-gradient(
+      145deg,
+      #15222b,
+      #09121a
+    );
+
+  color: inherit;
+  text-align: left;
+
+  transition:
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.armory-page__relic:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--relic-color);
+
+  box-shadow:
+    inset 0 0 13px
+      color-mix(
+        in srgb,
+        var(--relic-color) 10%,
+        transparent
+      ),
+    0 5px 13px rgba(0, 0, 0, 0.25);
+}
+
+.armory-page__relic-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 1;
+  min-height: 105px;
+
+  overflow: hidden;
+}
+
+.armory-page__relic-art .item-art {
+  width: 100%;
+  height: 100%;
+}
+
+.armory-page__relic-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  margin-top: 5px;
+
+  min-width: 0;
+}
+
+.armory-page__relic-info > span {
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.armory-page__relic-info strong {
+  color: #e1d4b9;
+
+  font-size: 10px;
+  font-weight: normal;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.armory-page__relic-info small {
+  color: #7f8989;
+  font-size: 8px;
+}
+
+.armory-page__relic-power {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+
+  color: #dcd2bd;
+
+  font-size: 9px;
+
+  text-shadow:
+    0 1px 4px #000,
+    0 0 5px #000;
+}
+
+/* =========================================
+   QUICK NAVIGATION
+========================================= */
+
+.armory-page__navigation {
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+
+  min-width: 0;
+  overflow: hidden;
+}
+
+.armory-page__destination-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 9px;
+}
+
+.armory-page__destination {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  min-height: 55px;
+
+  padding: 7px;
+
+  border: 1px solid #303b43;
+
+  background:
+    linear-gradient(
+      110deg,
+      rgba(31, 43, 52, 0.72),
+      rgba(8, 15, 22, 0.88)
+    );
+
+  color: inherit;
+  text-align: left;
+
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.armory-page__destination:hover {
+  border-color: #94764e;
+  transform: translateX(2px);
+}
+
+.armory-page__destination-icon {
+  display: grid;
+  place-items: center;
+
+  width: 39px;
+  height: 39px;
+  flex-shrink: 0;
+
+  border: 1px solid #66533c;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(143, 103, 55, 0.2),
+      #101820 73%
+    );
+
+  color: #c4a06e;
+}
+
+.armory-page__destination-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.armory-page__destination-info strong {
+  color: #e0d2b7;
+
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: uppercase;
+}
+
+.armory-page__destination-info small {
+  color: #838d8e;
+
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.armory-page__destination > svg {
+  flex-shrink: 0;
+  color: #727d81;
+}
+
+/* Codex shortcut */
+
+.armory-page__codex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: auto 9px 9px;
+  padding: 10px;
+
+  border: 1px solid #6d5b42;
+
+  background:
+    linear-gradient(
+      110deg,
+      rgba(94, 70, 39, 0.16),
+      rgba(11, 18, 24, 0.86)
+    );
+
+  color: #c6b18d;
+  text-align: left;
+
+  transition: 0.2s;
+}
+
+.armory-page__codex:hover {
+  border-color: #ad8a57;
+}
+
+.armory-page__codex > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  flex: 1;
+}
+
+.armory-page__codex strong {
+  color: #dac6a3;
+
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: uppercase;
+}
+
+.armory-page__codex small {
+  color: #858e8e;
+
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+/* =========================================
+   SMALL DESKTOP
+========================================= */
+
+@media (max-width: 1250px) {
+  .armory-page {
+    padding: 11px;
+  }
+
+  .armory-page__hero {
+    grid-template-columns:
+      minmax(210px, 1fr)
+      minmax(260px, 1.1fr)
+      minmax(190px, 0.85fr);
+
+    min-height: 390px;
+  }
+
+  .armory-page__intro {
+    padding: 22px 17px;
+  }
+
+  .armory-page__intro h1 {
+    font-size: 40px;
+  }
+
+  .armory-page__intro-text {
+    font-size: 10px;
+  }
+
+  .armory-page__stats {
+    padding: 18px 13px;
+  }
+
+  .armory-page__relic {
+    min-height: 165px;
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+  .armory-page {
+    height: auto;
+    overflow: visible;
+  }
+
+  .armory-page__hero {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    grid-template-areas:
+      "intro character"
+      "stats stats";
+
+    min-height: 0;
+  }
+
+  .armory-page__intro {
+    grid-area: intro;
+
+    min-height: 470px;
+  }
+
+  .armory-page__character {
+    grid-area: character;
+
+    min-height: 470px;
+  }
+
+  .armory-page__stats {
+    grid-area: stats;
+
+    display: grid;
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+
+    gap: 7px;
+
+    border-left: 0;
+    border-top: 1px solid #3a4144;
+  }
+
+  .armory-page__stats-heading,
+  .armory-page__xp {
+    grid-column: 1 / -1;
+  }
+
+  .armory-page__stat {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    padding: 8px;
+
+    border: 1px solid #343f45;
+  }
+
+  .armory-page__lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+  .armory-page {
+    padding: 9px;
+  }
+
+  .armory-page__hero {
+    grid-template-columns: minmax(0, 1fr);
+
+    grid-template-areas:
+      "character"
+      "intro"
+      "stats";
+  }
+
+  .armory-page__character {
+    min-height: 500px;
+  }
+
+  .armory-page__intro {
+    min-height: 0;
+    padding: 22px 15px;
+  }
+
+  .armory-page__intro h1 {
+    font-size: 38px;
+  }
+
+  .armory-page__character-summary {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .armory-page__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .armory-page__relic-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 390px) {
+  .armory-page__hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .armory-page__primary,
+  .armory-page__secondary {
+    width: 100%;
+  }
+
+  .armory-page__character-summary {
+    grid-template-columns:
+      minmax(0, 1fr);
+  }
+
+  .armory-page__stats {
+    grid-template-columns:
+      minmax(0, 1fr);
+  }
+
+  .armory-page__relic-grid {
+    grid-template-columns:
+      minmax(0, 1fr);
+  }
+}
