@@ -29,6 +29,7 @@ import CharacterPage from "./pages/CharacterPage";
 import SkillsPage from "./pages/SkillsPage";
 import MapPage from "./pages/MapPage";
 import QuestsPage from "./pages/QuestsPage";
+import CodexPage from './pages/CodexPage';
 
 const initialFilters = {
   search: "",
@@ -443,8 +444,11 @@ export default function App() {
       {/* QUESTS PAGE */}
       {activeTab === "Quests" && <QuestsPage character={character} />}
 
+      {/* CODEX PAGE */}
+      {activeTab === "Codex" && <CodexPage character={character} />}
+
       {/* FUTURE PAGES */}
-      {!["Inventory", "Character", "Skills", "Map", "Quests"].includes(activeTab) && (
+      {!["Inventory", "Character", "Skills", "Map", "Quests", "Codex"].includes(activeTab) && (
         <main className="other-section">
           <div className="other-section__crest">
             <Compass size={46} strokeWidth={1} />

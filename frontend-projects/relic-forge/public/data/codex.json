@@ -1,0 +1,208 @@
+{
+  "entries": [
+    {
+      "id": "dire-wolf",
+      "category": "creatures",
+      "type": "creature",
+      "name": "Dire Wolf",
+      "subtitle": "Hunter of the Whispering Woods",
+      "discovered": true,
+      "region": "Whispering Woods",
+      "threat": "Low",
+      "description": "Large wolves that hunt in coordinated packs throughout the ancient forests. Their unusually intelligent behavior makes them far more dangerous than ordinary beasts.",
+      "notes": [
+        "Usually attacks in groups.",
+        "Weak to fire damage.",
+        "Pack leaders are significantly stronger."
+      ],
+      "lore": "The wolves learned long ago that travelers fear the sound of one howl. They fear silence even more."
+    },
+    {
+      "id": "forest-wraith",
+      "category": "creatures",
+      "type": "creature",
+      "name": "Forest Wraith",
+      "subtitle": "Spirit Bound to Ancient Roots",
+      "discovered": true,
+      "region": "Whispering Woods",
+      "threat": "Moderate",
+      "description": "A restless spirit formed when ancient magic binds a dying soul to the forest. Wraiths move silently through trees and attack anyone who disturbs forgotten shrines.",
+      "notes": [
+        "Highly resistant to physical attacks.",
+        "Arcane and fire attacks are effective.",
+        "Often appears near ruined shrines."
+      ],
+      "lore": "Not everything haunting the forest remembers that it was once human."
+    },
+    {
+      "id": "mountain-drake",
+      "category": "creatures",
+      "type": "creature",
+      "name": "Mountain Drake",
+      "subtitle": "Scaled Predator of Ironspine",
+      "discovered": true,
+      "region": "Ironspine Peaks",
+      "threat": "High",
+      "description": "A smaller cousin of the ancient dragons, adapted to the freezing winds and rocky cliffs of Ironspine. Its scales are prized by armorers.",
+      "notes": [
+        "Avoid its frontal breath attack.",
+        "The wings are vulnerable after landing.",
+        "Drake scales are valuable crafting materials."
+      ],
+      "lore": "The mountains belonged to the drakes before men ever carved roads through them."
+    },
+    {
+      "id": "voidborn-stalker",
+      "category": "creatures",
+      "type": "creature",
+      "name": "Voidborn Stalker",
+      "subtitle": "Creature Beyond the Veil",
+      "discovered": false,
+      "region": "The Voidscar",
+      "threat": "Extreme",
+      "description": "",
+      "notes": [],
+      "lore": ""
+    },
+
+    {
+      "id": "ashen-keep",
+      "category": "locations",
+      "type": "location",
+      "name": "Ashen Keep",
+      "subtitle": "Seat of the Fallen Crown",
+      "discovered": true,
+      "region": "Central Aetherion",
+      "faction": "Wardens of Ash",
+      "description": "A fortress city built upon the ruins of an older kingdom. Ashen Keep serves as a refuge for warriors, merchants, craftsmen, and travelers.",
+      "notes": [
+        "Contains the primary forge.",
+        "Merchants restock regularly.",
+        "The western gate leads toward the Whispering Woods."
+      ],
+      "lore": "The keep survived three kings, two invasions, and one dragon. Its people intend to survive whatever comes next."
+    },
+    {
+      "id": "whispering-woods-location",
+      "category": "locations",
+      "type": "location",
+      "name": "Whispering Woods",
+      "subtitle": "Forest of Forgotten Paths",
+      "discovered": true,
+      "region": "Western Aetherion",
+      "faction": "None",
+      "description": "An ancient forest where trees grow around ruined shrines and abandoned roads. Travelers often report hearing voices when no one else is nearby.",
+      "notes": [
+        "Contains several hidden shrines.",
+        "Moonwood can be harvested here.",
+        "Visibility becomes poor after dusk."
+      ],
+      "lore": "Some roads through the forest lead to places no map remembers."
+    },
+    {
+      "id": "dragonfall-crater",
+      "category": "locations",
+      "type": "location",
+      "name": "Dragonfall Crater",
+      "subtitle": "Grave of the First Dragon",
+      "discovered": false,
+      "region": "Eastern Aetherion",
+      "description": "",
+      "notes": [],
+      "lore": ""
+    },
+
+    {
+      "id": "duskreaver-codex",
+      "category": "relics",
+      "type": "relic",
+      "name": "Duskreaver",
+      "subtitle": "Blade Forged in Dying Starlight",
+      "discovered": true,
+      "region": "Unknown",
+      "rarity": "Legendary",
+      "description": "A massive blade forged from dark metal veined with burning light. Scholars disagree whether the weapon was forged by mortals or recovered from something that fell from the sky.",
+      "notes": [
+        "The blade remains warm even in freezing conditions.",
+        "Its inscriptions cannot be fully translated.",
+        "The weapon reacts to powerful enemies."
+      ],
+      "lore": "When the final star dies, Duskreaver is said to remember the light."
+    },
+    {
+      "id": "crown-of-ashes",
+      "category": "relics",
+      "type": "relic",
+      "name": "Crown of Ashes",
+      "subtitle": "Broken Crown of a Forgotten King",
+      "discovered": true,
+      "region": "Sunken Reach",
+      "rarity": "Epic",
+      "description": "A shattered royal crown blackened by fire. Although damaged beyond repair, its ancient defensive enchantments remain active.",
+      "notes": [
+        "Royal markings predate Ashen Keep.",
+        "Fragments emit weak protective magic.",
+        "Possibly connected to the Drowned Crown legend."
+      ],
+      "lore": "A broken crown still remembers the weight of a kingdom."
+    },
+    {
+      "id": "oathkeeper-charm-codex",
+      "category": "relics",
+      "type": "relic",
+      "name": "Oathkeeper's Charm",
+      "subtitle": "Pendant of the First Order",
+      "discovered": false,
+      "region": "Unknown",
+      "rarity": "Legendary",
+      "description": "",
+      "notes": [],
+      "lore": ""
+    },
+
+    {
+      "id": "fall-of-the-first-king",
+      "category": "lore",
+      "type": "lore",
+      "name": "Fall of the First King",
+      "subtitle": "Fragment from the Royal Chronicle",
+      "discovered": true,
+      "region": "Ashen Keep",
+      "description": "The first kingdom of Aetherion collapsed after its ruler attempted to command powers buried beneath the capital. The surviving records disagree on what he awakened.",
+      "notes": [
+        "The original capital may lie beneath modern Ashen Keep.",
+        "Several royal relics survived the kingdom's destruction.",
+        "References to a 'door beneath the throne' appear repeatedly."
+      ],
+      "lore": "The king sought immortality. What answered him offered something far worse."
+    },
+    {
+      "id": "the-first-dragon",
+      "category": "lore",
+      "type": "lore",
+      "name": "The First Dragon",
+      "subtitle": "Legend of the Burning Sky",
+      "discovered": true,
+      "region": "Dragonfall",
+      "description": "Ancient songs describe a creature of impossible size falling from the heavens in an age before the first kingdom. Its death reshaped the eastern mountains.",
+      "notes": [
+        "Dragonfall Crater may be the impact site.",
+        "Modern drakes could descend from this creature.",
+        "Dragon scales contain traces of unknown magic."
+      ],
+      "lore": "For seven nights the sky burned, and on the eighth morning a mountain stood where no mountain had been before."
+    },
+    {
+      "id": "the-voidscar-records",
+      "category": "lore",
+      "type": "lore",
+      "name": "The Voidscar Records",
+      "subtitle": "Restricted Scholar Manuscript",
+      "discovered": false,
+      "region": "The Voidscar",
+      "description": "",
+      "notes": [],
+      "lore": ""
+    }
+  ]
+}
