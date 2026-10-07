@@ -17,12 +17,11 @@
 
   color: #c8c4b9;
 
-  background:
-    radial-gradient(
-      ellipse at 50% 40%,
-      rgba(29, 48, 60, 0.26),
-      transparent 68%
-    );
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(29, 48, 60, 0.26),
+    transparent 68%
+  );
 }
 
 /* =========================================
@@ -70,12 +69,11 @@
 
   border: 1px solid #716044;
 
-  background:
-    linear-gradient(
-      110deg,
-      rgba(135, 101, 55, 0.15),
-      rgba(15, 23, 30, 0.85)
-    );
+  background: linear-gradient(
+    110deg,
+    rgba(135, 101, 55, 0.15),
+    rgba(15, 23, 30, 0.85)
+  );
 
   color: #d5b578;
 }
@@ -180,12 +178,11 @@
 
   border: 1px solid #303b43;
 
-  background:
-    linear-gradient(
-      110deg,
-      rgba(32, 43, 52, 0.68),
-      rgba(8, 15, 22, 0.84)
-    );
+  background: linear-gradient(
+    110deg,
+    rgba(32, 43, 52, 0.68),
+    rgba(8, 15, 22, 0.84)
+  );
 
   color: #c4c0b6;
   text-align: left;
@@ -204,15 +201,13 @@
 .map-page__region--selected {
   border-color: #c79d61;
 
-  background:
-    linear-gradient(
-      110deg,
-      rgba(116, 84, 43, 0.25),
-      rgba(12, 21, 29, 0.9)
-    );
+  background: linear-gradient(
+    110deg,
+    rgba(116, 84, 43, 0.25),
+    rgba(12, 21, 29, 0.9)
+  );
 
-  box-shadow:
-    inset 2px 0 0 #d2aa6a;
+  box-shadow: inset 2px 0 0 #d2aa6a;
 }
 
 .map-page__region--locked {
@@ -229,12 +224,7 @@
 
   border: 1px solid #62533e;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(128, 94, 50, 0.2),
-      #101820 72%
-    );
+  background: radial-gradient(circle, rgba(128, 94, 50, 0.2), #101820 72%);
 
   color: #c09f6f;
 }
@@ -324,23 +314,7 @@
 
   overflow: hidden;
 
-  background:
-    radial-gradient(
-      ellipse at 40% 50%,
-      rgba(57, 72, 65, 0.28),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 70% 60%,
-      rgba(102, 68, 38, 0.14),
-      transparent 40%
-    ),
-    linear-gradient(
-      145deg,
-      #10212b,
-      #0a151e 50%,
-      #071019
-    );
+  background: #071019;
 }
 
 /* Faux world-map terrain */
@@ -349,36 +323,18 @@
   position: absolute;
   inset: 0;
 
-  opacity: 0.92;
+  width: 100%;
+  height: 100%;
 
-  background:
-    radial-gradient(
-      ellipse at 25% 35%,
-      rgba(75, 100, 77, 0.45) 0 9%,
-      transparent 10%
-    ),
-    radial-gradient(
-      ellipse at 38% 56%,
-      rgba(67, 91, 73, 0.45) 0 13%,
-      transparent 14%
-    ),
-    radial-gradient(
-      ellipse at 57% 35%,
-      rgba(93, 92, 71, 0.35) 0 12%,
-      transparent 13%
-    ),
-    radial-gradient(
-      ellipse at 75% 58%,
-      rgba(105, 73, 49, 0.37) 0 14%,
-      transparent 15%
-    ),
-    radial-gradient(
-      ellipse at 60% 77%,
-      rgba(66, 80, 72, 0.3) 0 12%,
-      transparent 13%
-    );
+  object-fit: cover;
+  object-position: center;
 
-  filter: blur(1px);
+  z-index: 0;
+
+  pointer-events: none;
+  user-select: none;
+
+  filter: brightness(0.8) contrast(1.08) saturate(0.9);
 }
 
 /* Decorative map lines */
@@ -460,12 +416,7 @@
   border: 1px solid #806744;
   border-radius: 50%;
 
-  background:
-    radial-gradient(
-      circle,
-      #3c3324,
-      #111820 70%
-    );
+  background: radial-gradient(circle, #3c3324, #111820 70%);
 
   color: #cfad73;
 
@@ -607,12 +558,7 @@
 
   border: 1px solid #8c7049;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(149, 109, 56, 0.25),
-      #111a22 75%
-    );
+  background: radial-gradient(circle, rgba(149, 109, 56, 0.25), #111a22 75%);
 
   color: #d0ac72;
 
@@ -652,13 +598,7 @@
 
   margin: 16px 0;
 
-  background:
-    linear-gradient(
-      90deg,
-      #92724a,
-      #334047 70%,
-      transparent
-    );
+  background: linear-gradient(90deg, #92724a, #334047 70%, transparent);
 }
 
 .map-page__description {
@@ -782,12 +722,7 @@
 
   border: 1px solid #957549;
 
-  background:
-    linear-gradient(
-      180deg,
-      #423522,
-      #1d1e1b
-    );
+  background: linear-gradient(180deg, #423522, #1d1e1b);
 
   color: #e2c793;
   font-size: 10px;
@@ -800,12 +735,7 @@
 .map-page__actions button:hover:not(:disabled) {
   border-color: #d9aa63;
 
-  background:
-    linear-gradient(
-      180deg,
-      #624a2c,
-      #29231b
-    );
+  background: linear-gradient(180deg, #624a2c, #29231b);
 
   color: #ffe3ac;
 }
