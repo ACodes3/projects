@@ -1,0 +1,843 @@
+
+/* =========================================
+   RELIC FORGE — CHARACTER PAGE
+========================================= */
+
+.character-page {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  padding: 15px 18px;
+  overflow-y: auto;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 40%,
+      rgba(32, 49, 60, 0.28),
+      transparent 65%
+    ),
+    transparent;
+}
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+
+.character-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-shrink: 0;
+
+  padding: 0 5px 12px;
+  border-bottom: 1px solid #3c3b35;
+}
+
+.character-page__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #8f8065;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.character-page__header h1 {
+  margin: 0;
+
+  color: #e6d2aa;
+  font-size: 23px;
+  font-weight: normal;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.character-page__level {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 9px 15px;
+
+  border: 1px solid #65553b;
+  background: rgba(170, 132, 76, 0.07);
+
+  color: #dbbd85;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* =========================================
+   THREE-COLUMN LAYOUT
+========================================= */
+
+.character-page__layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(240px, 0.95fr)
+    minmax(280px, 1.3fr)
+    minmax(240px, 1fr);
+
+  gap: 12px;
+
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* =========================================
+   EQUIPPED RELICS PANEL
+========================================= */
+
+.character-page__equipment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 15px 12px;
+  overflow: hidden;
+}
+
+.character-page__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  flex-shrink: 0;
+
+  padding-bottom: 10px;
+  border-bottom: 1px solid #42413a;
+}
+
+.character-page__section-heading h2 {
+  margin: 0;
+
+  color: #d9c5a3;
+  font-size: 13px;
+  font-weight: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.character-page__section-heading > span {
+  color: #8e8c83;
+  font-size: 11px;
+}
+
+/* Equipment list */
+
+.character-page__gear-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  flex: 1;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Individual equipment slot */
+
+.character-page__gear {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  width: 100%;
+  min-height: 69px;
+
+  padding: 7px;
+
+  border: 1px solid #303b43;
+
+  background:
+    linear-gradient(
+      110deg,
+      rgba(35, 43, 49, 0.65),
+      rgba(9, 16, 23, 0.65)
+    );
+
+  color: #d2cdc0;
+  text-align: left;
+
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+
+.character-page__gear:hover:not(:disabled) {
+  border-color: #a78a5b;
+
+  background:
+    linear-gradient(
+      110deg,
+      rgba(94, 76, 49, 0.25),
+      rgba(14, 22, 30, 0.85)
+    );
+
+  transform: translateX(2px);
+}
+
+.character-page__gear:disabled {
+  opacity: 0.48;
+}
+
+.character-page__gear > svg {
+  flex-shrink: 0;
+  color: #777c7e;
+}
+
+/* Equipment artwork */
+
+.character-page__gear-art {
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  border: 1px solid
+    var(--gear-color, #46535b);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(107, 86, 53, 0.22),
+      #0a1018 75%
+    );
+}
+
+.character-page__gear-art img {
+  object-fit: contain;
+}
+
+/* Equipment information */
+
+.character-page__gear-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.character-page__gear-slot {
+  color: #8a928f;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.character-page__gear-info strong {
+  color: #e8dac0;
+  font-size: 12px;
+  font-weight: normal;
+  letter-spacing: 0.035em;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.character-page__gear-rarity {
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+/* Manage equipment button */
+
+.character-page__inventory-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  flex-shrink: 0;
+
+  width: 100%;
+  min-height: 39px;
+
+  border: 1px solid #8a6a45;
+
+  background:
+    linear-gradient(
+      180deg,
+      #332d23,
+      #171a1c
+    );
+
+  color: #e2cba3;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+
+  transition: 0.2s;
+}
+
+.character-page__inventory-link:hover {
+  border-color: #dbb47a;
+  color: #fff0cf;
+
+  background:
+    linear-gradient(
+      180deg,
+      #51412d,
+      #24211d
+    );
+}
+
+/* =========================================
+   CENTER CHARACTER PORTRAIT
+========================================= */
+
+.character-page__hero {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  isolation: isolate;
+
+  min-height: 0;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 40%,
+      rgba(56, 79, 93, 0.45),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      #111f2b,
+      #07121d
+    );
+}
+
+/* Atmospheric background */
+
+.character-page__hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      rgba(105, 111, 110, 0.16),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 50% 95%,
+      rgba(145, 106, 53, 0.13),
+      transparent 50%
+    );
+}
+
+/* Decorative emblem */
+
+.character-page__hero-emblem {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  border: 1px solid rgba(181, 147, 88, 0.35);
+  border-radius: 50%;
+
+  color: #b59a65;
+  opacity: 0.55;
+}
+
+/* Main portrait */
+
+.character-page__hero-image {
+  position: absolute;
+  top: 25px;
+  left: 0;
+
+  width: 100%;
+  height: calc(100% - 105px);
+
+  object-fit: contain;
+  object-position: center bottom;
+
+  filter:
+    contrast(1.05)
+    drop-shadow(
+      0 15px 23px rgba(0, 0, 0, 0.65)
+    );
+
+  z-index: 1;
+}
+
+/* Portrait information */
+
+.character-page__hero-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 50px 15px 22px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(5, 11, 18, 0.95) 65%
+    );
+
+  z-index: 2;
+}
+
+.character-page__hero-class {
+  color: #c0a374;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.character-page__hero-info h2 {
+  margin: 8px 0 6px;
+
+  color: #f0dfbc;
+  font-size: clamp(18px, 2vw, 29px);
+  font-weight: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  text-shadow: 0 2px 8px #000;
+}
+
+.character-page__hero-info p {
+  margin: 0;
+
+  color: #a5a093;
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* =========================================
+   RIGHT ATTRIBUTE COLUMN
+========================================= */
+
+.character-page__attributes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow-y: auto;
+}
+
+/* Battle attributes */
+
+.character-page__attribute-panel {
+  padding: 15px 13px;
+  flex-shrink: 0;
+}
+
+.character-page__stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin-top: 14px;
+}
+
+.character-page__stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 69px;
+
+  padding: 10px;
+
+  border: 1px solid #2e3942;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 45, 54, 0.65),
+      rgba(10, 18, 26, 0.3)
+    );
+}
+
+/* Attribute icons */
+
+.character-page__stat-icon {
+  display: grid;
+  place-items: center;
+
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+
+  border: 1px solid #5a4e3c;
+
+  background:
+    radial-gradient(
+      circle,
+      #333023,
+      #12171c
+    );
+
+  color: #c7a976;
+}
+
+/* Attribute information */
+
+.character-page__stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.character-page__stat-info > span {
+  color: #a7a49a;
+
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.character-page__stat-info strong {
+  color: #e9dcc4;
+
+  font-size: 23px;
+  line-height: 1.15;
+  font-weight: normal;
+}
+
+.character-page__stat-info small {
+  color: #78848a;
+  font-size: 10px;
+}
+
+.character-page__stat-info em {
+  color: #83b89c;
+  font-style: normal;
+}
+
+/* =========================================
+   PROGRESSION PANEL
+========================================= */
+
+.character-page__progress-panel {
+  padding: 15px 13px;
+  flex-shrink: 0;
+}
+
+.character-page__progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 17px 0 10px;
+}
+
+.character-page__progress-info span {
+  color: #a5a29a;
+  font-size: 11px;
+}
+
+.character-page__progress-info strong {
+  color: #ead1a1;
+  font-size: 23px;
+  font-weight: normal;
+}
+
+/* Experience bar */
+
+.character-page__progress-track {
+  height: 7px;
+
+  border: 1px solid #393e40;
+
+  background: #101820;
+  overflow: hidden;
+}
+
+.character-page__progress-track > div {
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #7f6038,
+      #c9a66e,
+      #f2d79b
+    );
+
+  box-shadow: 0 0 10px rgba(224, 174, 97, 0.45);
+
+  transition: width 0.4s ease;
+}
+
+.character-page__progress-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-top: 9px;
+
+  color: #8d918f;
+  font-size: 10px;
+}
+
+/* =========================================
+   CHARACTER LORE
+========================================= */
+
+.character-page__lore-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  min-height: 130px;
+
+  padding: 15px 13px;
+}
+
+.character-page__lore-panel p {
+  margin: 16px 0;
+
+  color: #a6a398;
+
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.character-page__lore-decoration {
+  margin-top: auto;
+  padding-top: 10px;
+
+  color: #8a714c;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+/* =========================================
+   SMALLER DESKTOP
+========================================= */
+
+@media (max-width: 1250px) {
+  .character-page {
+    padding: 12px;
+  }
+
+  .character-page__layout {
+    grid-template-columns:
+      minmax(195px, 1fr)
+      minmax(230px, 1.2fr)
+      minmax(205px, 1fr);
+
+    gap: 8px;
+  }
+
+  .character-page__equipment {
+    padding: 11px 8px;
+  }
+
+  .character-page__gear {
+    gap: 7px;
+    min-height: 58px;
+  }
+
+  .character-page__gear-art {
+    width: 43px;
+    height: 43px;
+  }
+
+  .character-page__gear-info strong {
+    font-size: 10px;
+  }
+
+  .character-page__stat {
+    gap: 8px;
+    padding: 7px;
+    min-height: 60px;
+  }
+
+  .character-page__stat-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .character-page__stat-info strong {
+    font-size: 19px;
+  }
+}
+
+/* =========================================
+   TABLETS
+========================================= */
+
+@media (max-width: 900px) {
+  .character-page {
+    height: auto;
+    overflow: visible;
+  }
+
+  .character-page__layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    grid-template-areas:
+      "hero equipment"
+      "attributes attributes";
+  }
+
+  .character-page__hero {
+    grid-area: hero;
+    min-height: 560px;
+  }
+
+  .character-page__equipment {
+    grid-area: equipment;
+    min-height: 560px;
+  }
+
+  .character-page__attributes {
+    grid-area: attributes;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+
+    overflow: visible;
+  }
+
+  .character-page__attribute-panel {
+    grid-row: span 2;
+  }
+
+  .character-page__gear-list {
+    overflow: visible;
+  }
+
+  .character-page__hero-image {
+    top: 35px;
+    height: calc(100% - 105px);
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .character-page {
+    padding: 10px;
+  }
+
+  .character-page__header h1 {
+    font-size: 18px;
+  }
+
+  .character-page__level {
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+
+  .character-page__layout {
+    grid-template-columns: minmax(0, 1fr);
+
+    grid-template-areas:
+      "hero"
+      "equipment"
+      "attributes";
+  }
+
+  .character-page__hero {
+    min-height: 520px;
+  }
+
+  .character-page__equipment {
+    min-height: 0;
+  }
+
+  .character-page__gear-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .character-page__gear {
+    min-width: 0;
+    min-height: 70px;
+  }
+
+  .character-page__gear > svg {
+    display: none;
+  }
+
+  .character-page__gear-art {
+    width: 45px;
+    height: 45px;
+  }
+
+  .character-page__attributes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .character-page__attribute-panel,
+  .character-page__progress-panel,
+  .character-page__lore-panel {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 380px) {
+  .character-page__gear-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .character-page__hero {
+    min-height: 440px;
+  }
+
+  .character-page__hero-info h2 {
+    font-size: 20px;
+  }
+}
