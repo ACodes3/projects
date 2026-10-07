@@ -1,0 +1,196 @@
+{
+  "regions": [
+    {
+      "id": "ashen-keep",
+      "name": "Ashen Keep",
+      "subtitle": "Seat of the Fallen Crown",
+      "icon": "castle",
+      "requiredLevel": 1,
+      "recommendedPower": 120,
+      "difficulty": "Safe",
+      "description": "An ancient fortress rebuilt upon the ruins of a fallen kingdom. Merchants, smiths, and wandering warriors gather here before venturing into the wild lands beyond its walls.",
+      "position": {
+        "x": 48,
+        "y": 58
+      },
+      "enemies": [
+        "Training Knight",
+        "Fortress Rat",
+        "Rogue Mercenary"
+      ],
+      "rewards": [
+        "Common Equipment",
+        "Iron Coins",
+        "Basic Crafting Materials"
+      ]
+    },
+    {
+      "id": "whispering-woods",
+      "name": "Whispering Woods",
+      "subtitle": "Forest of Forgotten Paths",
+      "icon": "forest",
+      "requiredLevel": 6,
+      "recommendedPower": 210,
+      "difficulty": "Low",
+      "description": "An ancient forest filled with twisted roots, forgotten shrines, and voices carried through the trees. Travelers who wander too far from the paths are rarely seen again.",
+      "position": {
+        "x": 28,
+        "y": 42
+      },
+      "enemies": [
+        "Dire Wolf",
+        "Thorn Stalker",
+        "Forest Wraith"
+      ],
+      "rewards": [
+        "Uncommon Equipment",
+        "Moonwood",
+        "Forest Essences"
+      ]
+    },
+    {
+      "id": "ironspine",
+      "name": "Ironspine Peaks",
+      "subtitle": "Mountains of Steel",
+      "icon": "mountain",
+      "requiredLevel": 12,
+      "recommendedPower": 340,
+      "difficulty": "Moderate",
+      "description": "A jagged mountain range rich with forgotten mines and ancient dwarven ruins. The bitter winds conceal creatures adapted to the unforgiving heights.",
+      "position": {
+        "x": 61,
+        "y": 29
+      },
+      "enemies": [
+        "Stone Brute",
+        "Mountain Drake",
+        "Ironclaw Harpy"
+      ],
+      "rewards": [
+        "Rare Ore",
+        "Rare Equipment",
+        "Forgemaster Components"
+      ]
+    },
+    {
+      "id": "sunken-reach",
+      "name": "Sunken Reach",
+      "subtitle": "Ruins Beneath the Mist",
+      "icon": "skull",
+      "requiredLevel": 17,
+      "recommendedPower": 430,
+      "difficulty": "Dangerous",
+      "description": "A drowned kingdom slowly consumed by black marshes. Half-buried temples rise from the fog while the restless dead patrol roads that no longer lead anywhere.",
+      "position": {
+        "x": 20,
+        "y": 72
+      },
+      "enemies": [
+        "Drowned Soldier",
+        "Plague Crawler",
+        "Marsh Revenant"
+      ],
+      "rewards": [
+        "Rare Relics",
+        "Ancient Coins",
+        "Necrotic Essence"
+      ]
+    },
+    {
+      "id": "frostveil",
+      "name": "Frostveil",
+      "subtitle": "The Eternal Winter",
+      "icon": "snow",
+      "requiredLevel": 22,
+      "recommendedPower": 550,
+      "difficulty": "Severe",
+      "description": "Beyond the northern passes lies a frozen wasteland where the sun barely rises. Great beasts roam beneath violent snowstorms and forgotten citadels remain buried beneath the ice.",
+      "position": {
+        "x": 41,
+        "y": 18
+      },
+      "enemies": [
+        "Frost Warg",
+        "Icebound Knight",
+        "Glacial Giant"
+      ],
+      "rewards": [
+        "Epic Equipment",
+        "Frost Crystals",
+        "Ancient Ice Runes"
+      ]
+    },
+    {
+      "id": "ember-wastes",
+      "name": "Ember Wastes",
+      "subtitle": "Land of Burning Stone",
+      "icon": "flame",
+      "requiredLevel": 27,
+      "recommendedPower": 680,
+      "difficulty": "Deadly",
+      "description": "A scorched land formed by ancient volcanic eruptions. Rivers of molten stone cut through blackened valleys while creatures born from flame guard the ruins of forgotten fire temples.",
+      "position": {
+        "x": 77,
+        "y": 68
+      },
+      "enemies": [
+        "Ash Demon",
+        "Molten Golem",
+        "Ember Drake"
+      ],
+      "rewards": [
+        "Epic Equipment",
+        "Ember Shards",
+        "Volcanic Forging Materials"
+      ]
+    },
+    {
+      "id": "dragonfall",
+      "name": "Dragonfall Crater",
+      "subtitle": "Grave of the First Dragon",
+      "icon": "flame",
+      "requiredLevel": 35,
+      "recommendedPower": 850,
+      "difficulty": "Extreme",
+      "description": "A colossal crater said to mark the place where the first great dragon fell from the heavens. The land remains warped by its ancient power and only the strongest warriors dare enter.",
+      "position": {
+        "x": 83,
+        "y": 38
+      },
+      "enemies": [
+        "Dragonkin Warrior",
+        "Ancient Wyvern",
+        "Ashscale Behemoth"
+      ],
+      "rewards": [
+        "Legendary Equipment",
+        "Dragon Scales",
+        "Ancient Dragon Relics"
+      ]
+    },
+    {
+      "id": "voidscar",
+      "name": "The Voidscar",
+      "subtitle": "Where the World Broke",
+      "icon": "skull",
+      "requiredLevel": 45,
+      "recommendedPower": 1100,
+      "difficulty": "Nightmare",
+      "description": "A shattered region where reality itself has begun to collapse. Strange creatures emerge from fractures in the earth and ancient structures float above a landscape consumed by darkness.",
+      "position": {
+        "x": 65,
+        "y": 82
+      },
+      "enemies": [
+        "Voidborn Stalker",
+        "Abyss Knight",
+        "The Nameless Horror"
+      ],
+      "rewards": [
+        "Legendary Relics",
+        "Void Crystals",
+        "Mythic Crafting Materials"
+      ]
+    }
+  ]
+}
