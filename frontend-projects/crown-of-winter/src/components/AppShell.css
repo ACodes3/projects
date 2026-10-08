@@ -1,0 +1,522 @@
+/* =========================================
+   CROWN OF WINTER — APP SHELL
+========================================= */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+
+  width: 100%;
+  height: 100vh;
+
+  overflow: hidden;
+
+  color: #dceef7;
+
+  background:
+    radial-gradient(
+      circle at 78% 18%,
+      rgba(92, 173, 214, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(
+      135deg,
+      #07111f,
+      #0a1728 52%,
+      #081321
+    );
+
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.app-shell__sidebar {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 0;
+
+  border-right:
+    1px solid rgba(173, 220, 239, 0.18);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 23, 39, 0.94),
+      rgba(5, 15, 27, 0.98)
+    );
+
+  box-shadow:
+    10px 0 35px rgba(0, 6, 14, 0.18);
+}
+
+/* =========================================
+   BRAND
+========================================= */
+
+.app-shell__brand {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 86px;
+
+  padding: 0 20px;
+
+  border-bottom:
+    1px solid rgba(173, 220, 239, 0.14);
+}
+
+.app-shell__brand > svg {
+  flex-shrink: 0;
+
+  color: #aee8ff;
+
+  filter:
+    drop-shadow(
+      0 0 8px rgba(122, 210, 248, 0.42)
+    );
+}
+
+.app-shell__brand > div {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.app-shell__brand strong {
+  color: #eef9fd;
+
+  font-size: 12px;
+  font-weight: normal;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.app-shell__brand span {
+  margin-top: 3px;
+
+  color: #7799aa;
+
+  font-size: 8px;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.app-shell__nav {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  flex: 1;
+
+  min-height: 0;
+
+  padding: 18px 12px;
+
+  overflow-y: auto;
+}
+
+.app-shell__nav-item {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 44px;
+
+  padding: 0 12px;
+
+  border:
+    1px solid transparent;
+
+  color: #8299a7;
+
+  text-decoration: none;
+
+  font-size: 10px;
+
+  letter-spacing: 0.06em;
+
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.app-shell__nav-item svg {
+  flex-shrink: 0;
+
+  color: #7398aa;
+
+  transition:
+    color 0.2s,
+    filter 0.2s;
+}
+
+.app-shell__nav-item:hover {
+  color: #d4edf7;
+
+  border-color:
+    rgba(156, 217, 242, 0.13);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(85, 157, 193, 0.10),
+      rgba(85, 157, 193, 0.025)
+    );
+
+  transform: translateX(2px);
+}
+
+.app-shell__nav-item:hover svg {
+  color: #a7e3fb;
+}
+
+/* active */
+
+.app-shell__nav-item--active {
+  color: #e6f7fd;
+
+  border-color:
+    rgba(159, 222, 247, 0.26);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(72, 145, 182, 0.22),
+      rgba(48, 111, 145, 0.07)
+    );
+
+  box-shadow:
+    inset 2px 0 0 #9edff9,
+    inset 0 0 18px rgba(120, 208, 246, 0.035);
+}
+
+.app-shell__nav-item--active svg {
+  color: #b8ecff;
+
+  filter:
+    drop-shadow(
+      0 0 6px rgba(118, 211, 250, 0.35)
+    );
+}
+
+/* subtle active glow */
+
+.app-shell__nav-item--active::after {
+  content: "";
+
+  position: absolute;
+
+  top: 8px;
+  right: -1px;
+
+  width: 1px;
+  height: calc(100% - 16px);
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(163, 228, 255, 0.6),
+      transparent
+    );
+}
+
+/* =========================================
+   SIDEBAR BOTTOM
+========================================= */
+
+.app-shell__sidebar-bottom {
+  padding: 12px;
+
+  border-top:
+    1px solid rgba(173, 220, 239, 0.13);
+
+  background:
+    rgba(3, 12, 22, 0.25);
+}
+
+/* =========================================
+   MAIN
+========================================= */
+
+.app-shell__main {
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr);
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+/* =========================================
+   TOP BAR
+========================================= */
+
+.app-shell__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  min-width: 0;
+
+  padding: 0 25px;
+
+  border-bottom:
+    1px solid rgba(173, 220, 239, 0.16);
+
+  background:
+    rgba(7, 20, 34, 0.38);
+
+  backdrop-filter: blur(8px);
+}
+
+.app-shell__topbar > div:first-child {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.app-shell__topbar-label {
+  color: #789cab;
+
+  font-size: 8px;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+.app-shell__topbar strong {
+  margin-top: 3px;
+
+  color: #d7edf6;
+
+  font-size: 11px;
+  font-weight: normal;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.app-shell__status {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+
+  color: #91b8c9;
+
+  font-size: 8px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.app-shell__status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #8fe7ff;
+
+  box-shadow:
+    0 0 5px #8fe7ff,
+    0 0 12px rgba(113, 212, 251, 0.55);
+}
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.app-shell__content {
+  position: relative;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: auto;
+
+  background:
+    radial-gradient(
+      circle at 70% 20%,
+      rgba(97, 177, 218, 0.06),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(9, 24, 39, 0.82),
+      rgba(5, 15, 27, 0.94)
+    );
+}
+
+/* faint palace-grid effect */
+
+.app-shell__content::before {
+  content: "";
+
+  position: fixed;
+  inset: 64px 0 0 240px;
+
+  pointer-events: none;
+
+  opacity: 0.12;
+
+  background-image:
+    linear-gradient(
+      rgba(142, 209, 237, 0.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(142, 209, 237, 0.04) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    48px 48px;
+}
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+.app-shell__nav::-webkit-scrollbar,
+.app-shell__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-shell__nav::-webkit-scrollbar-track,
+.app-shell__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-shell__nav::-webkit-scrollbar-thumb,
+.app-shell__content::-webkit-scrollbar-thumb {
+  background:
+    rgba(131, 188, 211, 0.24);
+
+  border-radius: 10px;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1050px) {
+  .app-shell {
+    grid-template-columns:
+      205px
+      minmax(0, 1fr);
+  }
+
+  .app-shell__brand {
+    padding: 0 14px;
+  }
+
+  .app-shell__brand strong {
+    font-size: 10px;
+  }
+
+  .app-shell__nav {
+    padding:
+      15px
+      8px;
+  }
+
+  .app-shell__nav-item {
+    padding:
+      0
+      10px;
+  }
+
+  .app-shell__content::before {
+    left: 205px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns:
+      68px
+      minmax(0, 1fr);
+  }
+
+  .app-shell__brand {
+    justify-content: center;
+
+    padding: 0;
+  }
+
+  .app-shell__brand > div {
+    display: none;
+  }
+
+  .app-shell__nav {
+    padding:
+      15px
+      7px;
+  }
+
+  .app-shell__nav-item {
+    justify-content: center;
+
+    padding: 0;
+  }
+
+  .app-shell__nav-item span {
+    display: none;
+  }
+
+  .app-shell__sidebar-bottom {
+    padding:
+      10px
+      7px;
+  }
+
+  .app-shell__topbar {
+    padding:
+      0
+      15px;
+  }
+
+  .app-shell__content::before {
+    left: 68px;
+  }
+}
