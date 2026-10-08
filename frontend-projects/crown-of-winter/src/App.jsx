@@ -14,6 +14,7 @@ import WarTablePage from './pages/WarTablePage';
 import HarbingersPage from './pages/HarbingersPage';
 import IntelligencePage from './pages/IntelligencePage';
 import GnosesPage from './pages/GnosesPage';
+import RelicVaultPage from './pages/RelicVaultPage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -91,7 +92,7 @@ function App() {
 
           <Route
             path="/relic-vault"
-            element={<PlaceholderPage title="Imperial Relic Vault" />}
+            element={<RelicVaultPage />}
           />
 
           <Route
