@@ -1,5 +1,6 @@
 /* =========================================
    CROWN OF WINTER — HARBINGERS
+   PORTRAIT ROSTER VERSION
 ========================================= */
 
 .harbingers-page {
@@ -12,13 +13,13 @@
 
   background:
     radial-gradient(
-      circle at 76% 18%,
-      rgba(95, 157, 197, 0.07),
+      circle at 78% 16%,
+      rgba(91, 158, 198, 0.07),
       transparent 28%
     ),
     radial-gradient(
-      circle at 18% 74%,
-      rgba(88, 77, 145, 0.045),
+      circle at 18% 72%,
+      rgba(81, 74, 136, 0.045),
       transparent 30%
     ),
     linear-gradient(
@@ -82,11 +83,12 @@
   color: #7894a1;
 
   font-size: 9px;
+
   line-height: 1.6;
 }
 
 /* =========================================
-   STATUS
+   HEADER STATUS
 ========================================= */
 
 .harbingers-page__status {
@@ -145,7 +147,7 @@
 .harbingers-page__hero {
   position: relative;
 
-  min-height: 185px;
+  min-height: 170px;
 
   margin-bottom: 14px;
 
@@ -156,9 +158,9 @@
 
   background:
     radial-gradient(
-      circle at 80% 50%,
-      rgba(98, 173, 210, 0.12),
-      transparent 28%
+      circle at 82% 45%,
+      rgba(98, 173, 210, 0.13),
+      transparent 27%
     ),
     linear-gradient(
       125deg,
@@ -178,8 +180,8 @@
   background:
     linear-gradient(
       90deg,
-      rgba(3, 13, 23, 0.2),
-      transparent 58%
+      rgba(3, 13, 23, 0.28),
+      transparent 60%
     );
 }
 
@@ -193,7 +195,7 @@
     translateY(-50%);
 
   color:
-    rgba(161, 221, 246, 0.12);
+    rgba(161, 221, 246, 0.11);
 }
 
 .harbingers-page__hero-decoration::before {
@@ -204,8 +206,8 @@
   top: 50%;
   left: 50%;
 
-  width: 165px;
-  height: 165px;
+  width: 150px;
+  height: 150px;
 
   transform:
     translate(-50%, -50%);
@@ -225,11 +227,10 @@
   flex-direction: column;
   justify-content: center;
 
-  min-height: 185px;
+  width: 60%;
+  min-height: 170px;
 
-  width: 58%;
-
-  padding: 27px 32px;
+  padding: 25px 31px;
 }
 
 .harbingers-page__hero-content > span {
@@ -247,7 +248,7 @@
 
   color: #eff8fc;
 
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 400;
 
   letter-spacing: 0.08em;
@@ -256,7 +257,7 @@
 }
 
 .harbingers-page__hero-content p {
-  max-width: 560px;
+  max-width: 550px;
 
   margin: 10px 0 0;
 
@@ -277,7 +278,7 @@
 
   gap: 7px;
 
-  margin-top: 15px;
+  margin-top: 14px;
 }
 
 .harbingers-page__hero-meta span {
@@ -310,7 +311,7 @@
 }
 
 /* =========================================
-   MAIN COMMAND LAYOUT
+   MAIN COMMAND AREA
 ========================================= */
 
 .harbingers-page__command {
@@ -318,17 +319,19 @@
 
   grid-template-columns:
     minmax(0, 1fr)
-    310px;
+    340px;
 
   gap: 12px;
 }
 
 /* =========================================
-   ROSTER
+   ROSTER PANEL
 ========================================= */
 
 .harbingers-page__roster {
   min-width: 0;
+
+  overflow: hidden;
 
   border:
     1px solid rgba(151, 209, 233, 0.14);
@@ -410,46 +413,39 @@
 }
 
 /* =========================================
-   HARBINGER CARD
+   HARBINGER PORTRAIT CARD
 ========================================= */
 
 .harbinger-card {
   position: relative;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: block;
 
-  min-height: 190px;
+  min-width: 0;
+  height: 240px;
 
-  padding: 12px;
+  padding: 0;
 
   overflow: hidden;
 
   border:
-    1px solid rgba(145, 201, 225, 0.12);
+    1px solid rgba(145, 201, 225, 0.13);
 
-  outline: none;
+  outline: 0;
 
-  background:
-    linear-gradient(
-      160deg,
-      rgba(15, 38, 57, 0.74),
-      rgba(6, 18, 30, 0.9)
-    );
+  background: #071521;
 
   color: inherit;
 
   font-family: inherit;
 
-  text-align: center;
+  text-align: left;
 
   cursor: pointer;
 
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    background 0.2s ease,
     box-shadow 0.2s ease;
 }
 
@@ -458,183 +454,129 @@
 
   position: absolute;
 
+  z-index: 5;
+
   top: 0;
-  left: 50%;
+  left: 0;
 
-  width: 40%;
+  width: 45%;
   height: 1px;
-
-  transform:
-    translateX(-50%);
 
   background:
     linear-gradient(
       90deg,
-      transparent,
-      rgba(164, 228, 252, 0.54),
+      rgba(166, 229, 253, 0.65),
       transparent
     );
 
-  opacity: 0.25;
+  opacity: 0.3;
 
   transition: opacity 0.2s ease;
 }
 
-.harbinger-card::after {
-  content: "";
-
-  position: absolute;
-
-  inset: 7px;
-
-  border:
-    1px solid rgba(144, 202, 226, 0.035);
-
-  pointer-events: none;
-}
-
 .harbinger-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 
   border-color:
-    rgba(158, 222, 247, 0.27);
-
-  background:
-    linear-gradient(
-      160deg,
-      rgba(17, 45, 66, 0.86),
-      rgba(7, 22, 36, 0.94)
-    );
+    rgba(172, 229, 251, 0.34);
 
   box-shadow:
-    0 8px 20px rgba(0, 7, 14, 0.19);
+    0 10px 24px rgba(0, 7, 14, 0.26);
 }
 
 .harbinger-card:hover::before {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 /* =========================================
-   NUMBER
+   CARD IMAGE
+========================================= */
+
+.harbinger-card__image {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center 35%;
+
+  filter:
+    brightness(0.8)
+    contrast(1.04)
+    saturate(0.88);
+
+  transform: scale(1.01);
+
+  transition:
+    transform 0.35s ease,
+    filter 0.25s ease;
+}
+
+.harbinger-card:hover .harbinger-card__image {
+  transform: scale(1.045);
+
+  filter:
+    brightness(0.9)
+    contrast(1.04)
+    saturate(0.98);
+}
+
+/* =========================================
+   CARD IMAGE OVERLAY
+========================================= */
+
+.harbinger-card__image-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 9, 16, 0.12) 0%,
+      rgba(2, 9, 16, 0.04) 34%,
+      rgba(3, 12, 21, 0.38) 58%,
+      rgba(3, 13, 23, 0.92) 84%,
+      rgba(3, 13, 23, 0.98) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(3, 12, 21, 0.2),
+      transparent 25%,
+      transparent 75%,
+      rgba(3, 12, 21, 0.15)
+    );
+}
+
+/* =========================================
+   CARD NUMBER
 ========================================= */
 
 .harbinger-card__number {
   position: absolute;
 
-  top: 8px;
-  left: 9px;
+  z-index: 4;
 
-  color: #4e6d7a;
+  top: 9px;
+  left: 10px;
 
-  font-size: 6px;
-
-  letter-spacing: 0.12em;
-}
-
-/* =========================================
-   CREST
-========================================= */
-
-.harbinger-card__crest {
-  position: relative;
-
-  display: grid;
-  place-items: center;
-
-  width: 64px;
-  height: 64px;
-
-  margin-top: 11px;
-
-  border:
-    1px solid rgba(160, 222, 247, 0.18);
-
-  border-radius: 50%;
-
-  color: #8dd5ef;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(97, 177, 214, 0.13),
-      rgba(8, 26, 40, 0.12) 66%,
-      transparent 68%
-    );
-
-  transition:
-    border-color 0.2s,
-    color 0.2s,
-    box-shadow 0.2s;
-}
-
-.harbinger-card__crest::before {
-  content: "";
-
-  position: absolute;
-
-  inset: 7px;
-
-  border:
-    1px solid rgba(162, 220, 243, 0.07);
-
-  border-radius: 50%;
-}
-
-.harbinger-card:hover .harbinger-card__crest {
-  border-color:
-    rgba(175, 231, 252, 0.35);
-
-  color: #b8efff;
-
-  box-shadow:
-    0 0 18px rgba(100, 205, 244, 0.08);
-}
-
-/* =========================================
-   IDENTITY
-========================================= */
-
-.harbinger-card__identity {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  margin-top: 12px;
-}
-
-.harbinger-card__identity > span {
-  color: #688d9d;
+  color: rgba(180, 223, 240, 0.58);
 
   font-size: 6px;
 
-  letter-spacing: 0.18em;
+  letter-spacing: 0.13em;
 
-  text-transform: uppercase;
-}
-
-.harbinger-card__identity strong {
-  margin-top: 4px;
-
-  color: #dbeef5;
-
-  font-size: 11px;
-  font-weight: 400;
-
-  letter-spacing: 0.07em;
-
-  text-transform: uppercase;
-}
-
-.harbinger-card__identity small {
-  margin-top: 4px;
-
-  color: #627f8b;
-
-  font-size: 6px;
-
-  letter-spacing: 0.11em;
-
-  text-transform: uppercase;
+  text-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 /* =========================================
@@ -642,38 +584,164 @@
 ========================================= */
 
 .harbinger-card__status {
-  margin-top: auto;
+  position: absolute;
 
-  padding-top: 11px;
+  z-index: 4;
 
-  color: #7594a1;
+  top: 9px;
+  right: 10px;
+
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 21px;
+
+  padding: 0 7px;
+
+  border:
+    1px solid rgba(151, 211, 235, 0.16);
+
+  background:
+    rgba(4, 16, 27, 0.68);
+
+  backdrop-filter: blur(3px);
+
+  color: #8fc7da;
 
   font-size: 6px;
 
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
 
   text-transform: uppercase;
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .harbinger-card__status--deployed,
 .harbinger-card__status--active {
-  color: #8fc9dc;
+  color: #a3dced;
 }
 
 .harbinger-card__status--palace,
 .harbinger-card__status--snezhnaya,
 .harbinger-card__status--imperial-command {
-  color: #87cdb7;
+  color: #97d6c1;
 }
 
 .harbinger-card__status--classified,
 .harbinger-card__status--research {
-  color: #c6a96b;
+  color: #d7bb7b;
 }
 
 .harbinger-card__status--archived,
 .harbinger-card__status--fallen {
-  color: #9a7981;
+  color: #bf9299;
+}
+
+/* =========================================
+   SMALL CARD INSIGNIA
+========================================= */
+
+.harbinger-card__crest {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 50%;
+  bottom: 75px;
+
+  display: grid;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+
+  border:
+    1px solid rgba(170, 225, 247, 0.25);
+
+  background:
+    rgba(6, 25, 39, 0.64);
+
+  color: #a5def3;
+
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.24);
+}
+
+.harbinger-card__crest svg {
+  transform: rotate(-45deg);
+}
+
+/* =========================================
+   CARD IDENTITY
+========================================= */
+
+.harbinger-card__identity {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding:
+    11px 10px 14px;
+
+  text-align: center;
+}
+
+.harbinger-card__identity > span {
+  color: #8db4c3;
+
+  font-size: 6px;
+
+  letter-spacing: 0.19em;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.75);
+}
+
+.harbinger-card__identity strong {
+  margin-top: 4px;
+
+  color: #f0f8fb;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 2px 7px rgba(0, 0, 0, 0.85);
+}
+
+.harbinger-card__identity small {
+  margin-top: 4px;
+
+  color: #7793a0;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 /* =========================================
@@ -682,43 +750,43 @@
 
 .harbinger-card--selected {
   border-color:
-    rgba(184, 235, 255, 0.46);
-
-  background:
-    radial-gradient(
-      circle at 50% 36%,
-      rgba(91, 181, 220, 0.12),
-      transparent 36%
-    ),
-    linear-gradient(
-      160deg,
-      rgba(20, 51, 73, 0.95),
-      rgba(7, 23, 37, 0.98)
-    );
+    rgba(194, 239, 255, 0.62);
 
   box-shadow:
-    inset 0 0 24px rgba(113, 211, 248, 0.035),
-    0 0 18px rgba(87, 185, 225, 0.055);
+    0 0 0 1px rgba(146, 220, 247, 0.1),
+    0 0 20px rgba(99, 196, 234, 0.09),
+    0 10px 24px rgba(0, 7, 14, 0.25);
 }
 
 .harbinger-card--selected::before {
   opacity: 1;
 }
 
-.harbinger-card--selected .harbinger-card__crest {
-  color: #d8f7ff;
+.harbinger-card--selected
+.harbinger-card__image {
+  filter:
+    brightness(0.94)
+    contrast(1.04)
+    saturate(1);
+}
 
+.harbinger-card--selected
+.harbinger-card__crest {
   border-color:
-    rgba(195, 241, 255, 0.62);
+    rgba(202, 243, 255, 0.58);
+
+  color: #e1f8ff;
+
+  background:
+    rgba(14, 45, 64, 0.78);
 
   box-shadow:
-    0 0 22px rgba(105, 216, 255, 0.13),
-    inset 0 0 15px rgba(141, 224, 253, 0.06);
+    0 0 15px rgba(112, 215, 251, 0.13);
 }
 
 .harbinger-card--selected
 .harbinger-card__identity strong {
-  color: #f1fbff;
+  color: #ffffff;
 }
 
 /* =========================================
@@ -739,8 +807,8 @@
   background:
     linear-gradient(
       155deg,
-      rgba(11, 31, 47, 0.94),
-      rgba(5, 16, 27, 0.97)
+      rgba(11, 31, 47, 0.95),
+      rgba(5, 16, 27, 0.98)
     );
 }
 
@@ -798,108 +866,114 @@
 }
 
 /* =========================================
-   DOSSIER PORTRAIT
+   LARGE DOSSIER PORTRAIT
 ========================================= */
 
 .harbinger-dossier__portrait {
   position: relative;
 
+  height: 300px;
+
+  overflow: hidden;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.08);
+
+  background: #06121e;
+}
+
+.harbinger-dossier__portrait-image {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center 28%;
+
+  filter:
+    brightness(0.82)
+    contrast(1.04)
+    saturate(0.92);
+
+  transform: scale(1.01);
+}
+
+/* =========================================
+   PORTRAIT OVERLAY
+========================================= */
+
+.harbinger-dossier__portrait-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 9, 16, 0.05) 0%,
+      rgba(3, 11, 19, 0.08) 35%,
+      rgba(3, 12, 21, 0.46) 64%,
+      rgba(3, 13, 23, 0.94) 90%,
+      rgba(3, 13, 23, 1) 100%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================
+   PORTRAIT TEXT
+========================================= */
+
+.harbinger-dossier__portrait-content {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  padding: 24px 15px 19px;
+  padding:
+    20px 16px 19px;
 
   text-align: center;
-
-  border-bottom:
-    1px solid rgba(148, 202, 225, 0.08);
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(84, 165, 204, 0.08),
-      transparent 45%
-    );
 }
 
-.harbinger-dossier__portrait-ring {
-  position: relative;
-
+.harbinger-dossier__portrait-icon {
   display: grid;
   place-items: center;
 
-  width: 122px;
-  height: 122px;
+  width: 38px;
+  height: 38px;
+
+  margin-bottom: 9px;
+
+  transform: rotate(45deg);
 
   border:
-    1px solid rgba(164, 223, 246, 0.2);
-
-  border-radius: 50%;
-
-  box-shadow:
-    0 0 28px rgba(89, 184, 224, 0.055);
-}
-
-.harbinger-dossier__portrait-ring::before {
-  content: "";
-
-  position: absolute;
-
-  inset: 8px;
-
-  border:
-    1px solid rgba(158, 216, 240, 0.08);
-
-  border-radius: 50%;
-}
-
-.harbinger-dossier__portrait-ring::after {
-  content: "";
-
-  position: absolute;
-
-  width: 145px;
-  height: 1px;
+    1px solid rgba(177, 230, 251, 0.29);
 
   background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(149, 221, 248, 0.3),
-      transparent
-    );
+    rgba(7, 27, 42, 0.67);
+
+  color: #afe6f9;
 }
 
-.harbinger-dossier__portrait-inner {
-  display: grid;
-  place-items: center;
-
-  width: 88px;
-  height: 88px;
-
-  border-radius: 50%;
-
-  color: #afe8fa;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(101, 190, 226, 0.15),
-      rgba(8, 25, 39, 0.12) 68%,
-      transparent 70%
-    );
-
-  filter:
-    drop-shadow(
-      0 0 10px rgba(112, 212, 249, 0.11)
-    );
+.harbinger-dossier__portrait-icon svg {
+  transform: rotate(-45deg);
 }
 
-.harbinger-dossier__portrait > span {
-  margin-top: 15px;
-
-  color: #718f9c;
+.harbinger-dossier__portrait-content > span {
+  color: #8eb6c5;
 
   font-size: 6px;
 
@@ -908,23 +982,26 @@
   text-transform: uppercase;
 }
 
-.harbinger-dossier__portrait h3 {
+.harbinger-dossier__portrait-content h3 {
   margin: 5px 0 0;
 
-  color: #eef8fb;
+  color: #f2faff;
 
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 400;
 
   letter-spacing: 0.08em;
 
   text-transform: uppercase;
+
+  text-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.85);
 }
 
-.harbinger-dossier__portrait small {
+.harbinger-dossier__portrait-content small {
   margin-top: 4px;
 
-  color: #678592;
+  color: #758f9a;
 
   font-size: 6px;
 
@@ -942,7 +1019,8 @@
 
   gap: 6px;
 
-  padding: 12px 14px 0;
+  padding:
+    12px 14px 0;
 }
 
 .harbinger-dossier__stats > div {
@@ -985,11 +1063,12 @@
 }
 
 /* =========================================
-   DESCRIPTION
+   DOSSIER DESCRIPTION
 ========================================= */
 
 .harbinger-dossier__description {
-  padding: 15px 14px 0;
+  padding:
+    15px 14px 0;
 }
 
 .harbinger-dossier__description > span {
@@ -1022,7 +1101,9 @@
 
   gap: 9px;
 
-  margin: 15px 14px 0;
+  margin:
+    15px 14px 0;
+
   padding: 11px;
 
   border:
@@ -1085,9 +1166,11 @@
   min-height: 43px;
 
   margin-top: auto;
+
   padding: 0 14px;
 
   border: 0;
+
   border-top:
     1px solid rgba(151, 207, 230, 0.09);
 
@@ -1129,12 +1212,16 @@
   .harbingers-page__command {
     grid-template-columns:
       minmax(0, 1fr)
-      280px;
+      300px;
   }
 
   .harbingers-page__roster-grid {
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
+  }
+
+  .harbinger-card {
+    height: 250px;
   }
 }
 
@@ -1162,6 +1249,18 @@
       repeat(3, minmax(0, 1fr));
   }
 
+  .harbinger-card {
+    height: 230px;
+  }
+
+  .harbinger-dossier__portrait {
+    height: 380px;
+  }
+
+  .harbinger-dossier__portrait-image {
+    object-position: center 25%;
+  }
+
   .harbinger-dossier__button {
     margin-top: 18px;
   }
@@ -1181,12 +1280,12 @@
   }
 
   .harbingers-page__hero {
-    min-height: 210px;
+    min-height: 205px;
   }
 
   .harbingers-page__hero-content {
     width: 100%;
-    min-height: 210px;
+    min-height: 205px;
 
     padding: 23px;
   }
@@ -1210,6 +1309,18 @@
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
+
+  .harbinger-card {
+    height: 245px;
+  }
+
+  .harbinger-card__status {
+    font-size: 5px;
+  }
+
+  .harbinger-dossier__portrait {
+    height: 330px;
+  }
 }
 
 /* =========================================
@@ -1222,6 +1333,6 @@
   }
 
   .harbinger-card {
-    min-height: 175px;
+    height: 300px;
   }
 }
