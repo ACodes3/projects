@@ -1,0 +1,970 @@
+/* =========================================
+   CROWN OF WINTER — INTELLIGENCE ARCHIVE
+========================================= */
+
+.intelligence-page {
+  width: 100%;
+  min-height: 100%;
+
+  padding: 22px 28px 32px;
+
+  color: #dceef7;
+
+  background:
+    radial-gradient(
+      circle at 72% 18%,
+      rgba(85, 147, 187, 0.06),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #071522,
+      #050f1a 60%,
+      #07131f
+    );
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.intelligence-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 15px;
+  padding-bottom: 14px;
+
+  border-bottom:
+    1px solid rgba(165, 216, 238, 0.13);
+}
+
+.intelligence-page__eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #82b6ca;
+
+  font-size: 8px;
+
+  letter-spacing: 0.22em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__header h1 {
+  margin: 0;
+
+  color: #f1f8fc;
+
+  font-size: 27px;
+  font-weight: 400;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__header p {
+  max-width: 680px;
+
+  margin: 6px 0 0;
+
+  color: #7894a1;
+
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.intelligence-page__status {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 165px;
+
+  padding: 10px 13px;
+
+  border:
+    1px solid rgba(151, 211, 236, 0.17);
+
+  background:
+    rgba(8, 24, 39, 0.58);
+}
+
+.intelligence-page__status svg {
+  color: #98e0fa;
+}
+
+.intelligence-page__status > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.intelligence-page__status span {
+  color: #6d91a0;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__status strong {
+  color: #dff2f8;
+
+  font-size: 8px;
+  font-weight: 400;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   METRICS
+========================================= */
+
+.intelligence-page__metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.intelligence-page__metrics article {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 62px;
+
+  padding: 11px 13px;
+
+  border:
+    1px solid rgba(150, 207, 231, 0.13);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 33, 50, 0.76),
+      rgba(6, 18, 30, 0.86)
+    );
+}
+
+.intelligence-page__metrics article > svg {
+  flex-shrink: 0;
+
+  color: #8ed6ef;
+}
+
+.intelligence-page__metrics article > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.intelligence-page__metrics span {
+  color: #668897;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__metrics strong {
+  color: #e4f3f9;
+
+  font-size: 15px;
+  font-weight: 400;
+
+  letter-spacing: 0.04em;
+}
+
+/* =========================================
+   SEARCH BAR
+========================================= */
+
+.intelligence-page__search {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-height: 44px;
+
+  margin-bottom: 12px;
+  padding: 0 13px;
+
+  border:
+    1px solid rgba(150, 207, 231, 0.13);
+
+  background:
+    rgba(7, 22, 35, 0.78);
+}
+
+.intelligence-page__search svg {
+  flex-shrink: 0;
+
+  color: #79b9d1;
+}
+
+.intelligence-page__search input {
+  flex: 1;
+
+  min-width: 0;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #dbeef5;
+
+  font-family: inherit;
+
+  font-size: 8px;
+
+  letter-spacing: 0.05em;
+}
+
+.intelligence-page__search input::placeholder {
+  color: #577481;
+}
+
+.intelligence-page__search > span {
+  color: #648491;
+
+  font-size: 6px;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   MAIN COMMAND LAYOUT
+========================================= */
+
+.intelligence-page__command {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    330px;
+
+  gap: 12px;
+}
+
+/* =========================================
+   ARCHIVE
+========================================= */
+
+.intelligence-page__archive {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 29, 45, 0.84),
+      rgba(5, 17, 28, 0.93)
+    );
+}
+
+.intelligence-page__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  min-height: 54px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.09);
+}
+
+.intelligence-page__section-header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.intelligence-page__section-header span {
+  color: #628898;
+
+  font-size: 6px;
+
+  letter-spacing: 0.17em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__section-header h2 {
+  margin: 0;
+
+  color: #dcecf3;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-page__section-header > svg {
+  color: #93d8f1;
+}
+
+/* =========================================
+   REPORT LIST
+========================================= */
+
+.intelligence-page__reports {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  padding: 10px;
+}
+
+/* =========================================
+   REPORT
+========================================= */
+
+.intelligence-report {
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  width: 100%;
+
+  min-height: 72px;
+
+  padding: 9px 10px;
+
+  border:
+    1px solid rgba(145, 201, 225, 0.1);
+
+  outline: none;
+
+  background:
+    rgba(5, 18, 30, 0.48);
+
+  color: inherit;
+
+  font-family: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.intelligence-report:hover {
+  transform: translateX(2px);
+
+  border-color:
+    rgba(157, 220, 246, 0.22);
+
+  background:
+    rgba(10, 30, 46, 0.7);
+}
+
+/* =========================================
+   REPORT ICON
+========================================= */
+
+.intelligence-report__icon {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  border:
+    1px solid rgba(156, 216, 241, 0.15);
+
+  color: #8ed3ec;
+
+  background:
+    rgba(32, 76, 98, 0.1);
+}
+
+/* =========================================
+   REPORT CONTENT
+========================================= */
+
+.intelligence-report__content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.intelligence-report__content > span {
+  color: #678b9b;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-report__content strong {
+  overflow: hidden;
+
+  color: #d9ebf2;
+
+  font-size: 9px;
+  font-weight: 400;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.intelligence-report__content small {
+  color: #587481;
+
+  font-size: 6px;
+
+  letter-spacing: 0.08em;
+}
+
+/* =========================================
+   REPORT META
+========================================= */
+
+.intelligence-report__meta {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.intelligence-report__meta > svg {
+  color: #607f8d;
+}
+
+.intelligence-report__classification {
+  display: inline-flex;
+  align-items: center;
+
+  height: 21px;
+
+  padding: 0 7px;
+
+  border:
+    1px solid rgba(145, 199, 221, 0.11);
+
+  background:
+    rgba(5, 18, 31, 0.42);
+
+  font-size: 6px;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-report__classification--restricted {
+  color: #91c2d3;
+}
+
+.intelligence-report__classification--imperial {
+  color: #8dceb8;
+}
+
+.intelligence-report__classification--crimson {
+  color: #d09f74;
+
+  border-color:
+    rgba(208, 159, 116, 0.16);
+}
+
+.intelligence-report__classification--omega {
+  color: #d8838f;
+
+  border-color:
+    rgba(216, 131, 143, 0.17);
+}
+
+/* =========================================
+   SELECTED REPORT
+========================================= */
+
+.intelligence-report--selected {
+  border-color:
+    rgba(177, 232, 253, 0.36);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(16, 44, 64, 0.84),
+      rgba(7, 22, 36, 0.9)
+    );
+
+  box-shadow:
+    inset 2px 0 0 rgba(154, 224, 250, 0.55);
+}
+
+.intelligence-report--selected
+.intelligence-report__icon {
+  color: #d4f5ff;
+
+  border-color:
+    rgba(187, 237, 255, 0.4);
+
+  box-shadow:
+    0 0 14px rgba(108, 209, 249, 0.08);
+}
+
+.intelligence-report--selected
+.intelligence-report__content strong {
+  color: #f0faff;
+}
+
+/* =========================================
+   DOSSIER
+========================================= */
+
+.intelligence-dossier {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.14);
+
+  background:
+    linear-gradient(
+      155deg,
+      rgba(11, 31, 47, 0.94),
+      rgba(5, 16, 27, 0.97)
+    );
+}
+
+/* =========================================
+   DOSSIER HEADER
+========================================= */
+
+.intelligence-dossier__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 58px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.09);
+}
+
+.intelligence-dossier__header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.intelligence-dossier__header span {
+  color: #628898;
+
+  font-size: 6px;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__header h2 {
+  margin: 0;
+
+  color: #e0eff5;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__header > svg {
+  color: #97d9f1;
+}
+
+/* =========================================
+   CLASSIFICATION SEAL
+========================================= */
+
+.intelligence-dossier__classification {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 18px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.08);
+
+  background:
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(94, 178, 216, 0.08),
+      transparent 35%
+    );
+}
+
+.intelligence-dossier__seal {
+  display: grid;
+  place-items: center;
+
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid rgba(164, 224, 247, 0.2);
+
+  border-radius: 50%;
+
+  color: #9fe1f8;
+
+  box-shadow:
+    inset 0 0 15px rgba(107, 206, 243, 0.04);
+}
+
+.intelligence-dossier__classification > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.intelligence-dossier__classification span {
+  color: #6b8e9d;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__classification strong {
+  color: #e4f4f9;
+
+  font-size: 13px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   DOSSIER TITLE
+========================================= */
+
+.intelligence-dossier__title {
+  padding: 15px 14px 11px;
+}
+
+.intelligence-dossier__title > span {
+  color: #759baa;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__title h2 {
+  margin: 5px 0 0;
+
+  color: #eef8fc;
+
+  font-size: 15px;
+  font-weight: 400;
+
+  line-height: 1.25;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__title small {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #5e7a86;
+
+  font-size: 6px;
+
+  letter-spacing: 0.08em;
+}
+
+/* =========================================
+   DOSSIER STATS
+========================================= */
+
+.intelligence-dossier__stats {
+  display: grid;
+
+  gap: 6px;
+
+  padding: 0 14px;
+}
+
+.intelligence-dossier__stats > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 38px;
+
+  padding: 0 9px;
+
+  border:
+    1px solid rgba(141, 198, 221, 0.09);
+
+  background:
+    rgba(5, 18, 30, 0.42);
+}
+
+.intelligence-dossier__stats span {
+  color: #62818f;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__stats strong {
+  color: #d4e8ef;
+
+  font-size: 7px;
+  font-weight: 400;
+
+  text-align: right;
+
+  letter-spacing: 0.07em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   SUMMARY + BODY
+========================================= */
+
+.intelligence-dossier__summary,
+.intelligence-dossier__body {
+  padding: 15px 14px 0;
+}
+
+.intelligence-dossier__summary > span,
+.intelligence-dossier__body > span {
+  color: #7299a8;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.intelligence-dossier__summary p,
+.intelligence-dossier__body p {
+  margin: 7px 0 0;
+
+  color: #758d98;
+
+  font-size: 7px;
+
+  line-height: 1.7;
+}
+
+/* =========================================
+   DOSSIER BUTTON
+========================================= */
+
+.intelligence-dossier__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  min-height: 43px;
+
+  margin-top: auto;
+  padding: 0 14px;
+
+  border: 0;
+  border-top:
+    1px solid rgba(151, 207, 230, 0.09);
+
+  background: transparent;
+
+  color: #84b3c4;
+
+  font-family: inherit;
+
+  font-size: 7px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.intelligence-dossier__button:hover {
+  color: #dcf5ff;
+
+  background:
+    rgba(78, 163, 199, 0.04);
+}
+
+/* =========================================
+   SMALL DESKTOP
+========================================= */
+
+@media (max-width: 1250px) {
+  .intelligence-page {
+    padding: 18px;
+  }
+
+  .intelligence-page__command {
+    grid-template-columns:
+      minmax(0, 1fr)
+      300px;
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+  .intelligence-page__header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .intelligence-page__metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .intelligence-page__command {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligence-dossier__button {
+    margin-top: 18px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .intelligence-page {
+    padding: 12px;
+  }
+
+  .intelligence-page__header h1 {
+    font-size: 22px;
+  }
+
+  .intelligence-page__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligence-page__search > span {
+    display: none;
+  }
+
+  .intelligence-report {
+    grid-template-columns:
+      38px
+      minmax(0, 1fr);
+
+    min-height: 76px;
+  }
+
+  .intelligence-report__meta {
+    grid-column:
+      1 / -1;
+
+    justify-content: flex-end;
+  }
+}
