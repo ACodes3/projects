@@ -12,6 +12,7 @@ import TsaritsaPage from './pages/TsaritsaPage';
 import PalacePage from './pages/PalacePage';
 import WarTablePage from './pages/WarTablePage';
 import HarbingersPage from './pages/HarbingersPage';
+import IntelligencePage from './pages/IntelligencePage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -79,7 +80,7 @@ function App() {
 
           <Route
             path="/intelligence"
-            element={<PlaceholderPage title="Intelligence Archive" />}
+            element={<IntelligencePage />}
           />
 
           <Route
