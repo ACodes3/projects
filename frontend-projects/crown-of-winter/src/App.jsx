@@ -8,6 +8,7 @@ import {
 
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import TsaritsaPage from './pages/TsaritsaPage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -55,7 +56,7 @@ function App() {
 
           <Route
             path="/tsaritsa"
-            element={<PlaceholderPage title="The Tsaritsa" />}
+            element={<TsaritsaPage />}
           />
 
           <Route
