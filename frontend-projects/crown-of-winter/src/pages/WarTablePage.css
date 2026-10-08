@@ -1,0 +1,1227 @@
+/* =========================================
+   CROWN OF WINTER — WAR TABLE
+========================================= */
+
+.war-table-page {
+  width: 100%;
+  min-height: 100%;
+
+  padding: 22px 28px 32px;
+
+  color: #dceef7;
+
+  background:
+    radial-gradient(
+      circle at 48% 34%,
+      rgba(77, 168, 209, 0.08),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #081827,
+      #06121f 58%,
+      #071522
+    );
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.war-table-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+
+  border-bottom:
+    1px solid rgba(166, 218, 239, 0.14);
+}
+
+.war-table-page__eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #82b6ca;
+
+  font-size: 8px;
+
+  letter-spacing: 0.22em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__header h1 {
+  margin: 0;
+
+  color: #f0f8fc;
+
+  font-size: 27px;
+  font-weight: 400;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__header p {
+  margin: 6px 0 0;
+
+  color: #7895a3;
+
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   NETWORK STATUS
+========================================= */
+
+.war-table-page__network {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 160px;
+
+  padding: 10px 13px;
+
+  border:
+    1px solid rgba(153, 213, 238, 0.18);
+
+  background:
+    rgba(8, 26, 42, 0.55);
+}
+
+.war-table-page__network svg {
+  color: #93e2ff;
+
+  filter:
+    drop-shadow(
+      0 0 5px rgba(104, 218, 255, 0.25)
+    );
+}
+
+.war-table-page__network > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.war-table-page__network span {
+  color: #6d93a3;
+
+  font-size: 6px;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__network strong {
+  color: #dff5fc;
+
+  font-size: 8px;
+  font-weight: 400;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   TOP METRICS
+========================================= */
+
+.war-table-page__metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-bottom: 14px;
+}
+
+.war-table-page__metrics article {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 66px;
+
+  padding: 12px 14px;
+
+  border:
+    1px solid rgba(151, 208, 232, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(13, 35, 52, 0.78),
+      rgba(7, 20, 32, 0.88)
+    );
+}
+
+.war-table-page__metrics article > svg {
+  flex-shrink: 0;
+
+  color: #8fd7f1;
+}
+
+.war-table-page__metrics article > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.war-table-page__metrics span {
+  color: #698c9a;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__metrics strong {
+  color: #e1f3fa;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  letter-spacing: 0.05em;
+}
+
+/* =========================================
+   MAIN COMMAND AREA
+========================================= */
+
+.war-table-page__command {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    290px;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+/* =========================================
+   PANELS
+========================================= */
+
+.war-table-page__map-panel,
+.war-table-page__region {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.15);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 30, 46, 0.84),
+      rgba(5, 18, 30, 0.92)
+    );
+}
+
+.war-table-page__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  min-height: 56px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.1);
+}
+
+.war-table-page__panel-header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.war-table-page__panel-header span {
+  color: #638999;
+
+  font-size: 6px;
+
+  letter-spacing: 0.17em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__panel-header h2 {
+  margin: 0;
+
+  color: #dceef5;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__panel-header > svg {
+  color: #8bd8f4;
+}
+
+/* =========================================
+   STRATEGIC MAP
+========================================= */
+
+.war-table-page__map {
+  position: relative;
+
+  height: 390px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(59, 139, 179, 0.13),
+      transparent 48%
+    ),
+    linear-gradient(
+      145deg,
+      #081b2a,
+      #05131f
+    );
+}
+
+/* subtle tactical grid */
+
+.war-table-page__map-grid {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0.55;
+
+  background-image:
+    linear-gradient(
+      rgba(124, 193, 221, 0.07) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(124, 193, 221, 0.07) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    42px 42px;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black 40%,
+      transparent 92%
+    );
+}
+
+/* decorative crosshair lines */
+
+.war-table-page__map::before,
+.war-table-page__map::after {
+  content: "";
+
+  position: absolute;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  opacity: 0.15;
+}
+
+.war-table-page__map::before {
+  top: 50%;
+  left: 0;
+
+  width: 100%;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #8ddcf8,
+      transparent
+    );
+}
+
+.war-table-page__map::after {
+  top: 0;
+  left: 50%;
+
+  width: 1px;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      transparent,
+      #8ddcf8,
+      transparent
+    );
+}
+
+/* central imperial seal */
+
+.war-table-page__map-center {
+  position: absolute;
+
+  z-index: 0;
+
+  top: 50%;
+  left: 50%;
+
+  transform:
+    translate(-50%, -50%);
+
+  color:
+    rgba(119, 201, 234, 0.08);
+}
+
+.war-table-page__map-center::before,
+.war-table-page__map-center::after {
+  content: "";
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  border:
+    1px solid rgba(128, 206, 237, 0.1);
+}
+
+.war-table-page__map-center::before {
+  width: 230px;
+  height: 230px;
+}
+
+.war-table-page__map-center::after {
+  width: 300px;
+  height: 300px;
+
+  border-style: dashed;
+
+  opacity: 0.6;
+}
+
+/* =========================================
+   MAP MARKERS
+========================================= */
+
+.war-table-page__marker {
+  position: absolute;
+  z-index: 5;
+
+  display: grid;
+  place-items: center;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  transform:
+    translate(-50%, -50%);
+
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.war-table-page__marker-ring {
+  position: absolute;
+
+  width: 25px;
+  height: 25px;
+
+  border:
+    1px solid rgba(122, 205, 236, 0.36);
+
+  border-radius: 50%;
+
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.war-table-page__marker-dot {
+  position: relative;
+
+  z-index: 2;
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #79cbe9;
+
+  box-shadow:
+    0 0 7px rgba(113, 211, 247, 0.55);
+}
+
+.war-table-page__marker small {
+  position: absolute;
+
+  top: 30px;
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  white-space: nowrap;
+
+  color: #759dab;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+
+  transition: color 0.2s;
+}
+
+.war-table-page__marker:hover .war-table-page__marker-ring {
+  transform: scale(1.25);
+
+  border-color:
+    rgba(149, 226, 255, 0.65);
+
+  box-shadow:
+    0 0 14px rgba(103, 204, 243, 0.13);
+}
+
+.war-table-page__marker:hover small {
+  color: #d5eff8;
+}
+
+/* active marker */
+
+.war-table-page__marker--active
+.war-table-page__marker-ring {
+  transform: scale(1.35);
+
+  border-color:
+    rgba(168, 234, 255, 0.9);
+
+  box-shadow:
+    0 0 18px rgba(102, 211, 251, 0.22);
+}
+
+.war-table-page__marker--active
+.war-table-page__marker-dot {
+  background: #d3f6ff;
+
+  box-shadow:
+    0 0 11px rgba(151, 232, 255, 0.8);
+}
+
+.war-table-page__marker--active small {
+  color: #dff6ff;
+}
+
+/* =========================================
+   MAP LABEL
+========================================= */
+
+.war-table-page__map-label {
+  position: absolute;
+
+  z-index: 5;
+
+  left: 15px;
+  bottom: 13px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px 9px;
+
+  border:
+    1px solid rgba(145, 208, 233, 0.13);
+
+  background:
+    rgba(4, 17, 29, 0.72);
+
+  color: #7299a8;
+
+  font-size: 6px;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__map-label svg {
+  color: #9cddf6;
+}
+
+/* =========================================
+   REGION INTELLIGENCE
+========================================= */
+
+.war-table-page__region {
+  display: flex;
+  flex-direction: column;
+}
+
+.war-table-page__region-body {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+
+  padding: 15px;
+}
+
+.war-table-page__region-subtitle {
+  color: #7ea7b6;
+
+  font-size: 7px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+/* influence */
+
+.war-table-page__influence {
+  margin-top: 20px;
+}
+
+.war-table-page__influence > div:first-child {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.war-table-page__influence span {
+  color: #688996;
+
+  font-size: 7px;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__influence strong {
+  color: #e3f4fa;
+
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.war-table-page__influence-bar {
+  height: 4px;
+
+  margin-top: 8px;
+
+  overflow: hidden;
+
+  background:
+    rgba(111, 152, 172, 0.14);
+}
+
+.war-table-page__influence-bar > span {
+  display: block;
+
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4a9cc1,
+      #a8e9ff
+    );
+
+  box-shadow:
+    0 0 8px rgba(111, 210, 250, 0.27);
+}
+
+/* region stats */
+
+.war-table-page__region-stats {
+  display: grid;
+
+  grid-template-columns: 1fr;
+
+  gap: 7px;
+
+  margin-top: 19px;
+}
+
+.war-table-page__region-stats > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 38px;
+
+  padding: 0 10px;
+
+  border:
+    1px solid rgba(143, 200, 223, 0.1);
+
+  background:
+    rgba(5, 19, 31, 0.42);
+}
+
+.war-table-page__region-stats span {
+  color: #698794;
+
+  font-size: 6px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__region-stats strong {
+  color: #d2e8f0;
+
+  font-size: 8px;
+  font-weight: 400;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+}
+
+/* directive */
+
+.war-table-page__region-order {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: auto;
+  padding: 12px;
+
+  border:
+    1px solid rgba(146, 205, 229, 0.11);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 35, 52, 0.58),
+      rgba(5, 20, 32, 0.55)
+    );
+}
+
+.war-table-page__region-order > svg {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: #88cee9;
+}
+
+.war-table-page__region-order > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.war-table-page__region-order span {
+  color: #78a0af;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__region-order p {
+  margin: 0;
+
+  color: #77909b;
+
+  font-size: 7px;
+
+  line-height: 1.65;
+}
+
+/* =========================================
+   OPERATIONS SECTION
+========================================= */
+
+.war-table-page__operations {
+  width: 100%;
+}
+
+.war-table-page__section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+
+  border-bottom:
+    1px solid rgba(159, 211, 233, 0.11);
+}
+
+.war-table-page__section-heading > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.war-table-page__section-heading > div > span {
+  color: #688d9d;
+
+  font-size: 6px;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__section-heading h2 {
+  margin: 0;
+
+  color: #d9ebf2;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+}
+
+.war-table-page__section-heading > span {
+  color: #627f8d;
+
+  font-size: 6px;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   OPERATION GRID
+========================================= */
+
+.war-table-page__operation-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 11px;
+}
+
+.war-operation {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(149, 207, 231, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 51, 0.82),
+      rgba(6, 19, 31, 0.9)
+    );
+
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.war-operation:hover {
+  transform: translateY(-2px);
+
+  border-color:
+    rgba(160, 222, 247, 0.27);
+
+  box-shadow:
+    0 8px 22px rgba(0, 7, 14, 0.2);
+}
+
+/* =========================================
+   OPERATION TOP
+========================================= */
+
+.war-operation__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 12px 12px 0;
+}
+
+.war-operation__icon {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  border:
+    1px solid rgba(155, 217, 241, 0.17);
+
+  color: #95dbf5;
+
+  background:
+    rgba(31, 76, 99, 0.12);
+}
+
+/* priorities */
+
+.war-operation__priority {
+  display: inline-flex;
+  align-items: center;
+
+  height: 21px;
+
+  padding: 0 7px;
+
+  border:
+    1px solid rgba(145, 199, 221, 0.12);
+
+  background:
+    rgba(5, 18, 31, 0.42);
+
+  font-size: 6px;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.war-operation__priority--medium {
+  color: #90c8d9;
+}
+
+.war-operation__priority--high {
+  color: #d7b973;
+
+  border-color:
+    rgba(215, 185, 115, 0.15);
+}
+
+.war-operation__priority--critical {
+  color: #d98791;
+
+  border-color:
+    rgba(217, 135, 145, 0.18);
+}
+
+/* =========================================
+   OPERATION CONTENT
+========================================= */
+
+.war-operation__content {
+  display: flex;
+  flex-direction: column;
+
+  padding: 11px 12px;
+}
+
+.war-operation__content > span {
+  color: #678b9b;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.war-operation__content h3 {
+  margin: 5px 0 0;
+
+  color: #dceef5;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.07em;
+
+  text-transform: uppercase;
+}
+
+.war-operation__content p {
+  margin: 7px 0 0;
+
+  color: #728b97;
+
+  font-size: 7px;
+
+  line-height: 1.55;
+}
+
+/* =========================================
+   OPERATION PROGRESS
+========================================= */
+
+.war-operation__progress {
+  padding:
+    0 12px 12px;
+}
+
+.war-operation__progress > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 6px;
+}
+
+.war-operation__progress span {
+  color: #668692;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.war-operation__progress strong {
+  color: #a7d8e9;
+
+  font-size: 7px;
+  font-weight: 400;
+}
+
+.war-operation__bar {
+  height: 3px;
+
+  overflow: hidden;
+
+  background:
+    rgba(112, 154, 174, 0.14);
+}
+
+.war-operation__bar > span {
+  display: block;
+
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4d9fc4,
+      #a9e8ff
+    );
+
+  box-shadow:
+    0 0 7px rgba(106, 206, 246, 0.25);
+}
+
+/* =========================================
+   OPERATION BUTTON
+========================================= */
+
+.war-operation > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  min-height: 39px;
+
+  padding: 0 12px;
+
+  border: 0;
+  border-top:
+    1px solid rgba(151, 207, 230, 0.09);
+
+  background: transparent;
+
+  color: #82adbe;
+
+  font-family: inherit;
+
+  font-size: 7px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.war-operation > button:hover {
+  color: #d8f4ff;
+
+  background:
+    rgba(79, 163, 198, 0.04);
+}
+
+/* =========================================
+   SMALL DESKTOP
+========================================= */
+
+@media (max-width: 1250px) {
+  .war-table-page {
+    padding: 18px;
+  }
+
+  .war-table-page__command {
+    grid-template-columns:
+      minmax(0, 1fr)
+      260px;
+  }
+
+  .war-table-page__map {
+    height: 360px;
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+  .war-table-page__header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .war-table-page__metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .war-table-page__command {
+    grid-template-columns: 1fr;
+  }
+
+  .war-table-page__map {
+    height: 370px;
+  }
+
+  .war-table-page__region-order {
+    margin-top: 18px;
+  }
+
+  .war-table-page__operation-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .war-table-page {
+    padding: 12px;
+  }
+
+  .war-table-page__header h1 {
+    font-size: 22px;
+  }
+
+  .war-table-page__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .war-table-page__map {
+    height: 340px;
+  }
+
+  .war-table-page__map-center svg {
+    width: 120px;
+    height: 120px;
+  }
+
+  .war-table-page__map-center::before {
+    width: 170px;
+    height: 170px;
+  }
+
+  .war-table-page__map-center::after {
+    width: 220px;
+    height: 220px;
+  }
+
+  .war-table-page__marker small {
+    display: none;
+  }
+
+  .war-table-page__section-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .war-table-page__operation-grid {
+    grid-template-columns: 1fr;
+  }
+}

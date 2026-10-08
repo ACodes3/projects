@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import TsaritsaPage from './pages/TsaritsaPage';
 import PalacePage from './pages/PalacePage';
+import WarTablePage from './pages/WarTablePage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -67,7 +68,7 @@ function App() {
 
           <Route
             path="/war-table"
-            element={<PlaceholderPage title="War Table" />}
+            element={<WarTablePage />}
           />
 
           <Route
