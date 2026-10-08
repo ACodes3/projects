@@ -13,6 +13,7 @@ import PalacePage from './pages/PalacePage';
 import WarTablePage from './pages/WarTablePage';
 import HarbingersPage from './pages/HarbingersPage';
 import IntelligencePage from './pages/IntelligencePage';
+import GnosesPage from './pages/GnosesPage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -85,7 +86,7 @@ function App() {
 
           <Route
             path="/gnoses"
-            element={<PlaceholderPage title="Project: Gnoses" />}
+            element={<GnosesPage />}
           />
 
           <Route
