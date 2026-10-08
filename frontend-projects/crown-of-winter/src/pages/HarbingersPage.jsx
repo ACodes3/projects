@@ -27,6 +27,7 @@ const harbingers = [
     status: 'Imperial Command',
     clearance: 'Omega',
     icon: Crown,
+    image: '/images/pierro.png',
     description:
       'Highest executive authority within the Fatui command structure beneath the Crown.',
     directive:
@@ -40,6 +41,7 @@ const harbingers = [
     status: 'Deployed',
     clearance: 'Crimson',
     icon: Sword,
+    image: '/images/capitano.png',
     description:
       'A commanding military presence entrusted with operations requiring overwhelming force.',
     directive:
@@ -53,6 +55,7 @@ const harbingers = [
     status: 'Classified',
     clearance: 'Omega',
     icon: FlaskConical,
+    image: '/images/dottore.png',
     description:
       'Oversees experimental research and projects beyond conventional scientific restrictions.',
     directive:
@@ -66,6 +69,7 @@ const harbingers = [
     status: 'Palace',
     clearance: 'Crimson',
     icon: Feather,
+    image: '/images/columbina.png',
     description:
       'An enigmatic Harbinger whose operational capabilities remain heavily classified.',
     directive:
@@ -79,6 +83,7 @@ const harbingers = [
     status: 'Active',
     clearance: 'Crimson',
     icon: Eye,
+    image: '/images/arlecchino.png',
     description:
       'Directs covert assets and maintains an extensive network of operatives beyond Snezhnaya.',
     directive:
@@ -92,6 +97,7 @@ const harbingers = [
     status: 'Snezhnaya',
     clearance: 'Imperial',
     icon: Shield,
+    image: '/images/pulcinella.png',
     description:
       'Maintains political and administrative stability throughout the northern homeland.',
     directive:
@@ -105,6 +111,7 @@ const harbingers = [
     status: 'Archived',
     clearance: 'Restricted',
     icon: Theater,
+    image: '/images/scaramouche.png',
     description:
       'A former operational asset retained within sealed imperial records.',
     directive:
@@ -118,6 +125,7 @@ const harbingers = [
     status: 'Research',
     clearance: 'Crimson',
     icon: Gem,
+    image: '/images/sandrone.png',
     description:
       'Oversees mechanical development, autonomous constructs and specialized imperial engineering.',
     directive:
@@ -131,6 +139,7 @@ const harbingers = [
     status: 'Fallen',
     clearance: 'Sealed',
     icon: Snowflake,
+    image: '/images/signora.png',
     description:
       'A former diplomatic and combat operative whose imperial record remains preserved.',
     directive:
@@ -144,6 +153,7 @@ const harbingers = [
     status: 'Palace',
     clearance: 'Imperial',
     icon: Banknote,
+    image: '/images/pantalone.png',
     description:
       'Controls financial networks, trade influence and economic resources supporting imperial operations.',
     directive:
@@ -157,6 +167,7 @@ const harbingers = [
     status: 'Deployed',
     clearance: 'Imperial',
     icon: Crosshair,
+    image: '/images/tartaglia.png',
     description:
       'A highly mobile combat operative frequently assigned to direct field engagements.',
     directive:
@@ -165,7 +176,9 @@ const harbingers = [
 ];
 
 function HarbingersPage() {
-  const [selectedHarbinger, setSelectedHarbinger] = useState(harbingers[1]);
+  const [selectedHarbinger, setSelectedHarbinger] = useState(
+    harbingers[1]
+  );
 
   const SelectedIcon = selectedHarbinger.icon;
 
@@ -174,7 +187,6 @@ function HarbingersPage() {
 
       {/* HEADER */}
       <header className="harbingers-page__header">
-
         <div>
           <span className="harbingers-page__eyebrow">
             Fatui High Command
@@ -189,16 +201,13 @@ function HarbingersPage() {
         </div>
 
         <div className="harbingers-page__status">
-
           <Users size={18} />
 
           <div>
             <span>Command Roster</span>
             <strong>Restricted</strong>
           </div>
-
         </div>
-
       </header>
 
       {/* HERO */}
@@ -209,7 +218,6 @@ function HarbingersPage() {
         </div>
 
         <div className="harbingers-page__hero-content">
-
           <span>
             Her Majesty&apos;s Executors
           </span>
@@ -224,7 +232,6 @@ function HarbingersPage() {
           </p>
 
           <div className="harbingers-page__hero-meta">
-
             <span>
               <Shield size={13} />
               Imperial Authority
@@ -234,9 +241,7 @@ function HarbingersPage() {
               <Snowflake size={13} />
               Crown Allegiance
             </span>
-
           </div>
-
         </div>
 
       </section>
@@ -248,16 +253,12 @@ function HarbingersPage() {
         <div className="harbingers-page__roster">
 
           <div className="harbingers-page__section-header">
-
             <div>
               <span>Imperial Roster</span>
               <h2>Command Members</h2>
             </div>
 
-            <span>
-              XI
-            </span>
-
+            <span>XI</span>
           </div>
 
           <div className="harbingers-page__roster-grid">
@@ -277,19 +278,39 @@ function HarbingersPage() {
                   onClick={() => setSelectedHarbinger(harbinger)}
                 >
 
+                  {/* PORTRAIT */}
+                  <img
+                    src={harbinger.image}
+                    alt={harbinger.codename}
+                    className="harbinger-card__image"
+                  />
+
+                  <div className="harbinger-card__image-overlay" />
+
+                  {/* NUMBER */}
                   <div className="harbinger-card__number">
                     {String(index + 1).padStart(2, '0')}
                   </div>
 
+                  {/* STATUS */}
+                  <div
+                    className={`harbinger-card__status harbinger-card__status--${harbinger.status
+                      .toLowerCase()
+                      .replace(' ', '-')}`}
+                  >
+                    {harbinger.status}
+                  </div>
+
+                  {/* SMALL INSIGNIA */}
                   <div className="harbinger-card__crest">
                     <Icon
-                      size={25}
+                      size={17}
                       strokeWidth={1}
                     />
                   </div>
 
+                  {/* TEXT */}
                   <div className="harbinger-card__identity">
-
                     <span>
                       {harbinger.codename}
                     </span>
@@ -301,15 +322,6 @@ function HarbingersPage() {
                     <small>
                       {harbinger.division}
                     </small>
-
-                  </div>
-
-                  <div
-                    className={`harbinger-card__status harbinger-card__status--${harbinger.status
-                      .toLowerCase()
-                      .replace(' ', '-')}`}
-                  >
-                    {harbinger.status}
                   </div>
 
                 </button>
@@ -324,43 +336,51 @@ function HarbingersPage() {
         <aside className="harbinger-dossier">
 
           <div className="harbinger-dossier__header">
-
             <div>
               <span>Selected Harbinger</span>
               <h2>{selectedHarbinger.title}</h2>
             </div>
 
             <Crown size={18} />
-
           </div>
 
+          {/* LARGE PORTRAIT */}
           <div className="harbinger-dossier__portrait">
 
-            <div className="harbinger-dossier__portrait-ring">
+            <img
+              src={selectedHarbinger.image}
+              alt={selectedHarbinger.codename}
+              className="harbinger-dossier__portrait-image"
+            />
 
-              <div className="harbinger-dossier__portrait-inner">
+            <div className="harbinger-dossier__portrait-overlay" />
+
+            <div className="harbinger-dossier__portrait-content">
+
+              <div className="harbinger-dossier__portrait-icon">
                 <SelectedIcon
-                  size={64}
-                  strokeWidth={0.75}
+                  size={22}
+                  strokeWidth={1}
                 />
               </div>
 
+              <span>
+                {selectedHarbinger.codename}
+              </span>
+
+              <h3>
+                {selectedHarbinger.title}
+              </h3>
+
+              <small>
+                {selectedHarbinger.division}
+              </small>
+
             </div>
-
-            <span>
-              {selectedHarbinger.codename}
-            </span>
-
-            <h3>
-              {selectedHarbinger.title}
-            </h3>
-
-            <small>
-              {selectedHarbinger.division}
-            </small>
 
           </div>
 
+          {/* STATS */}
           <div className="harbinger-dossier__stats">
 
             <div>
@@ -380,6 +400,7 @@ function HarbingersPage() {
 
           </div>
 
+          {/* DESCRIPTION */}
           <div className="harbinger-dossier__description">
 
             <span>
@@ -392,6 +413,7 @@ function HarbingersPage() {
 
           </div>
 
+          {/* DIRECTIVE */}
           <div className="harbinger-dossier__directive">
 
             <Crown size={17} />
