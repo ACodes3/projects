@@ -817,3 +817,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   CARD ENTER LINK
+========================================= */
+
+.palace-card__enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 0;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #83afc0;
+
+  font-family: inherit;
+
+  font-size: 7px;
+  font-weight: 400;
+
+  letter-spacing: 0.1em;
+
+  text-decoration: none;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.palace-card__enter:visited {
+  color: #83afc0;
+}
+
+.palace-card__enter:hover {
+  color: #d8f4ff;
+
+  text-decoration: none;
+
+  transform: translateX(2px);
+}
+
+.palace-card__enter:focus {
+  outline: none;
+}
