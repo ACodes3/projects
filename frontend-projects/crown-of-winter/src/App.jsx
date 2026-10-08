@@ -15,6 +15,7 @@ import HarbingersPage from './pages/HarbingersPage';
 import IntelligencePage from './pages/IntelligencePage';
 import GnosesPage from './pages/GnosesPage';
 import RelicVaultPage from './pages/RelicVaultPage';
+import SystemPage from './pages/SystemPage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -27,22 +28,6 @@ function LoginRoute() {
   );
 }
 
-function PlaceholderPage({ title }) {
-  return (
-    <div
-      style={{
-        minHeight: '100%',
-        display: 'grid',
-        placeItems: 'center',
-        color: '#dceef7',
-        fontFamily: 'Georgia, serif',
-        letterSpacing: '0.08em',
-      }}
-    >
-      {title}
-    </div>
-  );
-}
 
 function App() {
   return (
@@ -97,7 +82,7 @@ function App() {
 
           <Route
             path="/system"
-            element={<PlaceholderPage title="System" />}
+            element={<SystemPage />}
           />
         </Route>
 
