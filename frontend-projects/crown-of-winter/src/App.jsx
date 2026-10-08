@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage';
 import TsaritsaPage from './pages/TsaritsaPage';
 import PalacePage from './pages/PalacePage';
 import WarTablePage from './pages/WarTablePage';
+import HarbingersPage from './pages/HarbingersPage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -73,7 +74,7 @@ function App() {
 
           <Route
             path="/harbingers"
-            element={<PlaceholderPage title="Eleven Harbingers" />}
+            element={<HarbingersPage />}
           />
 
           <Route
