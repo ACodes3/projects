@@ -1,5 +1,6 @@
 /* =========================================
    CROWN OF WINTER — WAR TABLE
+   TSARITSA STRATEGY BOARD
 ========================================= */
 
 .war-table-page {
@@ -12,15 +13,20 @@
 
   background:
     radial-gradient(
-      circle at 48% 34%,
-      rgba(77, 168, 209, 0.08),
-      transparent 30%
+      circle at 47% 38%,
+      rgba(83, 140, 187, 0.08),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 72% 70%,
+      rgba(93, 80, 156, 0.05),
+      transparent 32%
     ),
     linear-gradient(
       145deg,
-      #081827,
-      #06121f 58%,
-      #071522
+      #071522,
+      #050f1a 58%,
+      #07131f
     );
 }
 
@@ -35,11 +41,11 @@
 
   gap: 24px;
 
-  margin-bottom: 16px;
+  margin-bottom: 15px;
   padding-bottom: 14px;
 
   border-bottom:
-    1px solid rgba(166, 218, 239, 0.14);
+    1px solid rgba(165, 216, 238, 0.13);
 }
 
 .war-table-page__eyebrow {
@@ -59,7 +65,7 @@
 .war-table-page__header h1 {
   margin: 0;
 
-  color: #f0f8fc;
+  color: #f1f8fc;
 
   font-size: 27px;
   font-weight: 400;
@@ -70,16 +76,18 @@
 }
 
 .war-table-page__header p {
+  max-width: 660px;
+
   margin: 6px 0 0;
 
-  color: #7895a3;
+  color: #7894a1;
 
   font-size: 9px;
   line-height: 1.6;
 }
 
 /* =========================================
-   NETWORK STATUS
+   CHAMBER STATUS
 ========================================= */
 
 .war-table-page__network {
@@ -88,24 +96,19 @@
 
   gap: 10px;
 
-  min-width: 160px;
+  min-width: 155px;
 
   padding: 10px 13px;
 
   border:
-    1px solid rgba(153, 213, 238, 0.18);
+    1px solid rgba(151, 211, 236, 0.17);
 
   background:
-    rgba(8, 26, 42, 0.55);
+    rgba(8, 24, 39, 0.58);
 }
 
 .war-table-page__network svg {
-  color: #93e2ff;
-
-  filter:
-    drop-shadow(
-      0 0 5px rgba(104, 218, 255, 0.25)
-    );
+  color: #99e1fb;
 }
 
 .war-table-page__network > div {
@@ -116,28 +119,28 @@
 }
 
 .war-table-page__network span {
-  color: #6d93a3;
+  color: #6d91a0;
 
   font-size: 6px;
 
-  letter-spacing: 0.16em;
+  letter-spacing: 0.15em;
 
   text-transform: uppercase;
 }
 
 .war-table-page__network strong {
-  color: #dff5fc;
+  color: #dff2f8;
 
   font-size: 8px;
   font-weight: 400;
 
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
 
   text-transform: uppercase;
 }
 
 /* =========================================
-   TOP METRICS
+   METRICS
 ========================================= */
 
 .war-table-page__metrics {
@@ -148,7 +151,7 @@
 
   gap: 10px;
 
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .war-table-page__metrics article {
@@ -157,25 +160,25 @@
 
   gap: 11px;
 
-  min-height: 66px;
+  min-height: 62px;
 
-  padding: 12px 14px;
+  padding: 11px 13px;
 
   border:
-    1px solid rgba(151, 208, 232, 0.14);
+    1px solid rgba(150, 207, 231, 0.13);
 
   background:
     linear-gradient(
       145deg,
-      rgba(13, 35, 52, 0.78),
-      rgba(7, 20, 32, 0.88)
+      rgba(12, 33, 50, 0.76),
+      rgba(6, 18, 30, 0.86)
     );
 }
 
 .war-table-page__metrics article > svg {
   flex-shrink: 0;
 
-  color: #8fd7f1;
+  color: #8ed6ef;
 }
 
 .war-table-page__metrics article > div {
@@ -186,7 +189,7 @@
 }
 
 .war-table-page__metrics span {
-  color: #698c9a;
+  color: #668897;
 
   font-size: 6px;
 
@@ -196,16 +199,16 @@
 }
 
 .war-table-page__metrics strong {
-  color: #e1f3fa;
+  color: #e4f3f9;
 
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
 
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 /* =========================================
-   MAIN COMMAND AREA
+   MAIN WAR CHAMBER
 ========================================= */
 
 .war-table-page__command {
@@ -213,7 +216,7 @@
 
   grid-template-columns:
     minmax(0, 1fr)
-    290px;
+    300px;
 
   gap: 12px;
 
@@ -221,50 +224,49 @@
 }
 
 /* =========================================
-   PANELS
+   BOARD PANEL
 ========================================= */
 
-.war-table-page__map-panel,
-.war-table-page__region {
+.war-board-panel {
   min-width: 0;
 
   overflow: hidden;
 
   border:
-    1px solid rgba(151, 209, 233, 0.15);
+    1px solid rgba(151, 209, 233, 0.14);
 
   background:
     linear-gradient(
       145deg,
-      rgba(10, 30, 46, 0.84),
-      rgba(5, 18, 30, 0.92)
+      rgba(9, 27, 43, 0.88),
+      rgba(4, 15, 26, 0.94)
     );
 }
 
-.war-table-page__panel-header {
+.war-board-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   gap: 14px;
 
-  min-height: 56px;
+  min-height: 54px;
 
   padding: 10px 14px;
 
   border-bottom:
-    1px solid rgba(151, 207, 230, 0.1);
+    1px solid rgba(151, 207, 230, 0.09);
 }
 
-.war-table-page__panel-header > div {
+.war-board-panel__header > div {
   display: flex;
   flex-direction: column;
 
   gap: 3px;
 }
 
-.war-table-page__panel-header span {
-  color: #638999;
+.war-board-panel__header span {
+  color: #628898;
 
   font-size: 6px;
 
@@ -273,10 +275,10 @@
   text-transform: uppercase;
 }
 
-.war-table-page__panel-header h2 {
+.war-board-panel__header h2 {
   margin: 0;
 
-  color: #dceef5;
+  color: #dcecf3;
 
   font-size: 11px;
   font-weight: 400;
@@ -286,172 +288,451 @@
   text-transform: uppercase;
 }
 
-.war-table-page__panel-header > svg {
-  color: #8bd8f4;
+.war-board-panel__header > svg {
+  color: #99dff8;
 }
 
 /* =========================================
-   STRATEGIC MAP
+   DARK WAR CHAMBER
 ========================================= */
 
-.war-table-page__map {
+.war-board-stage {
   position: relative;
 
-  height: 390px;
+  min-height: 530px;
 
   overflow: hidden;
 
+  padding: 28px 22px 18px;
+
   background:
     radial-gradient(
-      circle at center,
-      rgba(59, 139, 179, 0.13),
-      transparent 48%
+      ellipse at center,
+      rgba(76, 115, 168, 0.13),
+      transparent 44%
+    ),
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(73, 167, 211, 0.08),
+      transparent 28%
     ),
     linear-gradient(
-      145deg,
-      #081b2a,
-      #05131f
+      180deg,
+      #040b13,
+      #02070d
     );
 }
 
-/* subtle tactical grid */
+.war-board-stage::before {
+  content: "";
 
-.war-table-page__map-grid {
   position: absolute;
   inset: 0;
 
-  opacity: 0.55;
-
-  background-image:
-    linear-gradient(
-      rgba(124, 193, 221, 0.07) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(124, 193, 221, 0.07) 1px,
-      transparent 1px
-    );
-
-  background-size:
-    42px 42px;
-
-  mask-image:
-    radial-gradient(
-      circle at center,
-      black 40%,
-      transparent 92%
-    );
-}
-
-/* decorative crosshair lines */
-
-.war-table-page__map::before,
-.war-table-page__map::after {
-  content: "";
-
-  position: absolute;
-
-  z-index: 1;
-
   pointer-events: none;
 
-  opacity: 0.15;
-}
-
-.war-table-page__map::before {
-  top: 50%;
-  left: 0;
-
-  width: 100%;
-  height: 1px;
-
   background:
     linear-gradient(
       90deg,
-      transparent,
-      #8ddcf8,
-      transparent
-    );
-}
-
-.war-table-page__map::after {
-  top: 0;
-  left: 50%;
-
-  width: 1px;
-  height: 100%;
-
-  background:
+      rgba(0, 0, 0, 0.55),
+      transparent 18%,
+      transparent 82%,
+      rgba(0, 0, 0, 0.55)
+    ),
     linear-gradient(
-      transparent,
-      #8ddcf8,
-      transparent
+      180deg,
+      rgba(0, 0, 0, 0.28),
+      transparent 28%,
+      transparent 72%,
+      rgba(0, 0, 0, 0.4)
     );
 }
 
-/* central imperial seal */
-
-.war-table-page__map-center {
-  position: absolute;
-
-  z-index: 0;
-
-  top: 50%;
-  left: 50%;
-
-  transform:
-    translate(-50%, -50%);
-
-  color:
-    rgba(119, 201, 234, 0.08);
-}
-
-.war-table-page__map-center::before,
-.war-table-page__map-center::after {
-  content: "";
-
+.war-board-stage__glow {
   position: absolute;
 
   top: 50%;
   left: 50%;
+
+  width: 560px;
+  height: 360px;
 
   transform:
     translate(-50%, -50%);
 
   border-radius: 50%;
 
-  border:
-    1px solid rgba(128, 206, 237, 0.1);
-}
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(84, 145, 205, 0.17),
+      rgba(50, 94, 145, 0.07) 42%,
+      transparent 72%
+    );
 
-.war-table-page__map-center::before {
-  width: 230px;
-  height: 230px;
-}
+  filter: blur(28px);
 
-.war-table-page__map-center::after {
-  width: 300px;
-  height: 300px;
-
-  border-style: dashed;
-
-  opacity: 0.6;
+  pointer-events: none;
 }
 
 /* =========================================
-   MAP MARKERS
+   MAIN BOARD
 ========================================= */
 
-.war-table-page__marker {
+.war-board {
+  position: relative;
+  z-index: 2;
+
+  width: min(540px, 76%);
+
+  margin: 0 auto;
+
+  transform:
+    perspective(1100px)
+    rotateX(7deg);
+
+  transform-origin: center center;
+}
+
+/* ornate outer border */
+
+.war-board::before {
+  content: "";
+
   position: absolute;
-  z-index: 5;
+
+  inset: -15px;
+
+  z-index: -2;
+
+  border:
+    1px solid rgba(122, 168, 211, 0.22);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(28, 45, 72, 0.95),
+      rgba(11, 21, 38, 0.98)
+    );
+
+  box-shadow:
+    0 16px 35px rgba(0, 0, 0, 0.5),
+    0 0 32px rgba(77, 129, 184, 0.08),
+    inset 0 0 30px rgba(118, 175, 221, 0.05);
+}
+
+/* second ornamental frame */
+
+.war-board::after {
+  content: "";
+
+  position: absolute;
+
+  inset: -8px;
+
+  z-index: -1;
+
+  border:
+    1px solid rgba(158, 210, 239, 0.16);
+
+  box-shadow:
+    inset 0 0 18px rgba(124, 190, 226, 0.04);
+}
+
+/* =========================================
+   ORNAMENTAL CORNERS
+========================================= */
+
+.war-board__corner {
+  position: absolute;
+
+  z-index: 8;
+
+  width: 42px;
+  height: 42px;
+
+  border-color:
+    rgba(154, 211, 237, 0.38);
+
+  pointer-events: none;
+}
+
+.war-board__corner--tl {
+  top: -15px;
+  left: -15px;
+
+  border-top: 2px solid;
+  border-left: 2px solid;
+
+  transform: rotate(-4deg);
+}
+
+.war-board__corner--tr {
+  top: -15px;
+  right: -15px;
+
+  border-top: 2px solid;
+  border-right: 2px solid;
+
+  transform: rotate(4deg);
+}
+
+.war-board__corner--bl {
+  bottom: -15px;
+  left: -15px;
+
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+
+  transform: rotate(4deg);
+}
+
+.war-board__corner--br {
+  right: -15px;
+  bottom: -15px;
+
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+
+  transform: rotate(-4deg);
+}
+
+/* =========================================
+   BOARD FRAME
+========================================= */
+
+.war-board__frame {
+  position: relative;
+
+  padding: 18px;
+
+  border:
+    1px solid rgba(134, 192, 224, 0.22);
+
+  background:
+    linear-gradient(
+      135deg,
+      #16243a,
+      #0c1728 55%,
+      #111d32
+    );
+
+  box-shadow:
+    inset 0 0 16px rgba(154, 207, 236, 0.06);
+}
+
+/* decorative bevel */
+
+.war-board__frame::before {
+  content: "";
+
+  position: absolute;
+  inset: 7px;
+
+  border:
+    1px solid rgba(145, 202, 232, 0.1);
+
+  pointer-events: none;
+}
+
+/* =========================================
+   BOARD CRESTS
+========================================= */
+
+.war-board__crest {
+  position: absolute;
+  z-index: 10;
 
   display: grid;
   place-items: center;
 
-  width: 28px;
-  height: 28px;
+  width: 46px;
+  height: 46px;
+
+  left: 50%;
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+
+  border:
+    1px solid rgba(165, 220, 245, 0.25);
+
+  background:
+    linear-gradient(
+      145deg,
+      #172a42,
+      #091624
+    );
+
+  color: #9fe3fa;
+
+  box-shadow:
+    0 0 13px rgba(103, 190, 227, 0.08);
+}
+
+.war-board__crest svg {
+  transform: rotate(-45deg);
+}
+
+.war-board__crest--top {
+  top: -31px;
+}
+
+.war-board__crest--bottom {
+  bottom: -31px;
+}
+
+/* =========================================
+   BOARD SURFACE
+========================================= */
+
+.war-board__surface {
+  position: relative;
+
+  aspect-ratio: 1 / 1;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(163, 218, 242, 0.2);
+
+  background:
+    linear-gradient(
+      145deg,
+      #142941,
+      #0b1c31
+    );
+
+  box-shadow:
+    inset 0 0 35px rgba(101, 186, 225, 0.08);
+}
+
+/* =========================================
+   CHESS CELLS
+========================================= */
+
+.war-board__cells {
+  position: absolute;
+  inset: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(8, 1fr);
+
+  grid-template-rows:
+    repeat(8, 1fr);
+}
+
+.war-board__cell {
+  border:
+    1px solid rgba(151, 203, 228, 0.035);
+}
+
+.war-board__cell:nth-child(16n + 1),
+.war-board__cell:nth-child(16n + 3),
+.war-board__cell:nth-child(16n + 5),
+.war-board__cell:nth-child(16n + 7),
+.war-board__cell:nth-child(16n + 10),
+.war-board__cell:nth-child(16n + 12),
+.war-board__cell:nth-child(16n + 14),
+.war-board__cell:nth-child(16n + 16) {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(107, 158, 205, 0.18),
+      rgba(71, 111, 153, 0.12)
+    );
+}
+
+.war-board__cell:nth-child(16n + 2),
+.war-board__cell:nth-child(16n + 4),
+.war-board__cell:nth-child(16n + 6),
+.war-board__cell:nth-child(16n + 8),
+.war-board__cell:nth-child(16n + 9),
+.war-board__cell:nth-child(16n + 11),
+.war-board__cell:nth-child(16n + 13),
+.war-board__cell:nth-child(16n + 15) {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37, 73, 109, 0.18),
+      rgba(21, 47, 75, 0.16)
+    );
+}
+
+/* subtle icy sheen */
+
+.war-board__surface::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(197, 237, 255, 0.04),
+      transparent 32%,
+      transparent 68%,
+      rgba(118, 184, 221, 0.035)
+    );
+}
+
+/* =========================================
+   IMPERIAL SEAL
+========================================= */
+
+.war-board__seal {
+  position: absolute;
+
+  z-index: 3;
+
+  top: 50%;
+  left: 50%;
+
+  transform:
+    translate(-50%, -50%);
+
+  pointer-events: none;
+}
+
+.war-board__seal-ring {
+  display: grid;
+  place-items: center;
+
+  width: 102px;
+  height: 102px;
+
+  border:
+    1px solid rgba(158, 218, 244, 0.12);
+
+  border-radius: 50%;
+
+  color:
+    rgba(162, 225, 248, 0.12);
+
+  box-shadow:
+    0 0 28px rgba(89, 181, 221, 0.05),
+    inset 0 0 22px rgba(96, 183, 219, 0.04);
+}
+
+/* =========================================
+   STRATEGY TOKENS
+========================================= */
+
+.war-token {
+  position: absolute;
+
+  z-index: 10;
+
+  width: 54px;
+  height: 62px;
 
   padding: 0;
 
@@ -465,43 +746,100 @@
   cursor: pointer;
 }
 
-.war-table-page__marker-ring {
+.war-token__shadow {
   position: absolute;
+
+  left: 50%;
+  bottom: 2px;
+
+  width: 38px;
+  height: 13px;
+
+  transform:
+    translateX(-50%);
+
+  border-radius: 50%;
+
+  background:
+    rgba(0, 0, 0, 0.55);
+
+  filter: blur(5px);
+}
+
+/* piece base */
+
+.war-token__base {
+  position: absolute;
+
+  left: 50%;
+  bottom: 8px;
+
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+
+  border:
+    1px solid rgba(145, 207, 235, 0.34);
+
+  background:
+    linear-gradient(
+      145deg,
+      #1a3953,
+      #0c1d31
+    );
+
+  box-shadow:
+    0 5px 8px rgba(0, 0, 0, 0.42),
+    inset 0 0 10px rgba(131, 206, 239, 0.06);
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* glowing center */
+
+.war-token__gem {
+  display: grid;
+  place-items: center;
 
   width: 25px;
   height: 25px;
 
-  border:
-    1px solid rgba(122, 205, 236, 0.36);
+  transform:
+    rotate(-45deg);
+
+  color: #96def8;
 
   border-radius: 50%;
 
-  transition:
-    transform 0.2s,
-    border-color 0.2s,
-    box-shadow 0.2s;
+  background:
+    radial-gradient(
+      circle,
+      rgba(144, 225, 255, 0.22),
+      rgba(55, 114, 145, 0.09) 60%,
+      transparent 72%
+    );
+
+  filter:
+    drop-shadow(
+      0 0 4px rgba(107, 211, 248, 0.26)
+    );
 }
 
-.war-table-page__marker-dot {
-  position: relative;
+/* label */
 
-  z-index: 2;
-
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: #79cbe9;
-
-  box-shadow:
-    0 0 7px rgba(113, 211, 247, 0.55);
-}
-
-.war-table-page__marker small {
+.war-token__label {
   position: absolute;
 
-  top: 30px;
+  top: 58px;
   left: 50%;
 
   transform:
@@ -509,131 +847,234 @@
 
   white-space: nowrap;
 
-  color: #759dab;
+  color: #658998;
 
   font-family: Georgia, "Times New Roman", serif;
 
   font-size: 6px;
 
-  letter-spacing: 0.11em;
+  letter-spacing: 0.12em;
 
   text-transform: uppercase;
 
-  transition: color 0.2s;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.8);
+
+  transition: color 0.2s ease;
 }
 
-.war-table-page__marker:hover .war-table-page__marker-ring {
-  transform: scale(1.25);
+/* hover */
+
+.war-token:hover .war-token__base {
+  transform:
+    translateX(-50%)
+    rotate(45deg)
+    scale(1.1);
 
   border-color:
-    rgba(149, 226, 255, 0.65);
+    rgba(168, 230, 255, 0.58);
 
   box-shadow:
-    0 0 14px rgba(103, 204, 243, 0.13);
+    0 6px 11px rgba(0, 0, 0, 0.48),
+    0 0 15px rgba(101, 201, 241, 0.1);
 }
 
-.war-table-page__marker:hover small {
-  color: #d5eff8;
+.war-token:hover .war-token__label {
+  color: #ccebf7;
 }
 
-/* active marker */
+/* selected */
 
-.war-table-page__marker--active
-.war-table-page__marker-ring {
-  transform: scale(1.35);
+.war-token--selected .war-token__base {
+  transform:
+    translateX(-50%)
+    rotate(45deg)
+    scale(1.14);
 
   border-color:
-    rgba(168, 234, 255, 0.9);
+    rgba(196, 240, 255, 0.86);
+
+  background:
+    linear-gradient(
+      145deg,
+      #285874,
+      #102a42
+    );
 
   box-shadow:
-    0 0 18px rgba(102, 211, 251, 0.22);
+    0 7px 14px rgba(0, 0, 0, 0.5),
+    0 0 19px rgba(106, 214, 251, 0.2),
+    inset 0 0 11px rgba(171, 235, 255, 0.08);
 }
 
-.war-table-page__marker--active
-.war-table-page__marker-dot {
-  background: #d3f6ff;
+.war-token--selected .war-token__gem {
+  color: #e0f8ff;
 
-  box-shadow:
-    0 0 11px rgba(151, 232, 255, 0.8);
+  filter:
+    drop-shadow(
+      0 0 7px rgba(146, 231, 255, 0.7)
+    );
 }
 
-.war-table-page__marker--active small {
-  color: #dff6ff;
+.war-token--selected .war-token__label {
+  color: #e1f5fc;
 }
 
 /* =========================================
-   MAP LABEL
+   BOARD CAPTION
 ========================================= */
 
-.war-table-page__map-label {
-  position: absolute;
+.war-board-stage__caption {
+  position: relative;
+  z-index: 2;
 
-  z-index: 5;
-
-  left: 15px;
-  bottom: 13px;
-
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
 
-  gap: 7px;
+  gap: 14px;
 
-  padding: 7px 9px;
+  margin-top: 31px;
 
-  border:
-    1px solid rgba(145, 208, 233, 0.13);
+  padding: 9px 12px;
 
-  background:
-    rgba(4, 17, 29, 0.72);
+  border-top:
+    1px solid rgba(146, 204, 228, 0.08);
 
-  color: #7299a8;
+  color: #5f7f8c;
 
   font-size: 6px;
 
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
 
   text-transform: uppercase;
 }
 
-.war-table-page__map-label svg {
-  color: #9cddf6;
+.war-board-stage__caption > span:first-child {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.war-board-stage__caption svg {
+  color: #89cce5;
 }
 
 /* =========================================
-   REGION INTELLIGENCE
+   REGION PANEL
 ========================================= */
 
-.war-table-page__region {
+.war-region-panel {
   display: flex;
   flex-direction: column;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 29, 45, 0.9),
+      rgba(5, 17, 28, 0.95)
+    );
 }
 
-.war-table-page__region-body {
+.war-region-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 62px;
+
+  padding: 11px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.09);
+}
+
+.war-region-panel__header > div:first-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.war-region-panel__header span {
+  color: #628898;
+
+  font-size: 6px;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.war-region-panel__header h2 {
+  margin: 0;
+
+  color: #e0eff5;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.war-region-panel__selected-icon {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+
+  border:
+    1px solid rgba(153, 216, 241, 0.2);
+
+  color: #9fe3fa;
+
+  background:
+    rgba(45, 97, 122, 0.1);
+}
+
+/* =========================================
+   REGION BODY
+========================================= */
+
+.war-region-panel__body {
   display: flex;
   flex-direction: column;
 
   flex: 1;
 
-  padding: 15px;
+  padding: 16px;
 }
 
-.war-table-page__region-subtitle {
-  color: #7ea7b6;
+.war-region-panel__subtitle {
+  color: #7da4b3;
 
   font-size: 7px;
 
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
 
   text-transform: uppercase;
 }
 
 /* influence */
 
-.war-table-page__influence {
-  margin-top: 20px;
+.war-region-panel__influence {
+  margin-top: 22px;
 }
 
-.war-table-page__influence > div:first-child {
+.war-region-panel__influence > div:first-child {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -641,22 +1082,22 @@
   gap: 10px;
 }
 
-.war-table-page__influence span {
-  color: #688996;
+.war-region-panel__influence span {
+  color: #678895;
 
   font-size: 7px;
 
   text-transform: uppercase;
 }
 
-.war-table-page__influence strong {
-  color: #e3f4fa;
+.war-region-panel__influence strong {
+  color: #eef9fc;
 
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 400;
 }
 
-.war-table-page__influence-bar {
+.war-region-panel__bar {
   height: 4px;
 
   margin-top: 8px;
@@ -664,10 +1105,10 @@
   overflow: hidden;
 
   background:
-    rgba(111, 152, 172, 0.14);
+    rgba(108, 149, 168, 0.14);
 }
 
-.war-table-page__influence-bar > span {
+.war-region-panel__bar > span {
   display: block;
 
   height: 100%;
@@ -675,46 +1116,46 @@
   background:
     linear-gradient(
       90deg,
-      #4a9cc1,
-      #a8e9ff
+      #4d9fc4,
+      #b8efff
     );
 
   box-shadow:
-    0 0 8px rgba(111, 210, 250, 0.27);
+    0 0 8px rgba(112, 210, 248, 0.28);
 }
 
-/* region stats */
+/* =========================================
+   REGION STATS
+========================================= */
 
-.war-table-page__region-stats {
+.war-region-panel__stats {
   display: grid;
-
-  grid-template-columns: 1fr;
 
   gap: 7px;
 
-  margin-top: 19px;
+  margin-top: 18px;
 }
 
-.war-table-page__region-stats > div {
+.war-region-panel__stats > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   gap: 12px;
 
-  min-height: 38px;
+  min-height: 42px;
 
   padding: 0 10px;
 
   border:
-    1px solid rgba(143, 200, 223, 0.1);
+    1px solid rgba(142, 199, 222, 0.09);
 
   background:
-    rgba(5, 19, 31, 0.42);
+    rgba(5, 18, 30, 0.45);
 }
 
-.war-table-page__region-stats span {
-  color: #698794;
+.war-region-panel__stats span {
+  color: #648390;
 
   font-size: 6px;
 
@@ -723,8 +1164,8 @@
   text-transform: uppercase;
 }
 
-.war-table-page__region-stats strong {
-  color: #d2e8f0;
+.war-region-panel__stats strong {
+  color: #d5e9f0;
 
   font-size: 8px;
   font-weight: 400;
@@ -734,61 +1175,115 @@
   text-transform: uppercase;
 }
 
-/* directive */
+/* =========================================
+   ROYAL DIRECTIVE
+========================================= */
 
-.war-table-page__region-order {
+.war-region-panel__directive {
   display: flex;
   align-items: flex-start;
 
   gap: 10px;
 
-  margin-top: auto;
+  margin-top: 20px;
   padding: 12px;
 
   border:
-    1px solid rgba(146, 205, 229, 0.11);
+    1px solid rgba(148, 205, 229, 0.1);
 
   background:
     linear-gradient(
       145deg,
-      rgba(11, 35, 52, 0.58),
-      rgba(5, 20, 32, 0.55)
+      rgba(11, 34, 51, 0.57),
+      rgba(5, 18, 30, 0.54)
     );
 }
 
-.war-table-page__region-order > svg {
+.war-region-panel__directive-icon {
+  display: grid;
+  place-items: center;
+
+  width: 31px;
+  height: 31px;
+
   flex-shrink: 0;
 
-  margin-top: 2px;
+  border:
+    1px solid rgba(152, 214, 240, 0.16);
 
-  color: #88cee9;
+  color: #95d9f2;
 }
 
-.war-table-page__region-order > div {
+.war-region-panel__directive > div:last-child {
   display: flex;
   flex-direction: column;
 
   gap: 5px;
 }
 
-.war-table-page__region-order span {
-  color: #78a0af;
+.war-region-panel__directive span {
+  color: #759cab;
 
   font-size: 6px;
 
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
 
   text-transform: uppercase;
 }
 
-.war-table-page__region-order p {
+.war-region-panel__directive p {
   margin: 0;
 
-  color: #77909b;
+  color: #758d98;
 
   font-size: 7px;
 
   line-height: 1.65;
+}
+
+/* =========================================
+   ROYAL SEAL
+========================================= */
+
+.war-region-panel__seal {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: auto;
+  padding-top: 18px;
+
+  border-top:
+    1px solid rgba(151, 205, 228, 0.08);
+
+  color: #86c8e0;
+}
+
+.war-region-panel__seal > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.war-region-panel__seal span {
+  color: #617f8c;
+
+  font-size: 6px;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.war-region-panel__seal strong {
+  color: #cce5ee;
+
+  font-size: 8px;
+  font-weight: 400;
+
+  letter-spacing: 0.06em;
 }
 
 /* =========================================
@@ -810,7 +1305,7 @@
   padding-bottom: 9px;
 
   border-bottom:
-    1px solid rgba(159, 211, 233, 0.11);
+    1px solid rgba(159, 211, 233, 0.1);
 }
 
 .war-table-page__section-heading > div {
@@ -844,7 +1339,7 @@
 }
 
 .war-table-page__section-heading > span {
-  color: #627f8d;
+  color: #617f8c;
 
   font-size: 6px;
 
@@ -875,13 +1370,13 @@
   overflow: hidden;
 
   border:
-    1px solid rgba(149, 207, 231, 0.14);
+    1px solid rgba(149, 207, 231, 0.13);
 
   background:
     linear-gradient(
       145deg,
-      rgba(12, 34, 51, 0.82),
-      rgba(6, 19, 31, 0.9)
+      rgba(12, 34, 51, 0.8),
+      rgba(6, 19, 31, 0.89)
     );
 
   transition:
@@ -922,15 +1417,13 @@
   height: 38px;
 
   border:
-    1px solid rgba(155, 217, 241, 0.17);
+    1px solid rgba(155, 217, 241, 0.16);
 
   color: #95dbf5;
 
   background:
-    rgba(31, 76, 99, 0.12);
+    rgba(31, 76, 99, 0.11);
 }
-
-/* priorities */
 
 .war-operation__priority {
   display: inline-flex;
@@ -941,7 +1434,7 @@
   padding: 0 7px;
 
   border:
-    1px solid rgba(145, 199, 221, 0.12);
+    1px solid rgba(145, 199, 221, 0.11);
 
   background:
     rgba(5, 18, 31, 0.42);
@@ -1071,9 +1564,6 @@
       #4d9fc4,
       #a9e8ff
     );
-
-  box-shadow:
-    0 0 7px rgba(106, 206, 246, 0.25);
 }
 
 /* =========================================
@@ -1133,11 +1623,15 @@
   .war-table-page__command {
     grid-template-columns:
       minmax(0, 1fr)
-      260px;
+      270px;
   }
 
-  .war-table-page__map {
-    height: 360px;
+  .war-board-stage {
+    min-height: 490px;
+  }
+
+  .war-board {
+    width: min(500px, 80%);
   }
 }
 
@@ -1161,12 +1655,16 @@
     grid-template-columns: 1fr;
   }
 
-  .war-table-page__map {
-    height: 370px;
+  .war-board-stage {
+    min-height: 500px;
   }
 
-  .war-table-page__region-order {
-    margin-top: 18px;
+  .war-board {
+    width: min(500px, 78%);
+  }
+
+  .war-region-panel__seal {
+    margin-top: 22px;
   }
 
   .war-table-page__operation-grid {
@@ -1192,27 +1690,64 @@
     grid-template-columns: 1fr;
   }
 
-  .war-table-page__map {
-    height: 340px;
+  .war-board-stage {
+    min-height: 410px;
+
+    padding:
+      28px 10px 14px;
   }
 
-  .war-table-page__map-center svg {
-    width: 120px;
-    height: 120px;
+  .war-board {
+    width: 86%;
   }
 
-  .war-table-page__map-center::before {
-    width: 170px;
-    height: 170px;
+  .war-board__frame {
+    padding: 11px;
   }
 
-  .war-table-page__map-center::after {
-    width: 220px;
-    height: 220px;
+  .war-board__crest {
+    width: 36px;
+    height: 36px;
   }
 
-  .war-table-page__marker small {
+  .war-board__crest--top {
+    top: -25px;
+  }
+
+  .war-board__crest--bottom {
+    bottom: -25px;
+  }
+
+  .war-token {
+    width: 42px;
+    height: 50px;
+  }
+
+  .war-token__base {
+    width: 30px;
+    height: 30px;
+  }
+
+  .war-token__gem {
+    width: 20px;
+    height: 20px;
+  }
+
+  .war-token__gem svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .war-token__label {
     display: none;
+  }
+
+  .war-board-stage__caption {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    margin-top: 27px;
   }
 
   .war-table-page__section-heading {

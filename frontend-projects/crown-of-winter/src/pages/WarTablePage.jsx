@@ -1,18 +1,18 @@
 import { useState } from 'react';
 
 import {
-  Map,
-  Crosshair,
+  Snowflake,
+  Crown,
   Shield,
   Users,
   AlertTriangle,
   Radio,
   ChevronRight,
-  Snowflake,
-  Target,
   Swords,
   Eye,
-  Crown,
+  Gem,
+  Crosshair,
+  MapPin,
 } from 'lucide-react';
 
 import './WarTablePage.css';
@@ -26,8 +26,9 @@ const regions = [
     threat: 'Secure',
     forces: '18,420',
     operations: 3,
-    x: 50,
-    y: 20,
+    x: 54,
+    y: 16,
+    token: 'crown',
   },
   {
     id: 'mondstadt',
@@ -37,8 +38,9 @@ const regions = [
     threat: 'Observed',
     forces: '1,240',
     operations: 2,
-    x: 20,
-    y: 44,
+    x: 24,
+    y: 37,
+    token: 'shield',
   },
   {
     id: 'liyue',
@@ -48,8 +50,9 @@ const regions = [
     threat: 'Stable',
     forces: '2,810',
     operations: 4,
-    x: 39,
-    y: 58,
+    x: 42,
+    y: 50,
+    token: 'gem',
   },
   {
     id: 'inazuma',
@@ -59,8 +62,9 @@ const regions = [
     threat: 'Restricted',
     forces: '860',
     operations: 1,
-    x: 78,
-    y: 62,
+    x: 75,
+    y: 46,
+    token: 'snowflake',
   },
   {
     id: 'sumeru',
@@ -70,8 +74,9 @@ const regions = [
     threat: 'Observed',
     forces: '1,930',
     operations: 3,
-    x: 52,
-    y: 72,
+    x: 58,
+    y: 68,
+    token: 'eye',
   },
   {
     id: 'fontaine',
@@ -81,8 +86,9 @@ const regions = [
     threat: 'Active',
     forces: '3,460',
     operations: 5,
-    x: 29,
-    y: 31,
+    x: 30,
+    y: 22,
+    token: 'crosshair',
   },
   {
     id: 'natlan',
@@ -93,7 +99,8 @@ const regions = [
     forces: '4,120',
     operations: 6,
     x: 28,
-    y: 78,
+    y: 73,
+    token: 'swords',
   },
 ];
 
@@ -127,25 +134,63 @@ const operations = [
   },
 ];
 
+const boardCells = Array.from({ length: 64 }, (_, index) => index);
+
+function RegionIcon({ token }) {
+  const props = {
+    size: 19,
+    strokeWidth: 1.3,
+  };
+
+  switch (token) {
+    case 'crown':
+      return <Crown {...props} />;
+
+    case 'shield':
+      return <Shield {...props} />;
+
+    case 'gem':
+      return <Gem {...props} />;
+
+    case 'snowflake':
+      return <Snowflake {...props} />;
+
+    case 'eye':
+      return <Eye {...props} />;
+
+    case 'crosshair':
+      return <Crosshair {...props} />;
+
+    case 'swords':
+      return <Swords {...props} />;
+
+    default:
+      return <MapPin {...props} />;
+  }
+}
+
 function WarTablePage() {
-  const [selectedRegion, setSelectedRegion] = useState(regions[5]);
+  const [selectedRegion, setSelectedRegion] = useState(regions[0]);
 
   return (
     <main className="war-table-page">
 
-      {/* HEADER */}
+      {/* =====================================
+          HEADER
+      ===================================== */}
+
       <header className="war-table-page__header">
 
         <div>
           <span className="war-table-page__eyebrow">
-            Imperial Strategic Command
+            Imperial Strategic Chamber
           </span>
 
           <h1>War Table</h1>
 
           <p>
-            Global Fatui deployments, regional influence and
-            active imperial operations.
+            Her Majesty&apos;s strategic board for imperial deployments,
+            foreign influence and classified military operations.
           </p>
         </div>
 
@@ -154,15 +199,18 @@ function WarTablePage() {
           <Radio size={18} />
 
           <div>
-            <span>Strategic Network</span>
-            <strong>Live</strong>
+            <span>War Chamber</span>
+            <strong>Sealed</strong>
           </div>
 
         </div>
 
       </header>
 
-      {/* TOP METRICS */}
+      {/* =====================================
+          METRICS
+      ===================================== */}
+
       <section className="war-table-page__metrics">
 
         <article>
@@ -203,96 +251,174 @@ function WarTablePage() {
 
       </section>
 
-      {/* MAIN COMMAND AREA */}
+      {/* =====================================
+          WAR CHAMBER
+      ===================================== */}
+
       <section className="war-table-page__command">
 
-        {/* MAP */}
-        <article className="war-table-page__map-panel">
+        {/* ===================================
+            IMPERIAL BOARD
+        =================================== */}
 
-          <div className="war-table-page__panel-header">
+        <article className="war-board-panel">
+
+          <div className="war-board-panel__header">
 
             <div>
-              <span>Global Theatre</span>
-              <h2>Imperial Influence Map</h2>
+              <span>Her Majesty&apos;s Chamber</span>
+              <h2>Imperial Strategy Board</h2>
             </div>
 
-            <Map size={18} />
+            <Crown size={18} />
 
           </div>
 
-          <div className="war-table-page__map">
+          <div className="war-board-stage">
 
-            <div className="war-table-page__map-grid" />
+            {/* atmospheric table glow */}
+            <div className="war-board-stage__glow" />
 
-            <div className="war-table-page__map-center">
-              <Snowflake size={170} strokeWidth={0.3} />
+            {/* ornate board */}
+            <div className="war-board">
+
+              {/* ornamental corners */}
+              <span className="war-board__corner war-board__corner--tl" />
+              <span className="war-board__corner war-board__corner--tr" />
+              <span className="war-board__corner war-board__corner--bl" />
+              <span className="war-board__corner war-board__corner--br" />
+
+              {/* outer decoration */}
+              <div className="war-board__frame">
+
+                <div className="war-board__crest war-board__crest--top">
+                  <Snowflake size={24} strokeWidth={1} />
+                </div>
+
+                <div className="war-board__crest war-board__crest--bottom">
+                  <Crown size={22} strokeWidth={1} />
+                </div>
+
+                {/* board surface */}
+                <div className="war-board__surface">
+
+                  <div className="war-board__cells">
+                    {boardCells.map((cell) => (
+                      <span
+                        key={cell}
+                        className="war-board__cell"
+                      />
+                    ))}
+                  </div>
+
+                  {/* center imperial emblem */}
+                  <div className="war-board__seal">
+                    <div className="war-board__seal-ring">
+                      <Snowflake
+                        size={54}
+                        strokeWidth={0.7}
+                      />
+                    </div>
+                  </div>
+
+                  {/* strategic tokens */}
+                  {regions.map((region) => (
+                    <button
+                      key={region.id}
+                      type="button"
+                      aria-label={`Select ${region.name}`}
+                      className={`war-token ${
+                        selectedRegion.id === region.id
+                          ? 'war-token--selected'
+                          : ''
+                      }`}
+                      style={{
+                        left: `${region.x}%`,
+                        top: `${region.y}%`,
+                      }}
+                      onClick={() => setSelectedRegion(region)}
+                    >
+
+                      <span className="war-token__shadow" />
+
+                      <span className="war-token__base">
+
+                        <span className="war-token__gem">
+                          <RegionIcon token={region.token} />
+                        </span>
+
+                      </span>
+
+                      <span className="war-token__label">
+                        {region.name}
+                      </span>
+
+                    </button>
+                  ))}
+
+                </div>
+
+              </div>
+
             </div>
 
-            {regions.map((region) => (
-              <button
-                key={region.id}
-                type="button"
-                className={`war-table-page__marker ${
-                  selectedRegion.id === region.id
-                    ? 'war-table-page__marker--active'
-                    : ''
-                }`}
-                style={{
-                  left: `${region.x}%`,
-                  top: `${region.y}%`,
-                }}
-                onClick={() => setSelectedRegion(region)}
-              >
-                <span className="war-table-page__marker-ring" />
-
-                <span className="war-table-page__marker-dot" />
-
-                <small>{region.name}</small>
-              </button>
-            ))}
-
-            <div className="war-table-page__map-label">
-              <Crown size={13} />
+            <div className="war-board-stage__caption">
 
               <span>
-                Crown of Winter Strategic Network
+                <Snowflake size={12} />
+                Cryo Strategic Matrix
               </span>
+
+              <span>
+                Sector VII // Imperial Eyes Only
+              </span>
+
             </div>
 
           </div>
 
         </article>
 
-        {/* REGION INTELLIGENCE */}
-        <aside className="war-table-page__region">
+        {/* ===================================
+            SELECTED REGION
+        =================================== */}
 
-          <div className="war-table-page__panel-header">
+        <aside className="war-region-panel">
+
+          <div className="war-region-panel__header">
 
             <div>
-              <span>Selected Territory</span>
+              <span>Selected Piece</span>
               <h2>{selectedRegion.name}</h2>
             </div>
 
-            <Target size={18} />
+            <div className="war-region-panel__selected-icon">
+              <RegionIcon token={selectedRegion.token} />
+            </div>
 
           </div>
 
-          <div className="war-table-page__region-body">
+          <div className="war-region-panel__body">
 
-            <span className="war-table-page__region-subtitle">
+            <span className="war-region-panel__subtitle">
               {selectedRegion.subtitle}
             </span>
 
-            <div className="war-table-page__influence">
+            {/* influence */}
+
+            <div className="war-region-panel__influence">
 
               <div>
-                <span>Imperial Influence</span>
+                <span>
+                  Imperial Influence
+                </span>
+
                 <strong>
                   {selectedRegion.influence}%
                 </strong>
               </div>
 
-              <div className="war-table-page__influence-bar">
+              <div className="war-region-panel__bar">
                 <span
                   style={{
                     width: `${selectedRegion.influence}%`,
@@ -302,10 +428,13 @@ function WarTablePage() {
 
             </div>
 
-            <div className="war-table-page__region-stats">
+            {/* stats */}
+
+            <div className="war-region-panel__stats">
 
               <div>
                 <span>Threat Status</span>
+
                 <strong>
                   {selectedRegion.threat}
                 </strong>
@@ -313,6 +442,7 @@ function WarTablePage() {
 
               <div>
                 <span>Fatui Forces</span>
+
                 <strong>
                   {selectedRegion.forces}
                 </strong>
@@ -320,25 +450,47 @@ function WarTablePage() {
 
               <div>
                 <span>Operations</span>
+
                 <strong>
-                  {selectedRegion.operations}
+                  {String(selectedRegion.operations).padStart(2, '0')}
                 </strong>
               </div>
 
             </div>
 
-            <div className="war-table-page__region-order">
+            {/* royal directive */}
 
-              <Eye size={16} />
+            <div className="war-region-panel__directive">
+
+              <div className="war-region-panel__directive-icon">
+                <Crown size={17} />
+              </div>
 
               <div>
-                <span>Current Directive</span>
+                <span>
+                  Royal Directive
+                </span>
 
                 <p>
-                  Maintain surveillance and continue
-                  strategic influence operations throughout
-                  {` ${selectedRegion.name}`}.
+                  Maintain strategic pressure and continue imperial
+                  observation throughout {selectedRegion.name}.
                 </p>
+              </div>
+
+            </div>
+
+            {/* seal */}
+
+            <div className="war-region-panel__seal">
+
+              <Snowflake
+                size={35}
+                strokeWidth={0.8}
+              />
+
+              <div>
+                <span>Authority</span>
+                <strong>By Order of the Crown</strong>
               </div>
 
             </div>
@@ -349,18 +501,21 @@ function WarTablePage() {
 
       </section>
 
-      {/* OPERATIONS */}
+      {/* =====================================
+          OPERATIONS
+      ===================================== */}
+
       <section className="war-table-page__operations">
 
         <div className="war-table-page__section-heading">
 
           <div>
-            <span>Imperial Command</span>
-            <h2>Priority Operations</h2>
+            <span>Current Campaigns</span>
+            <h2>Imperial Operations</h2>
           </div>
 
           <span>
-            03 Classified Missions
+            03 Priority Orders
           </span>
 
         </div>
@@ -376,7 +531,7 @@ function WarTablePage() {
               <div className="war-operation__top">
 
                 <div className="war-operation__icon">
-                  <Swords size={20} />
+                  <Swords size={19} />
                 </div>
 
                 <span
@@ -406,7 +561,9 @@ function WarTablePage() {
               <div className="war-operation__progress">
 
                 <div>
-                  <span>{operation.status}</span>
+                  <span>
+                    {operation.status}
+                  </span>
 
                   <strong>
                     {operation.progress}%
@@ -424,7 +581,7 @@ function WarTablePage() {
               </div>
 
               <button type="button">
-                Open Operation
+                Review Order
                 <ChevronRight size={14} />
               </button>
 
