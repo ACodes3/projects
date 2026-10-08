@@ -9,6 +9,7 @@ import {
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import TsaritsaPage from './pages/TsaritsaPage';
+import PalacePage from './pages/PalacePage';
 import AppShell from './components/AppShell';
 
 function LoginRoute() {
@@ -61,7 +62,7 @@ function App() {
 
           <Route
             path="/palace"
-            element={<PlaceholderPage title="Palace of Ice" />}
+            element={<PalacePage />}
           />
 
           <Route
