@@ -32,6 +32,7 @@ const chambers = [
     subtitle: "Strategic Command",
     icon: Map,
     status: "Open",
+    path: "/palace/war",
     description:
       "Military operations, regional deployments and strategic Fatui planning are coordinated here.",
   },
