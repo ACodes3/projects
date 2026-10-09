@@ -20,6 +20,7 @@ import SystemPage from "./pages/SystemPage";
 import ThroneChamberPage from "./pages/palace/ThroneChamberPage";
 import WarChamberPage from './pages/palace/WarChamberPage';
 import HarbingerHallPage from './pages/palace/HarbingerHallPage';
+import ImperialArchivesPage from './pages/palace/ImperialArchivesPage';
 
 import AppShell from "./components/AppShell";
 
@@ -59,6 +60,8 @@ function App() {
           <Route path="/palace/war" element={<WarChamberPage />} />
 
           <Route path="/palace/harbingers" element={<HarbingerHallPage />} />
+
+          <Route path="/palace/archives" element={<ImperialArchivesPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
