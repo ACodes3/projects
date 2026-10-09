@@ -1,112 +1,351 @@
 import {
+  Activity,
   ArrowRight,
   CalendarDays,
-  Check,
   Dumbbell,
   Flame,
-  Footprints,
   Plus,
   Scale,
-  Target,
   TrendingUp,
   Utensils,
 } from 'lucide-react';
 
-import { Link } from 'react-router-dom';
+import {
+  useMemo,
+  useState,
+} from 'react';
+
+import {
+  Link,
+} from 'react-router-dom';
 
 import './DashboardPage.css';
 
-/* =========================================
-   TEMPORARY DASHBOARD DATA
+const WORKOUTS_KEY =
+  'forge:workoutHistory';
 
-   These will later come from localStorage.
+const NUTRITION_KEY =
+  'forge:nutritionLogs';
+
+const PROGRESS_KEY =
+  'forge:progressEntries';
+
+/* =========================================
+   STORAGE
 ========================================= */
 
-const nutrition = {
-  calories: {
-    current: 1842,
-    target: 2400,
-  },
-  protein: {
-    current: 148,
-    target: 180,
-  },
-  carbs: {
-    current: 176,
-    target: 250,
-  },
-  fat: {
-    current: 61,
-    target: 70,
-  },
-};
+function readArray(key) {
+  try {
+    const stored =
+      localStorage.getItem(key);
 
-const workout = {
-  name: 'Push A',
-  exercises: 6,
-  estimatedTime: 70,
-  status: 'Ready',
-};
+    if (!stored) {
+      return [];
+    }
 
-const recentActivity = [
-  {
-    id: 1,
-    type: 'workout',
-    title: 'Pull A',
-    detail: '7 exercises · 19 sets',
-    time: 'Yesterday',
-    icon: Dumbbell,
-  },
-  {
-    id: 2,
-    type: 'nutrition',
-    title: 'Daily nutrition complete',
-    detail: '2,326 kcal · 181g protein',
-    time: 'Yesterday',
-    icon: Utensils,
-  },
-  {
-    id: 3,
-    type: 'weight',
-    title: 'Body weight logged',
-    detail: '82.4 kg',
-    time: '2 days ago',
-    icon: Scale,
-  },
-];
+    const parsed =
+      JSON.parse(stored);
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function readObject(key) {
+  try {
+    const stored =
+      localStorage.getItem(key);
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed =
+      JSON.parse(stored);
+
+    return (
+      parsed &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed)
+        ? parsed
+        : {}
+    );
+  } catch {
+    return {};
+  }
+}
+
+/* =========================================
+   DASHBOARD
+========================================= */
 
 function DashboardPage() {
-  const today = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date());
+  const [workouts] =
+    useState(() =>
+      readArray(
+        WORKOUTS_KEY,
+      ),
+    );
 
-  const caloriePercentage = Math.min(
-    (nutrition.calories.current / nutrition.calories.target) * 100,
-    100,
-  );
+  const [nutritionLogs] =
+    useState(() =>
+      readObject(
+        NUTRITION_KEY,
+      ),
+    );
 
-  const proteinPercentage = Math.min(
-    (nutrition.protein.current / nutrition.protein.target) * 100,
-    100,
-  );
+  const [progressEntries] =
+    useState(() =>
+      readArray(
+        PROGRESS_KEY,
+      ),
+    );
 
-  const carbPercentage = Math.min(
-    (nutrition.carbs.current / nutrition.carbs.target) * 100,
-    100,
-  );
+  const today =
+    getLocalDateString();
 
-  const fatPercentage = Math.min(
-    (nutrition.fat.current / nutrition.fat.target) * 100,
-    100,
-  );
+  /* =========================================
+     SORTED WORKOUTS
+  ========================================= */
+
+  const sortedWorkouts =
+    useMemo(() => {
+      return [...workouts].sort(
+        (a, b) =>
+          new Date(
+            b.date ??
+              b.createdAt ??
+              0,
+          ) -
+          new Date(
+            a.date ??
+              a.createdAt ??
+              0,
+          ),
+      );
+    }, [workouts]);
+
+  /* =========================================
+     SORTED PROGRESS
+  ========================================= */
+
+  const sortedProgress =
+    useMemo(() => {
+      return [
+        ...progressEntries,
+      ].sort(
+        (a, b) =>
+          new Date(
+            b.date ??
+              b.createdAt ??
+              0,
+          ) -
+          new Date(
+            a.date ??
+              a.createdAt ??
+              0,
+          ),
+      );
+    }, [progressEntries]);
+
+  /* =========================================
+     TODAY'S NUTRITION
+  ========================================= */
+
+  const todayFoods =
+    useMemo(
+      () =>
+        nutritionLogs[today] ??
+        [],
+      [nutritionLogs, today],
+    );
+
+  const nutrition =
+    useMemo(() => {
+      return todayFoods.reduce(
+        (
+          total,
+          food,
+        ) => ({
+          calories:
+            total.calories +
+            Number(
+              food.calories || 0,
+            ),
+
+          protein:
+            total.protein +
+            Number(
+              food.protein || 0,
+            ),
+
+          carbs:
+            total.carbs +
+            Number(
+              food.carbs || 0,
+            ),
+
+          fat:
+            total.fat +
+            Number(
+              food.fat || 0,
+            ),
+        }),
+        {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+        },
+      );
+    }, [todayFoods]);
+
+  /* =========================================
+     WEEKLY WORKOUT COUNT
+  ========================================= */
+
+  const weeklyWorkouts =
+    useMemo(() => {
+      const start =
+        getStartOfWeek();
+
+      return workouts.filter(
+        (workout) => {
+          if (!workout.date) {
+            return false;
+          }
+
+          const date =
+            new Date(
+              `${workout.date}T12:00:00`,
+            );
+
+          return date >= start;
+        },
+      ).length;
+    }, [workouts]);
+
+  /* =========================================
+     LATEST DATA
+  ========================================= */
+
+  const latestWorkout =
+    sortedWorkouts[0] ??
+    null;
+
+  const latestProgress =
+    sortedProgress[0] ??
+    null;
+
+  const currentWeight =
+    latestProgress?.weight !==
+      undefined &&
+    latestProgress?.weight !==
+      null
+      ? Number(
+          latestProgress.weight,
+        )
+      : null;
+
+  const workoutVolume =
+    latestWorkout
+      ? getWorkoutVolume(
+          latestWorkout,
+        )
+      : 0;
+
+  const workoutSets =
+    latestWorkout
+      ? getWorkoutSetCount(
+          latestWorkout,
+        )
+      : 0;
+
+  /* =========================================
+     RECENT ACTIVITY
+  ========================================= */
+
+  const recentActivity =
+    useMemo(() => {
+      const activities = [];
+
+      sortedWorkouts
+        .slice(0, 4)
+        .forEach(
+          (workout) => {
+            activities.push({
+              id:
+                `workout-${workout.id}`,
+
+              type: 'workout',
+
+              title:
+                workout.name ||
+                'Workout',
+
+              description:
+                `${workout.exercises?.length ?? 0} exercises · ${getWorkoutSetCount(workout)} sets`,
+
+              date:
+                workout.date,
+
+              timestamp:
+                getTimestamp(
+                  workout.date,
+                  workout.createdAt,
+                ),
+            });
+          },
+        );
+
+      sortedProgress
+        .slice(0, 3)
+        .forEach(
+          (entry) => {
+            activities.push({
+              id:
+                `progress-${entry.id}`,
+
+              type: 'progress',
+
+              title:
+                `${formatNumber(entry.weight)} kg`,
+
+              description:
+                'Body weight recorded',
+
+              date:
+                entry.date,
+
+              timestamp:
+                getTimestamp(
+                  entry.date,
+                  entry.createdAt,
+                ),
+            });
+          },
+        );
+
+      return activities
+        .sort(
+          (a, b) =>
+            b.timestamp -
+            a.timestamp,
+        )
+        .slice(0, 5);
+    }, [
+      sortedWorkouts,
+      sortedProgress,
+    ]);
 
   return (
     <main className="dashboard-page">
 
       {/* =====================================
-          PAGE HEADER
+          HEADER
       ===================================== */}
 
       <div className="page__header">
@@ -114,7 +353,7 @@ function DashboardPage() {
         <div className="page__header-text">
 
           <span className="page__eyebrow">
-            {today}
+            Overview
           </span>
 
           <h1 className="page__title">
@@ -122,202 +361,99 @@ function DashboardPage() {
           </h1>
 
           <p className="page__description">
-            Your training, nutrition and progress for today.
+            An overview of what
+            you've actually logged.
           </p>
 
         </div>
 
         <Link
-          to="/workouts"
+          to="/workouts/session"
           className="button button--primary"
         >
-          <Dumbbell size={15} />
-          Start Workout
+          <Plus size={16} />
+          Log Workout
         </Link>
 
       </div>
 
       {/* =====================================
-          TOP SUMMARY
+          SUMMARY
       ===================================== */}
 
-      <section className="dashboard-page__summary">
+      <section className="dashboard-page__stats">
 
-        {/* TODAY'S WORKOUT */}
+        <article className="dashboard-page__stat">
 
-        <article className="dashboard-card dashboard-card--workout">
-
-          <div className="dashboard-card__top">
-
-            <div className="dashboard-card__icon">
-              <Dumbbell size={19} />
-            </div>
-
-            <span className="dashboard-card__status">
-              {workout.status}
-            </span>
-
-          </div>
-
-          <span className="dashboard-card__label">
-            Today&apos;s Workout
-          </span>
-
-          <strong className="dashboard-card__value">
-            {workout.name}
-          </strong>
-
-          <p className="dashboard-card__detail">
-            {workout.exercises} exercises · approximately{' '}
-            {workout.estimatedTime} min
-          </p>
-
-          <Link
-            to="/workouts"
-            className="dashboard-card__link"
-          >
-            View workout
-            <ArrowRight size={14} />
-          </Link>
-
-        </article>
-
-        {/* CALORIES */}
-
-        <article className="dashboard-card">
-
-          <div className="dashboard-card__top">
-
-            <div className="dashboard-card__icon">
-              <Flame size={19} />
-            </div>
-
-            <span className="dashboard-card__percentage">
-              {Math.round(caloriePercentage)}%
-            </span>
-
-          </div>
-
-          <span className="dashboard-card__label">
-            Calories
-          </span>
-
-          <strong className="dashboard-card__value">
-            {nutrition.calories.current.toLocaleString()}
-          </strong>
-
-          <p className="dashboard-card__detail">
-            of {nutrition.calories.target.toLocaleString()} kcal
-          </p>
-
-          <div className="dashboard-card__progress">
-            <span
-              style={{
-                width: `${caloriePercentage}%`,
-              }}
+          <div>
+            <CalendarDays
+              size={18}
             />
           </div>
 
-        </article>
-
-        {/* BODY WEIGHT */}
-
-        <article className="dashboard-card">
-
-          <div className="dashboard-card__top">
-
-            <div className="dashboard-card__icon">
-              <Scale size={19} />
-            </div>
-
-            <span className="dashboard-card__trend">
-              -0.4 kg
-            </span>
-
-          </div>
-
-          <span className="dashboard-card__label">
-            Body Weight
+          <span>
+            Workouts This Week
           </span>
 
-          <strong className="dashboard-card__value">
-            82.4
-            <small> kg</small>
+          <strong>
+            {weeklyWorkouts}
           </strong>
-
-          <p className="dashboard-card__detail">
-            Last logged 2 days ago
-          </p>
-
-          <Link
-            to="/progress"
-            className="dashboard-card__link"
-          >
-            View progress
-            <ArrowRight size={14} />
-          </Link>
 
         </article>
 
-        {/* WEEKLY TRAINING */}
+        <article className="dashboard-page__stat">
 
-        <article className="dashboard-card">
-
-          <div className="dashboard-card__top">
-
-            <div className="dashboard-card__icon">
-              <TrendingUp size={19} />
-            </div>
-
-            <span className="dashboard-card__trend">
-              3 / 4
-            </span>
-
+          <div>
+            <Scale size={18} />
           </div>
 
-          <span className="dashboard-card__label">
-            Weekly Training
+          <span>
+            Current Weight
           </span>
 
-          <strong className="dashboard-card__value">
-            3
+          <strong>
+            {currentWeight !==
+            null
+              ? `${formatNumber(currentWeight)} kg`
+              : '—'}
           </strong>
 
-          <p className="dashboard-card__detail">
-            workouts completed this week
-          </p>
+        </article>
 
-          <div className="dashboard-page__week">
+        <article className="dashboard-page__stat">
 
-            <span className="dashboard-page__day dashboard-page__day--done">
-              M
-            </span>
-
-            <span className="dashboard-page__day dashboard-page__day--done">
-              T
-            </span>
-
-            <span className="dashboard-page__day">
-              W
-            </span>
-
-            <span className="dashboard-page__day dashboard-page__day--done">
-              T
-            </span>
-
-            <span className="dashboard-page__day">
-              F
-            </span>
-
-            <span className="dashboard-page__day">
-              S
-            </span>
-
-            <span className="dashboard-page__day">
-              S
-            </span>
-
+          <div>
+            <Flame size={18} />
           </div>
+
+          <span>
+            Calories Today
+          </span>
+
+          <strong>
+            {Math.round(
+              nutrition.calories,
+            ).toLocaleString()}
+          </strong>
+
+        </article>
+
+        <article className="dashboard-page__stat">
+
+          <div>
+            <Activity size={18} />
+          </div>
+
+          <span>
+            Protein Today
+          </span>
+
+          <strong>
+            {formatNumber(
+              nutrition.protein,
+            )}{' '}
+            g
+          </strong>
 
         </article>
 
@@ -329,342 +465,486 @@ function DashboardPage() {
 
       <section className="dashboard-page__grid">
 
-        {/* NUTRITION */}
+        {/* ===================================
+            LAST WORKOUT
+        =================================== */}
 
-        <article className="panel dashboard-page__nutrition">
+        <article className="panel dashboard-page__card dashboard-page__card--large">
 
-          <div className="panel__header">
+          <div className="dashboard-page__card-header">
 
             <div>
-              <span>Today</span>
-              <h2>Nutrition</h2>
+
+              <span>
+                Training
+              </span>
+
+              <h2>
+                Last Workout
+              </h2>
+
             </div>
 
-            <Utensils size={17} />
+            <Link to="/workouts">
+              View History
+              <ArrowRight
+                size={14}
+              />
+            </Link>
 
           </div>
 
-          <div className="dashboard-page__nutrition-content">
+          {latestWorkout ? (
+            <div className="dashboard-page__workout">
 
-            <div className="dashboard-page__calories">
+              <div className="dashboard-page__workout-top">
 
-              <div>
+                <div className="dashboard-page__workout-icon">
+                  <Dumbbell
+                    size={20}
+                  />
+                </div>
 
-                <span>
-                  Calories
-                </span>
+                <div>
 
-                <strong>
-                  {nutrition.calories.current.toLocaleString()}
-                  <small>
-                    {' '}
-                    / {nutrition.calories.target.toLocaleString()} kcal
-                  </small>
-                </strong>
+                  <strong>
+                    {latestWorkout.name ||
+                      'Workout'}
+                  </strong>
+
+                  <span>
+                    {formatDate(
+                      latestWorkout.date,
+                    )}
+                  </span>
+
+                </div>
 
               </div>
 
-              <div className="dashboard-page__calorie-ring">
+              <div className="dashboard-page__workout-stats">
 
-                <span>
-                  {Math.round(caloriePercentage)}%
-                </span>
+                <div>
+                  <span>
+                    Exercises
+                  </span>
+                  <strong>
+                    {latestWorkout
+                      .exercises
+                      ?.length ?? 0}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    Sets
+                  </span>
+                  <strong>
+                    {workoutSets}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    Volume
+                  </span>
+                  <strong>
+                    {formatVolume(
+                      workoutVolume,
+                    )}
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="dashboard-page__exercise-preview">
+
+                {latestWorkout.exercises
+                  ?.slice(0, 5)
+                  .map(
+                    (
+                      exercise,
+                      index,
+                    ) => (
+                      <div
+                        key={
+                          exercise.id ??
+                          `${exercise.name}-${index}`
+                        }
+                      >
+
+                        <span>
+                          {index + 1}
+                        </span>
+
+                        <strong>
+                          {exercise.name}
+                        </strong>
+
+                        <small>
+                          {exercise.sets
+                            ?.length ??
+                            0}{' '}
+                          sets
+                        </small>
+
+                      </div>
+                    ),
+                  )}
 
               </div>
 
             </div>
+          ) : (
+            <div className="dashboard-page__empty">
 
-            <div className="dashboard-page__macro-list">
-
-              <MacroRow
-                label="Protein"
-                value={nutrition.protein.current}
-                target={nutrition.protein.target}
-                percentage={proteinPercentage}
+              <Dumbbell
+                size={25}
               />
 
-              <MacroRow
-                label="Carbs"
-                value={nutrition.carbs.current}
-                target={nutrition.carbs.target}
-                percentage={carbPercentage}
-              />
+              <strong>
+                No workouts yet
+              </strong>
 
-              <MacroRow
-                label="Fat"
-                value={nutrition.fat.current}
-                target={nutrition.fat.target}
-                percentage={fatPercentage}
-              />
+              <p>
+                Your most recent
+                workout will appear
+                here after you log it.
+              </p>
+
+              <Link
+                to="/workouts/session"
+                className="button button--primary"
+              >
+                <Plus
+                  size={15}
+                />
+                Log Workout
+              </Link>
+
+            </div>
+          )}
+
+        </article>
+
+        {/* ===================================
+            TODAY'S NUTRITION
+        =================================== */}
+
+        <article className="panel dashboard-page__card">
+
+          <div className="dashboard-page__card-header">
+
+            <div>
+
+              <span>
+                Today
+              </span>
+
+              <h2>
+                Nutrition
+              </h2>
 
             </div>
 
-            <Link
-              to="/nutrition"
-              className="dashboard-page__section-link"
-            >
-              Open nutrition log
-              <ArrowRight size={14} />
+            <Link to="/nutrition">
+              Open Log
+              <ArrowRight
+                size={14}
+              />
             </Link>
+
+          </div>
+
+          <div className="dashboard-page__nutrition-total">
+
+            <span>
+              Calories
+            </span>
+
+            <strong>
+              {Math.round(
+                nutrition.calories,
+              ).toLocaleString()}
+            </strong>
+
+            <small>
+              kcal logged
+            </small>
+
+          </div>
+
+          <div className="dashboard-page__macros">
+
+            <div>
+
+              <span>
+                Protein
+              </span>
+
+              <strong>
+                {formatNumber(
+                  nutrition.protein,
+                )}
+                g
+              </strong>
+
+            </div>
+
+            <div>
+
+              <span>
+                Carbs
+              </span>
+
+              <strong>
+                {formatNumber(
+                  nutrition.carbs,
+                )}
+                g
+              </strong>
+
+            </div>
+
+            <div>
+
+              <span>
+                Fat
+              </span>
+
+              <strong>
+                {formatNumber(
+                  nutrition.fat,
+                )}
+                g
+              </strong>
+
+            </div>
+
+          </div>
+
+          <div className="dashboard-page__nutrition-footer">
+
+            <Utensils
+              size={15}
+            />
+
+            <span>
+              {todayFoods.length}{' '}
+              {todayFoods.length ===
+              1
+                ? 'food entry'
+                : 'food entries'}{' '}
+              today
+            </span>
 
           </div>
 
         </article>
 
-        {/* TODAY'S WORKOUT DETAIL */}
+        {/* ===================================
+            RECENT ACTIVITY
+        =================================== */}
 
-        <article className="panel dashboard-page__workout-panel">
+        <article className="panel dashboard-page__card dashboard-page__card--large">
 
-          <div className="panel__header">
+          <div className="dashboard-page__card-header">
 
             <div>
-              <span>Training Plan</span>
-              <h2>Today&apos;s Workout</h2>
-            </div>
 
-            <Dumbbell size={17} />
+              <span>
+                History
+              </span>
+
+              <h2>
+                Recent Activity
+              </h2>
+
+            </div>
 
           </div>
 
-          <div className="dashboard-page__workout-content">
+          {recentActivity.length ===
+          0 ? (
+            <div className="dashboard-page__activity-empty">
 
-            <div className="dashboard-page__workout-title">
+              <TrendingUp
+                size={24}
+              />
+
+              <p>
+                Activity will appear
+                here as you use FORGE.
+              </p>
+
+            </div>
+          ) : (
+            <div className="dashboard-page__activity">
+
+              {recentActivity.map(
+                (item) => (
+                  <div
+                    className="dashboard-page__activity-row"
+                    key={
+                      item.id
+                    }
+                  >
+
+                    <div className="dashboard-page__activity-icon">
+
+                      {item.type ===
+                      'workout' ? (
+                        <Dumbbell
+                          size={
+                            16
+                          }
+                        />
+                      ) : (
+                        <Scale
+                          size={
+                            16
+                          }
+                        />
+                      )}
+
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        {item.title}
+                      </strong>
+
+                      <span>
+                        {
+                          item.description
+                        }
+                      </span>
+
+                    </div>
+
+                    <time>
+                      {formatShortDate(
+                        item.date,
+                      )}
+                    </time>
+
+                  </div>
+                ),
+              )}
+
+            </div>
+          )}
+
+        </article>
+
+        {/* ===================================
+            QUICK ACTIONS
+        =================================== */}
+
+        <article className="panel dashboard-page__card">
+
+          <div className="dashboard-page__card-header">
+
+            <div>
+
+              <span>
+                Tracker
+              </span>
+
+              <h2>
+                Quick Actions
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div className="dashboard-page__actions">
+
+            <Link
+              to="/workouts/session"
+              className="dashboard-page__action"
+            >
 
               <div>
-
-                <span>
-                  Scheduled Session
-                </span>
-
-                <strong>
-                  Push A
-                </strong>
-
+                <Dumbbell
+                  size={17}
+                />
               </div>
 
               <span>
-                ~70 min
+                Log Workout
               </span>
 
-            </div>
-
-            <div className="dashboard-page__exercise-preview">
-
-              <WorkoutExercise
-                name="Bench Press"
-                prescription="3 × 6–8"
+              <ArrowRight
+                size={15}
               />
 
-              <WorkoutExercise
-                name="Incline Dumbbell Press"
-                prescription="3 × 8–10"
-              />
-
-              <WorkoutExercise
-                name="Shoulder Press"
-                prescription="3 × 8–10"
-              />
-
-              <WorkoutExercise
-                name="Lateral Raise"
-                prescription="3 × 12–15"
-              />
-
-            </div>
-
-            <div className="dashboard-page__remaining">
-              + 2 more exercises
-            </div>
-
-            <Link
-              to="/workouts"
-              className="button button--primary dashboard-page__start"
-            >
-              Start Workout
-              <ArrowRight size={14} />
             </Link>
-
-          </div>
-
-        </article>
-
-        {/* QUICK ACTIONS */}
-
-        <article className="panel dashboard-page__quick">
-
-          <div className="panel__header">
-
-            <div>
-              <span>Shortcuts</span>
-              <h2>Quick Add</h2>
-            </div>
-
-            <Plus size={17} />
-
-          </div>
-
-          <div className="dashboard-page__quick-list">
 
             <Link
               to="/nutrition"
-              className="dashboard-page__quick-item"
+              className="dashboard-page__action"
             >
+
               <div>
-                <Utensils size={17} />
+                <Utensils
+                  size={17}
+                />
               </div>
 
               <span>
                 Log Food
               </span>
 
-              <Plus size={14} />
+              <ArrowRight
+                size={15}
+              />
+
             </Link>
 
             <Link
               to="/progress"
-              className="dashboard-page__quick-item"
+              className="dashboard-page__action"
             >
+
               <div>
-                <Scale size={17} />
+                <Scale
+                  size={17}
+                />
               </div>
 
               <span>
-                Log Weight
+                Add Measurement
               </span>
 
-              <Plus size={14} />
-            </Link>
+              <ArrowRight
+                size={15}
+              />
 
-            <Link
-              to="/workouts"
-              className="dashboard-page__quick-item"
-            >
-              <div>
-                <Dumbbell size={17} />
-              </div>
-
-              <span>
-                New Workout
-              </span>
-
-              <Plus size={14} />
             </Link>
 
             <Link
               to="/library"
-              className="dashboard-page__quick-item"
+              className="dashboard-page__action"
             >
+
               <div>
-                <Target size={17} />
+                <Activity
+                  size={17}
+                />
               </div>
 
               <span>
-                Add Exercise
+                Exercise Library
               </span>
 
-              <Plus size={14} />
+              <ArrowRight
+                size={15}
+              />
+
             </Link>
-
-          </div>
-
-        </article>
-
-        {/* RECENT ACTIVITY */}
-
-        <article className="panel dashboard-page__activity">
-
-          <div className="panel__header">
-
-            <div>
-              <span>History</span>
-              <h2>Recent Activity</h2>
-            </div>
-
-            <CalendarDays size={17} />
-
-          </div>
-
-          <div className="dashboard-page__activity-list">
-
-            {recentActivity.map((activity) => {
-              const Icon = activity.icon;
-
-              return (
-                <div
-                  key={activity.id}
-                  className="dashboard-page__activity-item"
-                >
-
-                  <div className="dashboard-page__activity-icon">
-                    <Icon size={16} />
-                  </div>
-
-                  <div className="dashboard-page__activity-content">
-
-                    <strong>
-                      {activity.title}
-                    </strong>
-
-                    <span>
-                      {activity.detail}
-                    </span>
-
-                  </div>
-
-                  <small>
-                    {activity.time}
-                  </small>
-
-                </div>
-              );
-            })}
-
-          </div>
-
-        </article>
-
-        {/* DAILY TARGETS */}
-
-        <article className="panel dashboard-page__targets">
-
-          <div className="panel__header">
-
-            <div>
-              <span>Today</span>
-              <h2>Daily Targets</h2>
-            </div>
-
-            <Target size={17} />
-
-          </div>
-
-          <div className="dashboard-page__target-list">
-
-            <TargetRow
-              icon={Dumbbell}
-              label="Workout"
-              value="Scheduled"
-              complete
-            />
-
-            <TargetRow
-              icon={Utensils}
-              label="Protein"
-              value="148 / 180g"
-            />
-
-            <TargetRow
-              icon={Footprints}
-              label="Steps"
-              value="7,420 / 10,000"
-            />
-
-            <TargetRow
-              icon={Scale}
-              label="Weight"
-              value="Logged"
-              complete
-            />
 
           </div>
 
@@ -677,111 +957,205 @@ function DashboardPage() {
 }
 
 /* =========================================
-   MACRO ROW
+   WORKOUT HELPERS
 ========================================= */
 
-function MacroRow({
-  label,
-  value,
-  target,
-  percentage,
-}) {
+function getWorkoutSetCount(
+  workout,
+) {
   return (
-    <div className="dashboard-page__macro">
+    workout.exercises?.reduce(
+      (
+        total,
+        exercise,
+      ) =>
+        total +
+        (
+          exercise.sets
+            ?.length ?? 0
+        ),
+      0,
+    ) ?? 0
+  );
+}
 
-      <div>
+function getWorkoutVolume(
+  workout,
+) {
+  return (
+    workout.exercises?.reduce(
+      (
+        total,
+        exercise,
+      ) => {
+        const volume =
+          exercise.sets?.reduce(
+            (
+              setTotal,
+              set,
+            ) =>
+              setTotal +
+              (
+                Number(
+                  set.weight,
+                ) || 0
+              ) *
+                (
+                  Number(
+                    set.reps,
+                  ) || 0
+                ),
+            0,
+          ) ?? 0;
 
-        <span>
-          {label}
-        </span>
-
-        <strong>
-          {value}g
-          <small>
-            {' '}
-            / {target}g
-          </small>
-        </strong>
-
-      </div>
-
-      <div className="dashboard-page__macro-bar">
-        <span
-          style={{
-            width: `${percentage}%`,
-          }}
-        />
-      </div>
-
-    </div>
+        return total + volume;
+      },
+      0,
+    ) ?? 0
   );
 }
 
 /* =========================================
-   WORKOUT EXERCISE
+   DATE HELPERS
 ========================================= */
 
-function WorkoutExercise({
-  name,
-  prescription,
-}) {
-  return (
-    <div className="dashboard-page__exercise">
+function getLocalDateString() {
+  const date =
+    new Date();
 
-      <div>
-        <Dumbbell size={14} />
-      </div>
+  const offset =
+    date.getTimezoneOffset() *
+    60000;
 
-      <span>
-        {name}
-      </span>
+  return new Date(
+    date.getTime() - offset,
+  )
+    .toISOString()
+    .slice(0, 10);
+}
 
-      <strong>
-        {prescription}
-      </strong>
+function getStartOfWeek() {
+  const now =
+    new Date();
 
-    </div>
+  const start =
+    new Date(now);
+
+  const day =
+    start.getDay();
+
+  const difference =
+    day === 0
+      ? -6
+      : 1 - day;
+
+  start.setDate(
+    start.getDate() +
+      difference,
   );
+
+  start.setHours(
+    0,
+    0,
+    0,
+    0,
+  );
+
+  return start;
+}
+
+function getTimestamp(
+  date,
+  createdAt,
+) {
+  if (createdAt) {
+    return new Date(
+      createdAt,
+    ).getTime();
+  }
+
+  if (date) {
+    return new Date(
+      `${date}T12:00:00`,
+    ).getTime();
+  }
+
+  return 0;
 }
 
 /* =========================================
-   TARGET ROW
+   FORMATTERS
 ========================================= */
 
-function TargetRow({
-  icon: Icon,
-  label,
-  value,
-  complete = false,
-}) {
-  return (
-    <div className="dashboard-page__target">
+function formatNumber(value) {
+  const number =
+    Number(value);
 
-      <div className="dashboard-page__target-icon">
-        <Icon size={15} />
-      </div>
+  if (
+    !Number.isFinite(
+      number,
+    )
+  ) {
+    return '0';
+  }
 
-      <span>
-        {label}
-      </span>
+  return Number.isInteger(
+    number,
+  )
+    ? number.toString()
+    : number.toFixed(1);
+}
 
-      <strong>
-        {value}
-      </strong>
+function formatVolume(volume) {
+  const number =
+    Number(volume || 0);
 
-      <div
-        className={
-          complete
-            ? 'dashboard-page__target-check dashboard-page__target-check--complete'
-            : 'dashboard-page__target-check'
-        }
-      >
-        {complete && (
-          <Check size={12} />
-        )}
-      </div>
+  if (number >= 1000) {
+    return `${(
+      number / 1000
+    ).toFixed(1)}k kg`;
+  }
 
-    </div>
+  return `${Math.round(
+    number,
+  ).toLocaleString()} kg`;
+}
+
+function formatDate(date) {
+  if (!date) {
+    return 'Unknown date';
+  }
+
+  return new Intl.DateTimeFormat(
+    'en-US',
+    {
+      weekday: 'short',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    },
+  ).format(
+    new Date(
+      `${date}T12:00:00`,
+    ),
+  );
+}
+
+function formatShortDate(date) {
+  if (!date) {
+    return '—';
+  }
+
+  return new Intl.DateTimeFormat(
+    'en-US',
+    {
+      month: 'short',
+      day: 'numeric',
+    },
+  ).format(
+    new Date(
+      `${date}T12:00:00`,
+    ),
   );
 }
 
