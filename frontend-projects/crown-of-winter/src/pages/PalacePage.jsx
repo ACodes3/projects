@@ -72,6 +72,7 @@ const chambers = [
     subtitle: "Research Division",
     icon: FlaskConical,
     status: "Restricted",
+    path: "/palace/cryo-laboratory",
     description:
       "Experimental Cryo research and classified technological development.",
   },
