@@ -1,18 +1,18 @@
+import { useMemo, useState } from 'react';
+
 import {
-  ChevronLeft,
-  ChevronRight,
-  Flame,
+  Apple,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Coffee,
+  Cookie,
   Plus,
   Search,
   Trash2,
   Utensils,
   X,
 } from 'lucide-react';
-
-import {
-  useMemo,
-  useState,
-} from 'react';
 
 import './NutritionPage.css';
 
@@ -21,40 +21,9 @@ const STORAGE_KEY = 'forge:nutritionLogs';
 const MEALS = [
   'Breakfast',
   'Lunch',
-  'Dinner',
   'Snacks',
+  'Dinner',
 ];
-
-/* =========================================
-   DATE HELPERS
-========================================= */
-
-function getLocalDateString(date = new Date()) {
-  const offset =
-    date.getTimezoneOffset() *
-    60000;
-
-  return new Date(
-    date.getTime() - offset,
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-function moveDate(
-  dateString,
-  amount,
-) {
-  const date = new Date(
-    `${dateString}T12:00:00`,
-  );
-
-  date.setDate(
-    date.getDate() + amount,
-  );
-
-  return getLocalDateString(date);
-}
 
 /* =========================================
    STORAGE
@@ -62,26 +31,136 @@ function moveDate(
 
 function loadNutritionLogs() {
   try {
-    const stored =
-      localStorage.getItem(
-        STORAGE_KEY,
-      );
-
-    if (!stored) {
-      return {};
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    return (
-      parsed &&
-      typeof parsed === 'object'
-        ? parsed
-        : {}
+    const stored = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) || '{}',
     );
+
+    return stored &&
+      typeof stored === 'object' &&
+      !Array.isArray(stored)
+      ? stored
+      : {};
   } catch {
     return {};
+  }
+}
+
+function saveNutritionLogs(logs) {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(logs),
+  );
+}
+
+/* =========================================
+   DATE HELPERS
+========================================= */
+
+function getToday() {
+  const date = new Date();
+
+  const year = date.getFullYear();
+  const month = String(
+    date.getMonth() + 1,
+  ).padStart(2, '0');
+
+  const day = String(
+    date.getDate(),
+  ).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDate(dateString) {
+  if (!dateString) {
+    return 'Unknown date';
+  }
+
+  return new Date(
+    `${dateString}T12:00:00`,
+  ).toLocaleDateString(
+    'en-US',
+    {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    },
+  );
+}
+
+function formatShortDate(dateString) {
+  if (!dateString) {
+    return '';
+  }
+
+  return new Date(
+    `${dateString}T12:00:00`,
+  ).toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: 'numeric',
+    },
+  );
+}
+
+/* =========================================
+   NUTRITION HELPERS
+========================================= */
+
+function getTotals(entries = []) {
+  return entries.reduce(
+    (totals, entry) => ({
+      calories:
+        totals.calories +
+        Number(entry.calories || 0),
+
+      protein:
+        totals.protein +
+        Number(entry.protein || 0),
+
+      carbs:
+        totals.carbs +
+        Number(entry.carbs || 0),
+
+      fat:
+        totals.fat +
+        Number(entry.fat || 0),
+    }),
+    {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+    },
+  );
+}
+
+function getMealEntries(
+  entries,
+  meal,
+) {
+  return entries.filter(
+    (entry) =>
+      entry.meal === meal,
+  );
+}
+
+function getMealIcon(meal) {
+  switch (meal) {
+    case 'Breakfast':
+      return Coffee;
+
+    case 'Snacks':
+      return Cookie;
+
+    case 'Lunch':
+    case 'Dinner':
+      return Utensils;
+
+    default:
+      return Apple;
   }
 }
 
@@ -89,10 +168,14 @@ function loadNutritionLogs() {
    EMPTY FORM
 ========================================= */
 
-function createEmptyFood() {
+function createEmptyForm(
+  date = getToday(),
+  meal = 'Breakfast',
+) {
   return {
+    date,
+    meal,
     name: '',
-    meal: 'Breakfast',
     calories: '',
     protein: '',
     carbs: '',
@@ -104,312 +187,272 @@ function createEmptyFood() {
    NUTRITION PAGE
 ========================================= */
 
-function NutritionPage() {
-  const [
-    selectedDate,
-    setSelectedDate,
-  ] = useState(
-    getLocalDateString(),
-  );
+export default function NutritionPage() {
+  const [logs, setLogs] =
+    useState(loadNutritionLogs);
 
-  const [
-    logs,
-    setLogs,
-  ] = useState(
-    loadNutritionLogs,
-  );
+  const [expandedDate, setExpandedDate] =
+    useState(null);
 
-  const [
-    showAddFood,
-    setShowAddFood,
-  ] = useState(false);
+  const [search, setSearch] =
+    useState('');
 
-  const [
-    foodForm,
-    setFoodForm,
-  ] = useState(
-    createEmptyFood,
-  );
+  const [showModal, setShowModal] =
+    useState(false);
 
-  const [
-    search,
-    setSearch,
-  ] = useState('');
-
-  const [
-    error,
-    setError,
-  ] = useState('');
-
-  const foods =
-    useMemo(
-      () => logs[selectedDate] ?? [],
-      [
-        logs,
-        selectedDate,
-      ],
+  const [form, setForm] =
+    useState(() =>
+      createEmptyForm(),
     );
 
   /* =========================================
-     TOTALS
+     DAYS
   ========================================= */
 
-  const totals =
-    useMemo(() => {
-      return foods.reduce(
-        (
-          total,
-          food,
-        ) => ({
-          calories:
-            total.calories +
-            Number(
-              food.calories || 0,
-            ),
+  const days = useMemo(() => {
+    const query =
+      search
+        .trim()
+        .toLowerCase();
 
-          protein:
-            total.protein +
-            Number(
-              food.protein || 0,
-            ),
+    return Object.entries(logs)
+      .filter(
+        ([, entries]) =>
+          Array.isArray(entries) &&
+          entries.length > 0,
+      )
+      .sort(
+        ([dateA], [dateB]) =>
+          dateB.localeCompare(
+            dateA,
+          ),
+      )
+      .filter(
+        ([date, entries]) => {
+          if (!query) {
+            return true;
+          }
 
-          carbs:
-            total.carbs +
-            Number(
-              food.carbs || 0,
-            ),
+          const dateMatch =
+            formatDate(date)
+              .toLowerCase()
+              .includes(query);
 
-          fat:
-            total.fat +
-            Number(
-              food.fat || 0,
-            ),
-        }),
-        {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-        },
-      );
-    }, [foods]);
-
-  /* =========================================
-     FILTERED MEALS
-  ========================================= */
-
-  const foodsByMeal =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
-
-      return MEALS.reduce(
-        (
-          result,
-          meal,
-        ) => {
-          result[meal] =
-            foods.filter(
-              (food) =>
-                food.meal ===
-                  meal &&
-                (
-                  !query ||
-                  food.name
-                    .toLowerCase()
-                    .includes(
-                      query,
-                    )
-                ),
+          const foodMatch =
+            entries.some(
+              (entry) =>
+                entry.name
+                  ?.toLowerCase()
+                  .includes(query),
             );
 
-          return result;
+          return (
+            dateMatch ||
+            foodMatch
+          );
         },
-        {},
       );
-    }, [
-      foods,
-      search,
-    ]);
+  }, [logs, search]);
 
   /* =========================================
-     SAVE LOGS
+     OVERALL STATS
   ========================================= */
 
-  function saveLogs(nextLogs) {
-    setLogs(nextLogs);
+  const stats = useMemo(() => {
+    const allEntries =
+      Object.values(logs)
+        .filter(Array.isArray)
+        .flat();
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(
-        nextLogs,
+    const todayEntries =
+      logs[getToday()] || [];
+
+    const todayTotals =
+      getTotals(todayEntries);
+
+    const trackedDays =
+      Object.values(logs)
+        .filter(
+          (entries) =>
+            Array.isArray(
+              entries,
+            ) &&
+            entries.length > 0,
+        ).length;
+
+    return {
+      trackedDays,
+      totalEntries:
+        allEntries.length,
+      todayCalories:
+        todayTotals.calories,
+      todayProtein:
+        todayTotals.protein,
+    };
+  }, [logs]);
+
+  /* =========================================
+     OPEN ADD FOOD
+  ========================================= */
+
+  function openAddFood(
+    date = getToday(),
+    meal = 'Breakfast',
+  ) {
+    setForm(
+      createEmptyForm(
+        date,
+        meal,
       ),
     );
+
+    setShowModal(true);
+  }
+
+  function closeModal() {
+    setShowModal(false);
   }
 
   /* =========================================
-     ADD FOOD
+     FORM
   ========================================= */
 
-  function handleAddFood() {
+  function updateForm(
+    field,
+    value,
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  /* =========================================
+     SAVE FOOD
+  ========================================= */
+
+  function saveFood(event) {
+    event.preventDefault();
+
     const name =
-      foodForm.name.trim();
+      form.name.trim();
 
     if (!name) {
-      setError(
-        'Enter a food name.',
-      );
       return;
     }
 
-    const calories =
-      Number(
-        foodForm.calories,
-      );
-
-    const protein =
-      Number(
-        foodForm.protein || 0,
-      );
-
-    const carbs =
-      Number(
-        foodForm.carbs || 0,
-      );
-
-    const fat =
-      Number(
-        foodForm.fat || 0,
-      );
-
-    if (
-      !Number.isFinite(
-        calories,
-      ) ||
-      calories < 0
-    ) {
-      setError(
-        'Enter valid calories.',
-      );
-      return;
-    }
-
-    if (
-      protein < 0 ||
-      carbs < 0 ||
-      fat < 0
-    ) {
-      setError(
-        'Macros cannot be negative.',
-      );
-      return;
-    }
-
-    const food = {
+    const entry = {
       id:
-        crypto.randomUUID(),
+        crypto.randomUUID?.() ||
+        `${Date.now()}-${Math.random()}`,
 
       name,
 
-      meal:
-        foodForm.meal,
+      meal: form.meal,
 
-      calories,
-      protein,
-      carbs,
-      fat,
+      calories:
+        Number(form.calories) ||
+        0,
+
+      protein:
+        Number(form.protein) ||
+        0,
+
+      carbs:
+        Number(form.carbs) ||
+        0,
+
+      fat:
+        Number(form.fat) ||
+        0,
 
       createdAt:
         new Date().toISOString(),
     };
 
-    const nextLogs = {
+    const updated = {
       ...logs,
 
-      [selectedDate]: [
-        ...(logs[
-          selectedDate
-        ] ?? []),
+      [form.date]: [
+        ...(logs[form.date] ||
+          []),
 
-        food,
+        entry,
       ],
     };
 
-    saveLogs(nextLogs);
+    saveNutritionLogs(updated);
 
-    setFoodForm(
-      createEmptyFood(),
+    setLogs(updated);
+
+    setExpandedDate(
+      form.date,
     );
 
-    setError('');
-    setShowAddFood(false);
+    setShowModal(false);
   }
 
   /* =========================================
      DELETE FOOD
   ========================================= */
 
-  function deleteFood(foodId) {
-    const updatedFoods =
-      foods.filter(
-        (food) =>
-          food.id !== foodId,
+  function deleteFood(
+    date,
+    entryId,
+  ) {
+    const entries =
+      logs[date] || [];
+
+    const entry =
+      entries.find(
+        (item) =>
+          item.id ===
+          entryId,
       );
 
-    const nextLogs = {
-      ...logs,
+    const confirmed =
+      window.confirm(
+        `Delete "${
+          entry?.name ||
+          'this food'
+        }"?`,
+      );
 
-      [selectedDate]:
-        updatedFoods,
+    if (!confirmed) {
+      return;
+    }
+
+    const remaining =
+      entries.filter(
+        (item) =>
+          item.id !==
+          entryId,
+      );
+
+    const updated = {
+      ...logs,
     };
 
-    saveLogs(nextLogs);
+    if (
+      remaining.length === 0
+    ) {
+      delete updated[date];
+    } else {
+      updated[date] =
+        remaining;
+    }
+
+    saveNutritionLogs(updated);
+
+    setLogs(updated);
+
+    if (
+      remaining.length === 0 &&
+      expandedDate === date
+    ) {
+      setExpandedDate(null);
+    }
   }
-
-  /* =========================================
-     OPEN MODAL
-  ========================================= */
-
-  function openFoodModal(
-    meal = 'Breakfast',
-  ) {
-    setFoodForm({
-      ...createEmptyFood(),
-      meal,
-    });
-
-    setError('');
-    setShowAddFood(true);
-  }
-
-  /* =========================================
-     DATE LABEL
-  ========================================= */
-
-  const formattedDate =
-    new Intl.DateTimeFormat(
-      'en-US',
-      {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      },
-    ).format(
-      new Date(
-        `${selectedDate}T12:00:00`,
-      ),
-    );
-
-  const isToday =
-    selectedDate ===
-    getLocalDateString();
-
-  /* =========================================
-     RENDER
-  ========================================= */
 
   return (
     <main className="nutrition-page">
@@ -418,7 +461,7 @@ function NutritionPage() {
           HEADER
       ===================================== */}
 
-      <div className="page__header">
+      <header className="page__header">
 
         <div className="page__header-text">
 
@@ -431,8 +474,8 @@ function NutritionPage() {
           </h1>
 
           <p className="page__description">
-            Record what you eat and
-            track your daily intake.
+            Your nutrition history,
+            organized by day and meal.
           </p>
 
         </div>
@@ -441,212 +484,119 @@ function NutritionPage() {
           type="button"
           className="button button--primary"
           onClick={() =>
-            openFoodModal()
+            openAddFood()
           }
         >
           <Plus size={16} />
           Add Food
         </button>
 
-      </div>
+      </header>
 
       {/* =====================================
-          DATE
-      ===================================== */}
-
-      <section className="nutrition-page__date-bar">
-
-        <button
-          type="button"
-          aria-label="Previous day"
-          onClick={() =>
-            setSelectedDate(
-              moveDate(
-                selectedDate,
-                -1,
-              ),
-            )
-          }
-        >
-          <ChevronLeft
-            size={18}
-          />
-        </button>
-
-        <div>
-
-          <strong>
-            {isToday
-              ? 'Today'
-              : formattedDate}
-          </strong>
-
-          {isToday && (
-            <span>
-              {formattedDate}
-            </span>
-          )}
-
-        </div>
-
-        <button
-          type="button"
-          aria-label="Next day"
-          onClick={() =>
-            setSelectedDate(
-              moveDate(
-                selectedDate,
-                1,
-              ),
-            )
-          }
-        >
-          <ChevronRight
-            size={18}
-          />
-        </button>
-
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(
-            event,
-          ) =>
-            setSelectedDate(
-              event.target.value,
-            )
-          }
-        />
-
-      </section>
-
-      {/* =====================================
-          TOTALS
+          STATS
       ===================================== */}
 
       <section className="nutrition-page__stats">
 
-        <article className="nutrition-page__stat nutrition-page__stat--calories">
-
-          <div>
-            <Flame size={18} />
-          </div>
+        <article className="nutrition-page__stat">
 
           <span>
-            Calories
+            Today
           </span>
 
           <strong>
             {Math.round(
-              totals.calories,
-            ).toLocaleString()}
+              stats.todayCalories,
+            )}
           </strong>
 
           <small>
-            kcal
+            calories
           </small>
 
         </article>
 
         <article className="nutrition-page__stat">
 
-          <div>
-            P
-          </div>
-
           <span>
-            Protein
+            Protein Today
           </span>
 
           <strong>
-            {formatMacro(
-              totals.protein,
-            )}
+            {Math.round(
+              stats.todayProtein,
+            )}g
           </strong>
 
-          <small>g</small>
+          <small>
+            protein
+          </small>
 
         </article>
 
         <article className="nutrition-page__stat">
 
-          <div>
-            C
-          </div>
-
           <span>
-            Carbs
+            Tracked Days
           </span>
 
           <strong>
-            {formatMacro(
-              totals.carbs,
-            )}
+            {stats.trackedDays}
           </strong>
 
-          <small>g</small>
+          <small>
+            days logged
+          </small>
 
         </article>
 
         <article className="nutrition-page__stat">
 
-          <div>
-            F
-          </div>
-
           <span>
-            Fat
+            Food Entries
           </span>
 
           <strong>
-            {formatMacro(
-              totals.fat,
-            )}
+            {stats.totalEntries}
           </strong>
 
-          <small>g</small>
+          <small>
+            total
+          </small>
 
         </article>
 
       </section>
 
       {/* =====================================
-          LOG HEADER
+          DAYS HEADER
       ===================================== */}
 
-      <div className="nutrition-page__log-header">
+      <div className="nutrition-page__section-header">
 
         <div>
 
           <h2>
-            Food Log
+            Nutrition History
           </h2>
 
           <p>
-            {foods.length === 0
-              ? 'Nothing recorded for this day.'
-              : `${foods.length} ${
-                  foods.length === 1
-                    ? 'item'
-                    : 'items'
-                } recorded.`}
+            Open a day to see
+            everything you ate.
           </p>
 
         </div>
 
         <div className="nutrition-page__search">
 
-          <Search
-            size={15}
-          />
+          <Search size={15} />
 
           <input
-            type="text"
-            placeholder="Search today's food..."
+            type="search"
+            placeholder="Search days or foods..."
             value={search}
-            onChange={(
-              event,
-            ) =>
+            onChange={(event) =>
               setSearch(
                 event.target.value,
               )
@@ -658,217 +608,473 @@ function NutritionPage() {
       </div>
 
       {/* =====================================
-          EMPTY DAY
+          EMPTY STATE
       ===================================== */}
 
-      {foods.length === 0 && (
+      {days.length === 0 ? (
+
         <section className="panel nutrition-page__empty">
 
-          <div>
-            <Utensils
-              size={27}
-            />
-          </div>
+          <Apple size={28} />
 
           <h3>
-            No food logged
+            {stats.trackedDays === 0
+              ? 'No nutrition logged'
+              : 'No matching entries'}
           </h3>
 
           <p>
-            Add the food you ate and
-            FORGE will calculate the
-            totals for this day.
+            {stats.trackedDays === 0
+              ? 'Start logging food and your nutrition days will appear here.'
+              : 'Try a different search.'}
           </p>
 
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={() =>
-              openFoodModal()
-            }
-          >
-            <Plus size={16} />
-            Add First Food
-          </button>
+          {stats.trackedDays ===
+            0 && (
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={() =>
+                openAddFood()
+              }
+            >
+              <Plus size={15} />
+              Add Food
+            </button>
+          )}
 
         </section>
-      )}
 
-      {/* =====================================
-          MEALS
-      ===================================== */}
+      ) : (
 
-      {foods.length > 0 && (
-        <div className="nutrition-page__meals">
+        /* ===================================
+           DAY LIST
+        =================================== */
 
-          {MEALS.map(
-            (meal) => {
-              const mealFoods =
-                foodsByMeal[
-                  meal
-                ];
+        <section className="nutrition-page__days">
 
-              const mealCalories =
-                mealFoods.reduce(
-                  (
-                    total,
-                    food,
-                  ) =>
-                    total +
-                    Number(
-                      food.calories ||
-                        0,
-                    ),
-                  0,
+          {days.map(
+            ([date, entries]) => {
+              const expanded =
+                expandedDate ===
+                date;
+
+              const totals =
+                getTotals(
+                  entries,
                 );
 
+              const mealCount =
+                MEALS.filter(
+                  (meal) =>
+                    getMealEntries(
+                      entries,
+                      meal,
+                    ).length > 0,
+                ).length;
+
               return (
-                <section
-                  className="panel nutrition-page__meal"
-                  key={meal}
+                <article
+                  className="panel nutrition-page__day"
+                  key={date}
                 >
 
-                  <div className="nutrition-page__meal-header">
+                  {/* =========================
+                      DAY SUMMARY
+                  ========================= */}
 
-                    <div>
+                  <button
+                    type="button"
+                    className="nutrition-page__day-toggle"
+                    onClick={() =>
+                      setExpandedDate(
+                        expanded
+                          ? null
+                          : date,
+                      )
+                    }
+                  >
 
-                      <h3>
-                        {meal}
-                      </h3>
-
-                      <span>
-                        {Math.round(
-                          mealCalories,
-                        ).toLocaleString()}
-                        {' kcal'}
-                      </span>
-
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openFoodModal(
-                          meal,
-                        )
-                      }
-                    >
-                      <Plus
-                        size={15}
+                    <div className="nutrition-page__day-icon">
+                      <CalendarDays
+                        size={19}
                       />
-                      Add
-                    </button>
-
-                  </div>
-
-                  {mealFoods.length ===
-                    0 ? (
-                    <div className="nutrition-page__meal-empty">
-                      No food logged.
                     </div>
-                  ) : (
-                    <div className="nutrition-page__food-list">
 
-                      <div className="nutrition-page__food-heading">
-                        <span>
-                          Food
-                        </span>
-                        <span>
-                          Calories
-                        </span>
-                        <span>
-                          Protein
-                        </span>
-                        <span>
-                          Carbs
-                        </span>
-                        <span>
-                          Fat
-                        </span>
-                        <span />
+                    <div className="nutrition-page__day-main">
+
+                      <div className="nutrition-page__day-heading">
+
+                        <div>
+                          <h3>
+                            {formatDate(
+                              date,
+                            )}
+                          </h3>
+
+                          <span>
+                            {formatShortDate(
+                              date,
+                            ) ===
+                            formatShortDate(
+                              getToday(),
+                            )
+                              ? 'Today'
+                              : `${entries.length} food ${
+                                  entries.length ===
+                                  1
+                                    ? 'entry'
+                                    : 'entries'
+                                }`}
+                          </span>
+                        </div>
+
                       </div>
 
-                      {mealFoods.map(
-                        (food) => (
-                          <div
-                            className="nutrition-page__food"
-                            key={
-                              food.id
-                            }
-                          >
+                      <div className="nutrition-page__day-macros">
 
-                            <strong>
-                              {
-                                food.name
-                              }
-                            </strong>
+                        <div>
+                          <strong>
+                            {Math.round(
+                              totals.calories,
+                            )}
+                          </strong>
+                          <span>
+                            kcal
+                          </span>
+                        </div>
 
-                            <span>
-                              {Math.round(
-                                food.calories,
-                              )}
-                              {' kcal'}
-                            </span>
+                        <div>
+                          <strong>
+                            {Math.round(
+                              totals.protein,
+                            )}g
+                          </strong>
+                          <span>
+                            protein
+                          </span>
+                        </div>
 
-                            <span>
-                              {formatMacro(
-                                food.protein,
-                              )}
-                              g
-                            </span>
+                        <div>
+                          <strong>
+                            {Math.round(
+                              totals.carbs,
+                            )}g
+                          </strong>
+                          <span>
+                            carbs
+                          </span>
+                        </div>
 
-                            <span>
-                              {formatMacro(
-                                food.carbs,
-                              )}
-                              g
-                            </span>
+                        <div>
+                          <strong>
+                            {Math.round(
+                              totals.fat,
+                            )}g
+                          </strong>
+                          <span>
+                            fat
+                          </span>
+                        </div>
 
-                            <span>
-                              {formatMacro(
-                                food.fat,
-                              )}
-                              g
-                            </span>
+                      </div>
 
-                            <button
-                              type="button"
-                              aria-label={`Delete ${food.name}`}
-                              onClick={() =>
-                                deleteFood(
-                                  food.id,
-                                )
-                              }
+                      <div className="nutrition-page__day-meta">
+                        <span>
+                          {mealCount}{' '}
+                          {mealCount === 1
+                            ? 'meal'
+                            : 'meals'}{' '}
+                          logged
+                        </span>
+                      </div>
+
+                    </div>
+
+                    {expanded ? (
+                      <ChevronUp
+                        size={19}
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={19}
+                      />
+                    )}
+
+                  </button>
+
+                  {/* =========================
+                      DAY DETAILS
+                  ========================= */}
+
+                  {expanded && (
+
+                    <div className="nutrition-page__day-details">
+
+                      {MEALS.map(
+                        (meal) => {
+                          const mealEntries =
+                            getMealEntries(
+                              entries,
+                              meal,
+                            );
+
+                          const mealTotals =
+                            getTotals(
+                              mealEntries,
+                            );
+
+                          const MealIcon =
+                            getMealIcon(
+                              meal,
+                            );
+
+                          return (
+                            <section
+                              className="nutrition-page__meal"
+                              key={meal}
                             >
-                              <Trash2
-                                size={
-                                  16
-                                }
-                              />
-                            </button>
 
-                          </div>
-                        ),
+                              {/* =================
+                                  MEAL HEADER
+                              ================= */}
+
+                              <div className="nutrition-page__meal-header">
+
+                                <div className="nutrition-page__meal-title">
+
+                                  <div className="nutrition-page__meal-icon">
+                                    <MealIcon
+                                      size={16}
+                                    />
+                                  </div>
+
+                                  <div>
+
+                                    <h4>
+                                      {meal}
+                                    </h4>
+
+                                    <span>
+                                      {mealEntries.length}{' '}
+                                      {mealEntries.length ===
+                                      1
+                                        ? 'item'
+                                        : 'items'}
+                                    </span>
+
+                                  </div>
+
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className="nutrition-page__meal-add"
+                                  onClick={() =>
+                                    openAddFood(
+                                      date,
+                                      meal,
+                                    )
+                                  }
+                                >
+                                  <Plus
+                                    size={14}
+                                  />
+                                  Add Food
+                                </button>
+
+                              </div>
+
+                              {/* =================
+                                  MEAL TOTALS
+                              ================= */}
+
+                              {mealEntries.length >
+                                0 && (
+                                <div className="nutrition-page__meal-totals">
+
+                                  <span>
+                                    <strong>
+                                      {Math.round(
+                                        mealTotals.calories,
+                                      )}
+                                    </strong>
+                                    kcal
+                                  </span>
+
+                                  <span>
+                                    <strong>
+                                      {Math.round(
+                                        mealTotals.protein,
+                                      )}g
+                                    </strong>
+                                    protein
+                                  </span>
+
+                                  <span>
+                                    <strong>
+                                      {Math.round(
+                                        mealTotals.carbs,
+                                      )}g
+                                    </strong>
+                                    carbs
+                                  </span>
+
+                                  <span>
+                                    <strong>
+                                      {Math.round(
+                                        mealTotals.fat,
+                                      )}g
+                                    </strong>
+                                    fat
+                                  </span>
+
+                                </div>
+                              )}
+
+                              {/* =================
+                                  FOOD LIST
+                              ================= */}
+
+                              {mealEntries.length ===
+                              0 ? (
+
+                                <div className="nutrition-page__meal-empty">
+                                  No food logged
+                                  for this meal.
+                                </div>
+
+                              ) : (
+
+                                <div className="nutrition-page__foods">
+
+                                  <div className="nutrition-page__food-heading">
+
+                                    <span>
+                                      Food
+                                    </span>
+
+                                    <span>
+                                      Calories
+                                    </span>
+
+                                    <span>
+                                      Protein
+                                    </span>
+
+                                    <span>
+                                      Carbs
+                                    </span>
+
+                                    <span>
+                                      Fat
+                                    </span>
+
+                                    <span />
+
+                                  </div>
+
+                                  {mealEntries.map(
+                                    (
+                                      entry,
+                                    ) => (
+
+                                      <div
+                                        className="nutrition-page__food"
+                                        key={
+                                          entry.id
+                                        }
+                                      >
+
+                                        <strong>
+                                          {entry.name}
+                                        </strong>
+
+                                        <span>
+                                          {Math.round(
+                                            Number(
+                                              entry.calories ||
+                                                0,
+                                            ),
+                                          )}
+                                        </span>
+
+                                        <span>
+                                          {Math.round(
+                                            Number(
+                                              entry.protein ||
+                                                0,
+                                            ),
+                                          )}g
+                                        </span>
+
+                                        <span>
+                                          {Math.round(
+                                            Number(
+                                              entry.carbs ||
+                                                0,
+                                            ),
+                                          )}g
+                                        </span>
+
+                                        <span>
+                                          {Math.round(
+                                            Number(
+                                              entry.fat ||
+                                                0,
+                                            ),
+                                          )}g
+                                        </span>
+
+                                        <button
+                                          type="button"
+                                          aria-label={`Delete ${entry.name}`}
+                                          onClick={() =>
+                                            deleteFood(
+                                              date,
+                                              entry.id,
+                                            )
+                                          }
+                                        >
+                                          <Trash2
+                                            size={14}
+                                          />
+                                        </button>
+
+                                      </div>
+
+                                    ),
+                                  )}
+
+                                </div>
+
+                              )}
+
+                            </section>
+                          );
+                        },
                       )}
 
                     </div>
+
                   )}
 
-                </section>
+                </article>
               );
             },
           )}
 
-        </div>
+        </section>
       )}
 
       {/* =====================================
           ADD FOOD MODAL
       ===================================== */}
 
-      {showAddFood && (
+      {showModal && (
+
         <div
-          className="nutrition-page__overlay"
+          className="nutrition-page__modal-backdrop"
           onMouseDown={(
             event,
           ) => {
@@ -876,26 +1082,19 @@ function NutritionPage() {
               event.target ===
               event.currentTarget
             ) {
-              setShowAddFood(
-                false,
-              );
+              closeModal();
             }
           }}
         >
 
-          <section
-            className="nutrition-page__modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Add food"
-          >
+          <div className="nutrition-page__modal">
 
             <div className="nutrition-page__modal-header">
 
               <div>
 
                 <span>
-                  Nutrition Log
+                  Nutrition Entry
                 </span>
 
                 <h2>
@@ -906,292 +1105,259 @@ function NutritionPage() {
 
               <button
                 type="button"
-                aria-label="Close"
-                onClick={() =>
-                  setShowAddFood(
-                    false,
-                  )
+                onClick={
+                  closeModal
                 }
+                aria-label="Close"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
 
             </div>
 
-            <div className="nutrition-page__form">
+            <form
+              onSubmit={
+                saveFood
+              }
+            >
 
-              <div className="nutrition-page__field nutrition-page__field--full">
+              <div className="nutrition-page__form-grid">
 
-                <label htmlFor="food-name">
-                  Food Name
+                <label className="nutrition-page__field nutrition-page__field--full">
+
+                  <span>
+                    Food / Meal Name
+                  </span>
+
+                  <input
+                    type="text"
+                    placeholder="e.g. Chicken and rice"
+                    value={
+                      form.name
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'name',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                    autoFocus
+                  />
+
                 </label>
 
-                <input
-                  id="food-name"
-                  autoFocus
-                  placeholder="e.g. Chicken breast"
-                  value={
-                    foodForm.name
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        name:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
-                  }
-                />
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Date
+                  </span>
+
+                  <input
+                    type="date"
+                    value={
+                      form.date
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'date',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                    required
+                  />
+
+                </label>
+
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Meal
+                  </span>
+
+                  <select
+                    value={
+                      form.meal
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'meal',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                  >
+                    {MEALS.map(
+                      (meal) => (
+                        <option
+                          value={
+                            meal
+                          }
+                          key={
+                            meal
+                          }
+                        >
+                          {meal}
+                        </option>
+                      ),
+                    )}
+                  </select>
+
+                </label>
+
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Calories
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    value={
+                      form.calories
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'calories',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                  />
+
+                </label>
+
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Protein (g)
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="0"
+                    value={
+                      form.protein
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'protein',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                  />
+
+                </label>
+
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Carbs (g)
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="0"
+                    value={
+                      form.carbs
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'carbs',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                  />
+
+                </label>
+
+                <label className="nutrition-page__field">
+
+                  <span>
+                    Fat (g)
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="0"
+                    value={
+                      form.fat
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      updateForm(
+                        'fat',
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                  />
+
+                </label>
 
               </div>
 
-              <div className="nutrition-page__field nutrition-page__field--full">
+              <div className="nutrition-page__modal-actions">
 
-                <label htmlFor="food-meal">
-                  Meal
-                </label>
-
-                <select
-                  id="food-meal"
-                  value={
-                    foodForm.meal
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        meal:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
+                <button
+                  type="button"
+                  className="button"
+                  onClick={
+                    closeModal
                   }
                 >
+                  Cancel
+                </button>
 
-                  {MEALS.map(
-                    (meal) => (
-                      <option
-                        key={
-                          meal
-                        }
-                        value={
-                          meal
-                        }
-                      >
-                        {meal}
-                      </option>
-                    ),
-                  )}
-
-                </select>
+                <button
+                  type="submit"
+                  className="button button--primary"
+                >
+                  Add Food
+                </button>
 
               </div>
 
-              <div className="nutrition-page__field nutrition-page__field--full">
+            </form>
 
-                <label htmlFor="food-calories">
-                  Calories
-                </label>
-
-                <input
-                  id="food-calories"
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="0"
-                  value={
-                    foodForm.calories
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        calories:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
-                  }
-                />
-
-              </div>
-
-              <div className="nutrition-page__field">
-
-                <label htmlFor="food-protein">
-                  Protein (g)
-                </label>
-
-                <input
-                  id="food-protein"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  placeholder="0"
-                  value={
-                    foodForm.protein
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        protein:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
-                  }
-                />
-
-              </div>
-
-              <div className="nutrition-page__field">
-
-                <label htmlFor="food-carbs">
-                  Carbs (g)
-                </label>
-
-                <input
-                  id="food-carbs"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  placeholder="0"
-                  value={
-                    foodForm.carbs
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        carbs:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
-                  }
-                />
-
-              </div>
-
-              <div className="nutrition-page__field">
-
-                <label htmlFor="food-fat">
-                  Fat (g)
-                </label>
-
-                <input
-                  id="food-fat"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  placeholder="0"
-                  value={
-                    foodForm.fat
-                  }
-                  onChange={(
-                    event,
-                  ) =>
-                    setFoodForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-                        fat:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
-                  }
-                />
-
-              </div>
-
-            </div>
-
-            {error && (
-              <p className="nutrition-page__error">
-                {error}
-              </p>
-            )}
-
-            <div className="nutrition-page__modal-footer">
-
-              <button
-                type="button"
-                className="button"
-                onClick={() =>
-                  setShowAddFood(
-                    false,
-                  )
-                }
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                className="button button--primary"
-                onClick={
-                  handleAddFood
-                }
-              >
-                <Plus size={16} />
-                Add Food
-              </button>
-
-            </div>
-
-          </section>
+          </div>
 
         </div>
+
       )}
 
     </main>
   );
 }
-
-/* =========================================
-   FORMATTERS
-========================================= */
-
-function formatMacro(value) {
-  const number =
-    Number(value || 0);
-
-  return Number.isInteger(
-    number,
-  )
-    ? number.toString()
-    : number.toFixed(1);
-}
-
-export default NutritionPage;
