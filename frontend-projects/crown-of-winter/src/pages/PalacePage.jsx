@@ -62,6 +62,7 @@ const chambers = [
     subtitle: "Secured Artifacts",
     icon: Gem,
     status: "Restricted",
+    path: "/palace/relic-vault",
     description:
       "A heavily protected chamber containing relics, weapons and captured divine artifacts.",
   },
