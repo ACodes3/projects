@@ -42,6 +42,7 @@ const chambers = [
     subtitle: "Council Chamber",
     icon: Shield,
     status: "Open",
+    path: "/palace/harbingers",
     description:
       "A restricted council chamber reserved for the Eleven Fatui Harbingers.",
   },
