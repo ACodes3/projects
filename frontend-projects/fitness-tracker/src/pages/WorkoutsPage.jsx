@@ -1,192 +1,178 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+
 import {
   CalendarDays,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Dumbbell,
-  History,
   Plus,
   Search,
-  TrendingUp,
+  Trash2,
 } from 'lucide-react';
-
-import {
-  useMemo,
-  useState,
-} from 'react';
-
-import {
-  Link,
-} from 'react-router-dom';
 
 import './WorkoutsPage.css';
 
-const WORKOUT_HISTORY_KEY =
-  'forge:workoutHistory';
+const STORAGE_KEY = 'forge:workoutHistory';
 
-/* =========================================
-   WORKOUTS PAGE
-========================================= */
-
-function WorkoutsPage() {
-  const [search, setSearch] =
-    useState('');
-
-  const [workouts] =
-    useState(() =>
-      loadWorkoutHistory(),
+function loadWorkouts() {
+  try {
+    const data = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) || '[]'
     );
 
-  /* =========================================
-     FILTER
-  ========================================= */
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
 
-  const filteredWorkouts =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+function parseDate(date) {
+  if (!date) return 0;
 
-      if (!query) {
-        return workouts;
-      }
+  const timestamp = new Date(`${date}T12:00:00`).getTime();
 
-      return workouts.filter(
-        (workout) => {
-          const workoutName =
-            workout.name
-              ?.toLowerCase() ?? '';
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
 
-          const exerciseNames =
-            workout.exercises
-              ?.map(
-                (exercise) =>
-                  exercise.name ??
-                  '',
-              )
-              .join(' ')
-              .toLowerCase() ??
-            '';
+function formatDate(date) {
+  if (!date) return 'Unknown date';
 
-          return (
-            workoutName.includes(
-              query,
-            ) ||
-            exerciseNames.includes(
-              query,
-            )
-          );
-        },
+  return new Date(`${date}T12:00:00`).toLocaleDateString(
+    'en-US',
+    {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }
+  );
+}
+
+function getSetCount(workout) {
+  return (workout.exercises || []).reduce(
+    (total, exercise) => total + (exercise.sets?.length || 0),
+    0
+  );
+}
+
+function getVolume(workout) {
+  return (workout.exercises || []).reduce(
+    (total, exercise) => {
+      return (
+        total +
+        (exercise.sets || []).reduce(
+          (sum, set) =>
+            sum +
+            Number(set.weight || 0) *
+              Number(set.reps || 0),
+          0
+        )
       );
-    }, [
-      workouts,
-      search,
-    ]);
+    },
+    0
+  );
+}
 
-  /* =========================================
-     STATS
-  ========================================= */
+function formatVolume(volume) {
+  if (volume >= 1000) {
+    return `${(volume / 1000).toFixed(1)}k kg`;
+  }
 
-  const stats =
-    useMemo(() => {
-      const now =
-        new Date();
+  return `${Math.round(volume)} kg`;
+}
 
-      const startOfWeek =
-        new Date(now);
+function getWeekStart() {
+  const date = new Date();
+  const day = date.getDay();
 
-      const day =
-        startOfWeek.getDay();
+  date.setDate(date.getDate() - ((day + 6) % 7));
+  date.setHours(0, 0, 0, 0);
 
-      const difference =
-        day === 0
-          ? -6
-          : 1 - day;
+  return date.getTime();
+}
 
-      startOfWeek.setDate(
-        startOfWeek.getDate() +
-          difference,
-      );
+export default function WorkoutsPage() {
+  const [workouts, setWorkouts] = useState(loadWorkouts);
+  const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
-      startOfWeek.setHours(
-        0,
-        0,
-        0,
-        0,
-      );
+  const sortedWorkouts = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      const thisWeek =
-        workouts.filter(
-          (workout) => {
-            const workoutDate =
-              new Date(
-                workout.date ??
-                  workout.completedAt,
-              );
+    return [...workouts]
+      .sort((a, b) => {
+        const dateDifference =
+          parseDate(b.date) - parseDate(a.date);
 
-            return (
-              workoutDate >=
-              startOfWeek
-            );
-          },
-        ).length;
+        if (dateDifference !== 0) return dateDifference;
 
-      const totalSets =
-        workouts.reduce(
-          (
-            workoutTotal,
-            workout,
-          ) =>
-            workoutTotal +
-            getWorkoutSetCount(
-              workout,
-            ),
-          0,
+        return new Date(b.createdAt || 0) -
+          new Date(a.createdAt || 0);
+      })
+      .filter((workout) => {
+        if (!query) return true;
+
+        return (
+          (workout.name || '').toLowerCase().includes(query) ||
+          (workout.exercises || []).some((exercise) =>
+            (exercise.name || '').toLowerCase().includes(query)
+          )
         );
+      });
+  }, [workouts, search]);
 
-      const totalVolume =
-        workouts.reduce(
-          (
-            workoutTotal,
-            workout,
-          ) =>
-            workoutTotal +
-            getWorkoutVolume(
-              workout,
-            ),
-          0,
-        );
+  const stats = useMemo(() => {
+    const weekStart = getWeekStart();
 
-      return {
-        thisWeek,
-        totalSets,
-        totalVolume,
-      };
-    }, [workouts]);
+    return {
+      total: workouts.length,
+      thisWeek: workouts.filter(
+        (workout) =>
+          parseDate(workout.date) >= weekStart
+      ).length,
+      sets: workouts.reduce(
+        (total, workout) => total + getSetCount(workout),
+        0
+      ),
+      volume: workouts.reduce(
+        (total, workout) => total + getVolume(workout),
+        0
+      ),
+    };
+  }, [workouts]);
+
+  function deleteWorkout(id) {
+    const workout = workouts.find((item) => item.id === id);
+
+    if (
+      !window.confirm(
+        `Delete "${workout?.name || 'Workout'}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    const updated = workouts.filter((item) => item.id !== id);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setWorkouts(updated);
+
+    if (expandedId === id) {
+      setExpandedId(null);
+    }
+  }
 
   return (
     <main className="workouts-page">
-
-      {/* =====================================
-          HEADER
-      ===================================== */}
-
-      <div className="page__header">
-
+      <header className="page__header">
         <div className="page__header-text">
+          <span className="page__eyebrow">Training Log</span>
 
-          <span className="page__eyebrow">
-            Training Log
-          </span>
-
-          <h1 className="page__title">
-            Workouts
-          </h1>
+          <h1 className="page__title">Workouts</h1>
 
           <p className="page__description">
-            Record your training and
-            review what you have done.
+            Your completed training sessions, organized by workout.
           </p>
-
         </div>
 
         <Link
@@ -196,488 +182,196 @@ function WorkoutsPage() {
           <Plus size={16} />
           Log Workout
         </Link>
-
-      </div>
-
-      {/* =====================================
-          SUMMARY
-      ===================================== */}
+      </header>
 
       <section className="workouts-page__stats">
-
         <article className="workouts-page__stat">
-
-          <div>
-            <CalendarDays
-              size={18}
-            />
-          </div>
-
-          <span>
-            This Week
-          </span>
-
-          <strong>
-            {stats.thisWeek}
-          </strong>
-
+          <span>This Week</span>
+          <strong>{stats.thisWeek}</strong>
+          <small>workouts</small>
         </article>
 
         <article className="workouts-page__stat">
-
-          <div>
-            <Dumbbell
-              size={18}
-            />
-          </div>
-
-          <span>
-            Total Workouts
-          </span>
-
-          <strong>
-            {workouts.length}
-          </strong>
-
+          <span>Total Workouts</span>
+          <strong>{stats.total}</strong>
+          <small>sessions</small>
         </article>
 
         <article className="workouts-page__stat">
-
-          <div>
-            <TrendingUp
-              size={18}
-            />
-          </div>
-
-          <span>
-            Total Sets
-          </span>
-
-          <strong>
-            {stats.totalSets}
-          </strong>
-
+          <span>Total Sets</span>
+          <strong>{stats.sets}</strong>
+          <small>logged</small>
         </article>
 
         <article className="workouts-page__stat">
-
-          <div>
-            <History
-              size={18}
-            />
-          </div>
-
-          <span>
-            Total Volume
-          </span>
-
-          <strong>
-            {formatVolume(
-              stats.totalVolume,
-            )}
-          </strong>
-
+          <span>Total Volume</span>
+          <strong>{formatVolume(stats.volume)}</strong>
+          <small>lifted</small>
         </article>
-
       </section>
 
-      {/* =====================================
-          HISTORY
-      ===================================== */}
-
-      <section className="panel workouts-page__history">
-
-        <div className="workouts-page__history-header">
-
-          <div>
-
-            <span>
-              History
-            </span>
-
-            <h2>
-              Workout Log
-            </h2>
-
-          </div>
-
-          <div className="workouts-page__search">
-
-            <Search
-              size={15}
-            />
-
-            <input
-              type="text"
-              placeholder="Search workouts..."
-              value={search}
-              onChange={(
-                event,
-              ) =>
-                setSearch(
-                  event.target.value,
-                )
-              }
-            />
-
-          </div>
-
+      <div className="workouts-page__section-header">
+        <div>
+          <h2>Workout History</h2>
+          <p>
+            {workouts.length} completed{' '}
+            {workouts.length === 1 ? 'workout' : 'workouts'}
+          </p>
         </div>
 
-        {/* ===================================
-            EMPTY STATE
-        =================================== */}
+        <div className="workouts-page__search">
+          <Search size={16} />
 
-        {workouts.length === 0 && (
-          <div className="workouts-page__empty">
+          <input
+            type="search"
+            placeholder="Search workouts..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+      </div>
 
-            <div className="workouts-page__empty-icon">
-              <Dumbbell
-                size={28}
-              />
-            </div>
+      {sortedWorkouts.length === 0 ? (
+        <div className="panel workouts-page__empty">
+          <Dumbbell size={28} />
 
-            <h2>
-              No workouts logged yet
-            </h2>
+          <h3>
+            {workouts.length === 0
+              ? 'No workouts logged'
+              : 'No matching workouts'}
+          </h3>
 
-            <p>
-              Log your first workout
-              and it will appear here.
-            </p>
+          <p>
+            {workouts.length === 0
+              ? 'Log a completed workout to start building your history.'
+              : 'Try a different search term.'}
+          </p>
 
+          {workouts.length === 0 && (
             <Link
               to="/workouts/session"
               className="button button--primary"
             >
               <Plus size={15} />
-              Log First Workout
+              Log Workout
             </Link>
-
-          </div>
-        )}
-
-        {/* ===================================
-            NO SEARCH RESULTS
-        =================================== */}
-
-        {workouts.length > 0 &&
-          filteredWorkouts.length ===
-            0 && (
-            <div className="workouts-page__empty">
-
-              <Search
-                size={25}
-              />
-
-              <h2>
-                No workouts found
-              </h2>
-
-              <p>
-                Try a different workout
-                or exercise name.
-              </p>
-
-            </div>
           )}
+        </div>
+      ) : (
+        <section className="workouts-page__history">
+          {sortedWorkouts.map((workout) => {
+            const expanded = expandedId === workout.id;
+            const exerciseCount = workout.exercises?.length || 0;
+            const setCount = getSetCount(workout);
+            const volume = getVolume(workout);
 
-        {/* ===================================
-            WORKOUT LIST
-        =================================== */}
-
-        {filteredWorkouts.length >
-          0 && (
-          <div className="workouts-page__list">
-
-            {filteredWorkouts.map(
-              (workout) => {
-                const exerciseCount =
-                  workout.exercises
-                    ?.length ?? 0;
-
-                const setCount =
-                  getWorkoutSetCount(
-                    workout,
-                  );
-
-                const volume =
-                  getWorkoutVolume(
-                    workout,
-                  );
-
-                return (
-                  <article
-                    key={
-                      workout.id
+            return (
+              <article
+                className="panel workouts-page__workout"
+                key={workout.id}
+              >
+                <div className="workouts-page__workout-summary">
+                  <button
+                    type="button"
+                    className="workouts-page__workout-toggle"
+                    aria-expanded={expanded}
+                    onClick={() =>
+                      setExpandedId(expanded ? null : workout.id)
                     }
-                    className="workouts-page__workout"
                   >
-
-                    <div className="workouts-page__date">
-
-                      <strong>
-                        {formatDay(
-                          workout.date ??
-                            workout.completedAt,
-                        )}
-                      </strong>
-
-                      <span>
-                        {formatMonth(
-                          workout.date ??
-                            workout.completedAt,
-                        )}
-                      </span>
-
+                    <div className="workouts-page__workout-icon">
+                      <Dumbbell size={19} />
                     </div>
 
                     <div className="workouts-page__workout-main">
+                      <h3>{workout.name || 'Workout'}</h3>
 
-                      <strong>
-                        {workout.name ||
-                          'Workout'}
-                      </strong>
-
-                      <span>
-                        {formatFullDate(
-                          workout.date ??
-                            workout.completedAt,
-                        )}
+                      <span className="workouts-page__workout-date">
+                        <CalendarDays size={13} />
+                        {formatDate(workout.date)}
                       </span>
 
+                      <div className="workouts-page__workout-meta">
+                        <span>
+                          {exerciseCount} exercises
+                        </span>
+                        <span>{setCount} sets</span>
+                        <span>{formatVolume(volume)}</span>
+                      </div>
                     </div>
 
-                    <div className="workouts-page__workout-stat">
+                    {expanded ? (
+                      <ChevronUp size={19} />
+                    ) : (
+                      <ChevronDown size={19} />
+                    )}
+                  </button>
 
-                      <span>
-                        Exercises
-                      </span>
+                  <button
+                    type="button"
+                    className="workouts-page__delete"
+                    aria-label={`Delete ${workout.name || 'workout'}`}
+                    onClick={() => deleteWorkout(workout.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
 
-                      <strong>
-                        {
-                          exerciseCount
-                        }
-                      </strong>
-
+                {expanded && (
+                  <div className="workouts-page__workout-details">
+                    <div className="workouts-page__details-heading">
+                      <h4>Workout Details</h4>
+                      <span>{exerciseCount} exercises recorded</span>
                     </div>
 
-                    <div className="workouts-page__workout-stat">
+                    {(workout.exercises || []).map(
+                      (exercise, exerciseIndex) => (
+                        <div
+                          className="workouts-page__exercise"
+                          key={exercise.id || exerciseIndex}
+                        >
+                          <div className="workouts-page__exercise-header">
+                            <span>{exerciseIndex + 1}</span>
+                            <strong>{exercise.name}</strong>
+                            <small>
+                              {exercise.sets?.length || 0} sets
+                            </small>
+                          </div>
 
-                      <span>
-                        Sets
-                      </span>
+                          <div className="workouts-page__sets">
+                            <div className="workouts-page__set-heading">
+                              <span>Set</span>
+                              <span>Weight</span>
+                              <span>Reps</span>
+                            </div>
 
-                      <strong>
-                        {setCount}
-                      </strong>
-
-                    </div>
-
-                    <div className="workouts-page__workout-stat">
-
-                      <span>
-                        Volume
-                      </span>
-
-                      <strong>
-                        {formatVolume(
-                          volume,
-                        )}
-                      </strong>
-
-                    </div>
-
-                    <ChevronRight
-                      size={17}
-                    />
-
-                  </article>
-                );
-              },
-            )}
-
-          </div>
-        )}
-
-      </section>
-
+                            {(exercise.sets || []).map(
+                              (set, setIndex) => (
+                                <div
+                                  className="workouts-page__set"
+                                  key={set.id || setIndex}
+                                >
+                                  <span>{setIndex + 1}</span>
+                                  <strong>
+                                    {Number(set.weight || 0)} kg
+                                  </strong>
+                                  <strong>
+                                    {Number(set.reps || 0)}
+                                  </strong>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
     </main>
   );
 }
-
-/* =========================================
-   STORAGE
-========================================= */
-
-function loadWorkoutHistory() {
-  try {
-    const stored =
-      localStorage.getItem(
-        WORKOUT_HISTORY_KEY,
-      );
-
-    if (!stored) {
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.sort(
-      (a, b) =>
-        new Date(
-          b.date ??
-            b.completedAt,
-        ) -
-        new Date(
-          a.date ??
-            a.completedAt,
-        ),
-    );
-  } catch {
-    return [];
-  }
-}
-
-/* =========================================
-   CALCULATIONS
-========================================= */
-
-function getWorkoutSetCount(
-  workout,
-) {
-  if (!workout.exercises) {
-    return 0;
-  }
-
-  return workout.exercises.reduce(
-    (
-      total,
-      exercise,
-    ) =>
-      total +
-      (exercise.sets?.length ??
-        0),
-    0,
-  );
-}
-
-function getWorkoutVolume(
-  workout,
-) {
-  if (!workout.exercises) {
-    return 0;
-  }
-
-  return workout.exercises.reduce(
-    (
-      workoutVolume,
-      exercise,
-    ) => {
-      const exerciseVolume =
-        exercise.sets?.reduce(
-          (
-            setVolume,
-            set,
-          ) => {
-            const weight =
-              Number(
-                set.weight,
-              ) || 0;
-
-            const reps =
-              Number(
-                set.reps,
-              ) || 0;
-
-            return (
-              setVolume +
-              weight * reps
-            );
-          },
-          0,
-        ) ?? 0;
-
-      return (
-        workoutVolume +
-        exerciseVolume
-      );
-    },
-    0,
-  );
-}
-
-/* =========================================
-   FORMATTERS
-========================================= */
-
-function formatVolume(
-  volume,
-) {
-  if (volume >= 1000) {
-    return `${(
-      volume / 1000
-    ).toFixed(1)}k kg`;
-  }
-
-  return `${Math.round(
-    volume,
-  ).toLocaleString()} kg`;
-}
-
-function formatDay(date) {
-  if (!date) {
-    return '--';
-  }
-
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      day: '2-digit',
-    },
-  ).format(
-    new Date(date),
-  );
-}
-
-function formatMonth(date) {
-  if (!date) {
-    return '---';
-  }
-
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      month: 'short',
-    },
-  )
-    .format(
-      new Date(date),
-    )
-    .toUpperCase();
-}
-
-function formatFullDate(date) {
-  if (!date) {
-    return 'Unknown date';
-  }
-
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      weekday: 'short',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    },
-  ).format(
-    new Date(date),
-  );
-}
-
-export default WorkoutsPage;
