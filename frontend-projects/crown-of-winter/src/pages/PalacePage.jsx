@@ -52,6 +52,7 @@ const chambers = [
     subtitle: "Classified Records",
     icon: Archive,
     status: "Open",
+    path: "/palace/archives",
     description:
       "Historic records, intelligence dossiers and restricted imperial documentation.",
   },
