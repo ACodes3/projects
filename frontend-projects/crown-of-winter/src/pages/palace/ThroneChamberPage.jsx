@@ -81,7 +81,7 @@ function ThroneChamberPage() {
       <section className="throne-page__hero">
 
         <img
-          src="/images/palace/winter-palace.png"
+          src="/images/throne-room.png"
           alt="Imperial throne chamber"
           className="throne-page__hero-image"
         />
