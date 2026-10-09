@@ -82,6 +82,7 @@ const chambers = [
     subtitle: "Omega Clearance",
     icon: Snowflake,
     status: "Omega",
+    path: "/palace/gnosis",
     description:
       "The most secure chamber beneath the palace. Access is limited to the highest imperial authority.",
   },
