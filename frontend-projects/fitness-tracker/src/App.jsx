@@ -8,6 +8,7 @@ import {
 import AppShell from './components/AppShell';
 
 import DashboardPage from './pages/DashboardPage';
+import LibraryPage from './pages/LibraryPage';
 
 /* =========================================
    TEMPORARY PLACEHOLDER PAGES
@@ -90,34 +91,6 @@ function ProgressPage() {
 
           <p className="page__description">
             Follow changes in body weight, strength and training volume.
-          </p>
-
-        </div>
-
-      </div>
-
-    </main>
-  );
-}
-
-function LibraryPage() {
-  return (
-    <main className="page">
-
-      <div className="page__header">
-
-        <div className="page__header-text">
-
-          <span className="page__eyebrow">
-            Database
-          </span>
-
-          <h1 className="page__title">
-            Library
-          </h1>
-
-          <p className="page__description">
-            Manage reusable exercises and foods.
           </p>
 
         </div>
