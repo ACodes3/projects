@@ -7,6 +7,7 @@ import LibraryPage from "./pages/LibraryPage";
 import WorkoutsPage from "./pages/WorkoutsPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import NutritionPage from './pages/NutritionPage';
+import ProgressPage from './pages/ProgressPage';
 
 /* =========================================
    TEMPORARY PLACEHOLDER PAGES
@@ -14,25 +15,6 @@ import NutritionPage from './pages/NutritionPage';
    We will replace these one by one with
    proper page components as we build them.
 ========================================= */
-
-
-function ProgressPage() {
-  return (
-    <main className="page">
-      <div className="page__header">
-        <div className="page__header-text">
-          <span className="page__eyebrow">Performance</span>
-
-          <h1 className="page__title">Progress</h1>
-
-          <p className="page__description">
-            Follow changes in body weight, strength and training volume.
-          </p>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 function SettingsPage() {
   return (
