@@ -4,19 +4,17 @@
 
 .app-shell {
   display: grid;
-  grid-template-columns: 245px minmax(0, 1fr);
+
+  grid-template-columns:
+    245px
+    minmax(0, 1fr);
 
   width: 100%;
   min-height: 100vh;
 
-  background:
-    linear-gradient(
-      180deg,
-      #111315,
-      #0d0f11
-    );
+  background: #101214;
 
-  color: #f1f3f5;
+  color: #eef0f1;
 }
 
 /* =========================================
@@ -30,14 +28,15 @@
   display: flex;
   flex-direction: column;
 
+  width: 245px;
   height: 100vh;
 
-  padding: 20px 16px;
+  overflow: hidden;
 
   border-right:
-    1px solid rgba(255, 255, 255, 0.07);
+    1px solid rgba(255, 255, 255, 0.06);
 
-  background: #0b0d0f;
+  background: #111416;
 }
 
 /* =========================================
@@ -48,11 +47,11 @@
   display: flex;
   align-items: center;
 
-  gap: 12px;
+  gap: 11px;
 
-  min-height: 68px;
+  min-height: 78px;
 
-  padding: 8px 9px 19px;
+  padding: 0 18px;
 
   border-bottom:
     1px solid rgba(255, 255, 255, 0.06);
@@ -62,66 +61,77 @@
   display: grid;
   place-items: center;
 
-  width: 42px;
-  height: 42px;
-
   flex-shrink: 0;
 
+  width: 38px;
+  height: 38px;
+
   border:
-    1px solid rgba(255, 255, 255, 0.11);
+    1px solid rgba(217, 255, 119, 0.13);
 
-  border-radius: 9px;
+  border-radius: 8px;
 
-  background: #171a1d;
+  background:
+    rgba(217, 255, 119, 0.07);
 
   color: #d9ff77;
 }
 
-.app-shell__brand > div:last-child {
+.app-shell__brand-text {
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 3px;
 
   min-width: 0;
 }
 
-.app-shell__brand strong {
-  color: #f7f8f9;
+.app-shell__brand-text strong {
+  color: #f1f3f4;
 
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
-.app-shell__brand span {
-  color: #747b81;
+.app-shell__brand-text span {
+  overflow: hidden;
 
-  font-size: 11px;
+  color: #747c82;
 
-  letter-spacing: 0.03em;
+  font-size: 10px;
+  font-weight: 500;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* =========================================
-   NAVIGATION
+   SIDEBAR NAV
 ========================================= */
 
-.app-shell__navigation {
+.app-shell__nav {
   display: flex;
   flex-direction: column;
 
-  gap: 6px;
+  flex: 1;
 
-  padding-top: 21px;
+  min-height: 0;
+
+  padding: 18px 12px;
+
+  overflow-y: auto;
 }
 
 .app-shell__nav-label {
-  margin: 0 10px 7px;
+  display: block;
 
-  color: #61686e;
+  margin: 0 8px 9px;
 
-  font-size: 10px;
+  color: #626a70;
+
+  font-size: 9px;
   font-weight: 600;
 
   letter-spacing: 0.13em;
@@ -129,63 +139,88 @@
   text-transform: uppercase;
 }
 
-.app-shell__nav-item {
+.app-shell__nav-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+/* =========================================
+   NAV LINK
+========================================= */
+
+.app-shell__nav-link {
+  position: relative;
+
   display: flex;
   align-items: center;
 
   gap: 11px;
 
-  min-height: 45px;
+  width: 100%;
+  min-height: 43px;
 
-  padding: 0 12px;
+  padding: 0 11px;
 
   border:
     1px solid transparent;
 
-  border-radius: 8px;
+  border-radius: 7px;
 
-  color: #92999f;
+  color: #8f979d;
 
   font-size: 13px;
   font-weight: 500;
 
   text-decoration: none;
-
-  transition:
-    color 0.18s ease,
-    background 0.18s ease,
-    border-color 0.18s ease;
 }
 
-.app-shell__nav-item svg {
+.app-shell__nav-link svg {
   flex-shrink: 0;
 
-  color: #6f767c;
+  color: #6f777d;
 }
 
-.app-shell__nav-item:hover {
-  color: #e7eaec;
-
+.app-shell__nav-link:hover {
   background:
-    rgba(255, 255, 255, 0.035);
+    rgba(255, 255, 255, 0.025);
+
+  color: #d7dbdd;
 }
 
-.app-shell__nav-item:hover svg {
-  color: #a9afb4;
+.app-shell__nav-link:hover svg {
+  color: #a3abb0;
 }
 
-.app-shell__nav-item--active {
+.app-shell__nav-link--active {
   border-color:
-    rgba(217, 255, 119, 0.13);
+    rgba(217, 255, 119, 0.1);
 
   background:
-    rgba(217, 255, 119, 0.07);
+    rgba(217, 255, 119, 0.065);
 
-  color: #eff7d9;
+  color: #eef0f1;
 }
 
-.app-shell__nav-item--active svg {
+.app-shell__nav-link--active svg {
   color: #d9ff77;
+}
+
+.app-shell__nav-link--active::before {
+  content: '';
+
+  position: absolute;
+
+  left: -1px;
+  top: 10px;
+  bottom: 10px;
+
+  width: 2px;
+
+  border-radius: 2px;
+
+  background: #d9ff77;
 }
 
 /* =========================================
@@ -193,78 +228,10 @@
 ========================================= */
 
 .app-shell__sidebar-bottom {
-  display: flex;
-  flex-direction: column;
-
-  gap: 13px;
-
-  margin-top: auto;
-
-  padding-top: 16px;
+  padding: 12px;
 
   border-top:
     1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* =========================================
-   PROFILE
-========================================= */
-
-.app-shell__profile {
-  display: flex;
-  align-items: center;
-
-  gap: 11px;
-
-  min-height: 58px;
-
-  padding: 9px;
-
-  border:
-    1px solid rgba(255, 255, 255, 0.06);
-
-  border-radius: 9px;
-
-  background: #111417;
-}
-
-.app-shell__profile-avatar {
-  display: grid;
-  place-items: center;
-
-  width: 38px;
-  height: 38px;
-
-  flex-shrink: 0;
-
-  border-radius: 50%;
-
-  background: #d9ff77;
-
-  color: #101214;
-
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.app-shell__profile > div:last-child {
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.app-shell__profile strong {
-  color: #dfe2e4;
-
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.app-shell__profile span {
-  color: #6c7379;
-
-  font-size: 10px;
 }
 
 /* =========================================
@@ -272,6 +239,7 @@
 ========================================= */
 
 .app-shell__main {
+  width: 100%;
   min-width: 0;
   min-height: 100vh;
 
@@ -286,7 +254,7 @@
   position: sticky;
   top: 0;
 
-  z-index: 20;
+  z-index: 50;
 
   display: flex;
   align-items: center;
@@ -294,75 +262,93 @@
 
   gap: 20px;
 
-  min-height: 68px;
+  min-height: 62px;
 
-  padding: 0 28px;
+  padding: 0 24px;
 
   border-bottom:
-    1px solid rgba(255, 255, 255, 0.065);
+    1px solid rgba(255, 255, 255, 0.06);
 
   background:
     rgba(16, 18, 20, 0.96);
-}
 
-.app-shell__topbar > div:first-child {
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.app-shell__topbar span {
-  color: #6e757b;
-
-  font-size: 10px;
-  font-weight: 500;
-
-  letter-spacing: 0.11em;
-
-  text-transform: uppercase;
-}
-
-.app-shell__topbar strong {
-  color: #eceeef;
-
-  font-size: 13px;
-  font-weight: 500;
-
-  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
 }
 
 /* =========================================
-   STATUS
+   TOPBAR LEFT
 ========================================= */
 
-.app-shell__status {
+.app-shell__topbar-left {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  color: #7d858b;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.app-shell__status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #d9ff77;
+}
+
+/* =========================================
+   PROFILE LINK
+========================================= */
+
+.app-shell__profile-link {
   display: inline-flex;
   align-items: center;
 
   gap: 8px;
 
-  color: #777e84;
+  min-height: 36px;
 
-  font-size: 10px;
+  padding: 0 10px;
 
-  letter-spacing: 0.06em;
+  border:
+    1px solid rgba(255, 255, 255, 0.07);
 
-  text-transform: uppercase;
+  border-radius: 7px;
+
+  background: #16191c;
+
+  color: #9da4a9;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  text-decoration: none;
 }
 
-.app-shell__status-dot {
-  display: block;
+.app-shell__profile-link:hover {
+  border-color:
+    rgba(217, 255, 119, 0.13);
 
-  width: 7px;
-  height: 7px;
+  color: #d9ff77;
+}
 
-  border-radius: 50%;
+.app-shell__profile-icon {
+  display: grid;
+  place-items: center;
 
-  background: #d9ff77;
+  width: 25px;
+  height: 25px;
 
-  box-shadow:
-    0 0 7px rgba(217, 255, 119, 0.25);
+  border-radius: 6px;
+
+  background:
+    rgba(217, 255, 119, 0.06);
+
+  color: #d9ff77;
 }
 
 /* =========================================
@@ -372,107 +358,39 @@
 .app-shell__content {
   width: 100%;
 
-  padding: 30px;
-
-  overflow-x: hidden;
+  padding: 30px 32px 50px;
 }
 
 /* =========================================
-   GENERIC PAGE HELPERS
+   GLOBAL PAGE HEADER
 ========================================= */
-
-.page {
-  width: 100%;
-}
 
 .page__header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
 
-  gap: 20px;
+  gap: 28px;
 
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .page__header-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 
-  gap: 6px;
+  min-width: 0;
 }
 
 .page__eyebrow {
-  color: #7b8288;
+  display: block;
 
-  font-size: 10px;
-  font-weight: 600;
+  margin: 0 0 8px;
 
-  letter-spacing: 0.14em;
+  color: #778087;
 
-  text-transform: uppercase;
-}
-
-.page__title {
-  margin: 0;
-
-  color: #f2f3f4;
-
-  font-size: 32px;
-  font-weight: 600;
-
-  letter-spacing: -0.025em;
-}
-
-.page__description {
-  margin: 3px 0 0;
-
-  color: #858c92;
-
-  font-size: 13px;
-
-  line-height: 1.6;
-}
-
-/* =========================================
-   GENERIC CARD
-========================================= */
-
-.panel {
-  border:
-    1px solid rgba(255, 255, 255, 0.07);
-
-  border-radius: 10px;
-
-  background: #14171a;
-}
-
-.panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 15px;
-
-  min-height: 55px;
-
-  padding: 0 16px;
-
-  border-bottom:
-    1px solid rgba(255, 255, 255, 0.06);
-}
-
-.panel__header > div {
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.panel__header span {
-  color: #6c7379;
-
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
 
   letter-spacing: 0.13em;
@@ -480,21 +398,45 @@
   text-transform: uppercase;
 }
 
-.panel__header h2 {
+.page__title {
   margin: 0;
 
-  color: #dfe2e4;
+  color: #f2f4f5;
 
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 34px;
+  font-weight: 650;
+
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
 
-.panel__header svg {
-  color: #747b81;
+.page__description {
+  max-width: 620px;
+
+  margin: 9px 0 0;
+
+  color: #8f979d;
+
+  font-size: 14px;
+
+  line-height: 1.6;
 }
 
 /* =========================================
-   GENERIC BUTTONS
+   GLOBAL PANEL
+========================================= */
+
+.panel {
+  border:
+    1px solid rgba(255, 255, 255, 0.075);
+
+  border-radius: 10px;
+
+  background: #14171a;
+}
+
+/* =========================================
+   GLOBAL BUTTON
 ========================================= */
 
 .button {
@@ -504,7 +446,7 @@
 
   gap: 7px;
 
-  min-height: 38px;
+  min-height: 40px;
 
   padding: 0 14px;
 
@@ -513,35 +455,44 @@
 
   border-radius: 7px;
 
-  background: #171a1d;
+  outline: none;
 
-  color: #d6d9db;
+  background: #191d20;
+
+  color: #c3c8cb;
 
   font-family: inherit;
-
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-
-  letter-spacing: 0.03em;
 
   text-decoration: none;
 
   cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease;
 }
 
 .button:hover {
-  background: #1c2023;
-
   border-color:
-    rgba(255, 255, 255, 0.14);
+    rgba(217, 255, 119, 0.16);
 
-  color: #ffffff;
+  color: #d9ff77;
 }
+
+.button:focus-visible {
+  outline:
+    2px solid rgba(217, 255, 119, 0.35);
+
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.4;
+
+  cursor: default;
+}
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
 
 .button--primary {
   border-color: #d9ff77;
@@ -552,125 +503,312 @@
 }
 
 .button--primary:hover {
-  border-color: #e4ff9a;
+  border-color: #e2ff95;
 
-  background: #e4ff9a;
+  background: #e2ff95;
 
   color: #111315;
 }
 
 /* =========================================
-   RESPONSIVE
+   SCROLLBARS
 ========================================= */
 
-@media (max-width: 950px) {
+.app-shell__nav::-webkit-scrollbar,
+.app-shell__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-shell__nav::-webkit-scrollbar-track,
+.app-shell__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-shell__nav::-webkit-scrollbar-thumb,
+.app-shell__content::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+
+  background:
+    rgba(255, 255, 255, 0.09);
+}
+
+/* =========================================
+   LARGE TABLET
+========================================= */
+
+@media (max-width: 1100px) {
   .app-shell {
-    grid-template-columns: 210px minmax(0, 1fr);
+    grid-template-columns:
+      215px
+      minmax(0, 1fr);
   }
 
   .app-shell__sidebar {
-    padding: 17px 11px;
+    width: 215px;
   }
 
   .app-shell__content {
-    padding: 22px;
+    padding:
+      26px
+      24px
+      45px;
   }
 
-  .app-shell__nav-item {
-    font-size: 12px;
+  .app-shell__brand-text span {
+    font-size: 9px;
   }
 }
 
-@media (max-width: 700px) {
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 850px) {
   .app-shell {
     display: block;
+
+    padding-bottom: 70px;
   }
 
   .app-shell__sidebar {
-    position: static;
+    position: fixed;
+
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    z-index: 100;
 
     width: 100%;
-    height: auto;
+    height: 68px;
 
-    padding: 11px;
+    flex-direction: row;
+    align-items: stretch;
 
-    border-right: 0;
+    border-top:
+      1px solid rgba(255, 255, 255, 0.08);
 
-    border-bottom:
-      1px solid rgba(255, 255, 255, 0.07);
+    border-right: none;
+
+    background:
+      rgba(17, 20, 22, 0.98);
   }
 
   .app-shell__brand {
-    min-height: auto;
-
-    padding: 4px 5px 11px;
+    display: none;
   }
 
-  .app-shell__navigation {
-    display: grid;
+  .app-shell__nav {
+    flex: 1;
 
-    grid-template-columns:
-      repeat(5, minmax(0, 1fr));
+    padding: 7px 8px;
 
-    gap: 5px;
-
-    padding-top: 10px;
+    overflow: visible;
   }
 
   .app-shell__nav-label {
     display: none;
   }
 
-  .app-shell__nav-item {
-    justify-content: center;
+  .app-shell__nav-list {
+    display: grid;
 
-    gap: 5px;
+    grid-template-columns:
+      repeat(6, minmax(0, 1fr));
 
-    min-height: 40px;
+    height: 100%;
 
-    padding: 0 5px;
-
-    font-size: 10px;
+    gap: 3px;
   }
 
-  .app-shell__nav-item svg {
-    width: 15px;
+  .app-shell__nav-link {
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 4px;
+
+    min-height: 52px;
+
+    padding: 5px 3px;
+
+    font-size: 9px;
+
+    text-align: center;
+  }
+
+  .app-shell__nav-link svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .app-shell__nav-link--active::before {
+    top: auto;
+    right: 12px;
+    bottom: -1px;
+    left: 12px;
+
+    width: auto;
+    height: 2px;
   }
 
   .app-shell__sidebar-bottom {
+    display: flex;
+    align-items: center;
+
+    width: 62px;
+
+    padding: 7px 5px;
+
+    border-top: none;
+    border-left:
+      1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .app-shell__sidebar-bottom
+  .app-shell__nav-link {
+    width: 100%;
+  }
+
+  .app-shell__sidebar-bottom
+  .app-shell__nav-link span {
     display: none;
+  }
+
+  .app-shell__main {
+    min-height: calc(100vh - 68px);
   }
 
   .app-shell__topbar {
     min-height: 58px;
 
-    padding: 0 16px;
+    padding: 0 20px;
   }
 
-  .app-shell__status {
+  .app-shell__content {
+    padding:
+      24px
+      20px
+      38px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+  .app-shell {
+    padding-bottom: 64px;
+  }
+
+  .app-shell__sidebar {
+    height: 64px;
+  }
+
+  .app-shell__nav {
+    padding:
+      6px
+      5px;
+  }
+
+  .app-shell__nav-list {
+    gap: 1px;
+  }
+
+  .app-shell__nav-link {
+    min-height: 50px;
+
+    border-radius: 6px;
+
+    font-size: 8px;
+  }
+
+  .app-shell__nav-link svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .app-shell__sidebar-bottom {
+    width: 52px;
+
+    padding:
+      6px
+      3px;
+  }
+
+  .app-shell__topbar {
+    min-height: 56px;
+
+    padding:
+      0
+      14px;
+  }
+
+  .app-shell__topbar-left {
+    font-size: 10px;
+  }
+
+  .app-shell__profile-link {
+    min-height: 34px;
+
+    padding:
+      0
+      7px;
+  }
+
+  .app-shell__profile-link > span {
     display: none;
   }
 
   .app-shell__content {
-    padding: 18px;
+    padding:
+      22px
+      14px
+      32px;
+  }
+
+  .page__header {
+    align-items: stretch;
+    flex-direction: column;
+
+    gap: 18px;
+  }
+
+  .page__title {
+    font-size: 29px;
+  }
+
+  .page__header > .button {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+  .app-shell__nav-link span {
+    display: none;
+  }
+
+  .app-shell__nav-link {
+    gap: 0;
+  }
+
+  .app-shell__sidebar-bottom {
+    width: 48px;
+  }
+
+  .app-shell__content {
+    padding:
+      20px
+      12px
+      28px;
   }
 
   .page__title {
     font-size: 27px;
-  }
-
-  .page__description {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 500px) {
-  .app-shell__navigation {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-  }
-
-  .app-shell__content {
-    padding: 14px;
   }
 }

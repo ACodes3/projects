@@ -1,11 +1,12 @@
 import {
+  Activity,
   Dumbbell,
   LayoutDashboard,
-  Utensils,
-  TrendingUp,
   Library,
   Settings,
-  Activity,
+  TrendingUp,
+  UserRound,
+  Utensils,
 } from 'lucide-react';
 
 import {
@@ -14,6 +15,10 @@ import {
 } from 'react-router-dom';
 
 import './AppShell.css';
+
+/* =========================================
+   NAVIGATION
+========================================= */
 
 const navigation = [
   {
@@ -37,11 +42,20 @@ const navigation = [
     icon: TrendingUp,
   },
   {
-    label: 'Library',
+    label: 'Exercise Library',
     path: '/library',
     icon: Library,
   },
+  {
+    label: 'Profile',
+    path: '/profile',
+    icon: UserRound,
+  },
 ];
+
+/* =========================================
+   APP SHELL
+========================================= */
 
 function AppShell() {
   return (
@@ -53,13 +67,16 @@ function AppShell() {
 
       <aside className="app-shell__sidebar">
 
+        {/* BRAND */}
+
         <div className="app-shell__brand">
 
           <div className="app-shell__brand-icon">
-            <Activity size={19} />
+            <Activity size={20} />
           </div>
 
-          <div>
+          <div className="app-shell__brand-text">
+
             <strong>
               FORGE
             </strong>
@@ -67,79 +84,82 @@ function AppShell() {
             <span>
               Training & Nutrition
             </span>
+
           </div>
 
         </div>
 
-        {/* NAVIGATION */}
+        {/* MAIN NAV */}
 
-        <nav className="app-shell__navigation">
+        <nav className="app-shell__nav">
 
           <span className="app-shell__nav-label">
             Overview
           </span>
 
-          {navigation.map((item) => {
-            const Icon = item.icon;
+          <div className="app-shell__nav-list">
 
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  isActive
-                    ? 'app-shell__nav-item app-shell__nav-item--active'
-                    : 'app-shell__nav-item'
-                }
-              >
-                <Icon size={17} />
+            {navigation.map(
+              ({
+                label,
+                path,
+                icon: Icon,
+              }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  end={path === '/'}
+                  className={({
+                    isActive,
+                  }) =>
+                    `app-shell__nav-link ${
+                      isActive
+                        ? 'app-shell__nav-link--active'
+                        : ''
+                    }`
+                  }
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={1.8}
+                  />
 
-                <span>
-                  {item.label}
-                </span>
-              </NavLink>
-            );
-          })}
+                  <span>
+                    {label}
+                  </span>
+                </NavLink>
+              ),
+            )}
+
+          </div>
 
         </nav>
 
-        {/* BOTTOM */}
+        {/* BOTTOM NAV */}
 
         <div className="app-shell__sidebar-bottom">
 
           <NavLink
             to="/settings"
-            className={({ isActive }) =>
-              isActive
-                ? 'app-shell__nav-item app-shell__nav-item--active'
-                : 'app-shell__nav-item'
+            className={({
+              isActive,
+            }) =>
+              `app-shell__nav-link ${
+                isActive
+                  ? 'app-shell__nav-link--active'
+                  : ''
+              }`
             }
           >
-            <Settings size={17} />
+            <Settings
+              size={18}
+              strokeWidth={1.8}
+            />
 
             <span>
               Settings
             </span>
           </NavLink>
-
-          <div className="app-shell__profile">
-
-            <div className="app-shell__profile-avatar">
-              Y
-            </div>
-
-            <div>
-              <strong>
-                Your Profile
-              </strong>
-
-              <span>
-                Personal Tracker
-              </span>
-            </div>
-
-          </div>
 
         </div>
 
@@ -151,34 +171,39 @@ function AppShell() {
 
       <div className="app-shell__main">
 
+        {/* TOPBAR */}
+
         <header className="app-shell__topbar">
 
-          <div>
-
-            <span>
-              Personal Fitness
-            </span>
-
-            <strong>
-              Training Dashboard
-            </strong>
-
-          </div>
-
-          <div className="app-shell__status">
+          <div className="app-shell__topbar-left">
 
             <span className="app-shell__status-dot" />
 
-            Data saved locally
+            <span>
+              FORGE Tracker
+            </span>
 
           </div>
 
+          <NavLink
+            to="/profile"
+            className="app-shell__profile-link"
+          >
+            <div className="app-shell__profile-icon">
+              <UserRound size={16} />
+            </div>
+
+            <span>
+              Profile
+            </span>
+          </NavLink>
+
         </header>
 
+        {/* PAGE CONTENT */}
+
         <div className="app-shell__content">
-
           <Outlet />
-
         </div>
 
       </div>

@@ -9,6 +9,7 @@ import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import NutritionPage from './pages/NutritionPage';
 import ProgressPage from './pages/ProgressPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 
 
 /* =========================================
@@ -31,6 +32,8 @@ function App() {
           <Route path="/progress" element={<ProgressPage />} />
 
           <Route path="/library" element={<LibraryPage />} />
+          
+          <Route path="/profile" element={<ProfilePage />} />
 
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
