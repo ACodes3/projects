@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LibraryPage from "./pages/LibraryPage";
 import WorkoutsPage from "./pages/WorkoutsPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
+import NutritionPage from './pages/NutritionPage';
 
 /* =========================================
    TEMPORARY PLACEHOLDER PAGES
@@ -14,23 +15,6 @@ import WorkoutSessionPage from "./pages/WorkoutSessionPage";
    proper page components as we build them.
 ========================================= */
 
-function NutritionPage() {
-  return (
-    <main className="page">
-      <div className="page__header">
-        <div className="page__header-text">
-          <span className="page__eyebrow">Daily Intake</span>
-
-          <h1 className="page__title">Nutrition</h1>
-
-          <p className="page__description">
-            Track calories, protein, carbohydrates and fats.
-          </p>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 function ProgressPage() {
   return (
