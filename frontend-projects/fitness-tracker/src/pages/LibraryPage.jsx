@@ -1,10 +1,9 @@
 import {
+  ChevronRight,
   Dumbbell,
-  Search,
-  SlidersHorizontal,
-  Target,
   RotateCcw,
-  Layers3,
+  Search,
+  X,
 } from 'lucide-react';
 
 import {
@@ -13,83 +12,110 @@ import {
 } from 'react';
 
 import {
-  exercises,
-  muscleGroups,
   equipmentTypes,
+  exercises,
   exerciseTypes,
+  muscleGroups,
 } from '../data/exercises';
 
 import './LibraryPage.css';
 
-function LibraryPage() {
-  const [search, setSearch] = useState('');
-  const [muscleFilter, setMuscleFilter] = useState('All');
-  const [equipmentFilter, setEquipmentFilter] = useState('All');
-  const [typeFilter, setTypeFilter] = useState('All');
+/* =========================================
+   EXERCISE LIBRARY
+========================================= */
 
-  const [selectedExercise, setSelectedExercise] = useState(
-    exercises[0],
-  );
+function LibraryPage() {
+  const [search, setSearch] =
+    useState('');
+
+  const [muscle, setMuscle] =
+    useState('All');
+
+  const [equipment, setEquipment] =
+    useState('All');
+
+  const [type, setType] =
+    useState('All');
+
+  const [
+    selectedExercise,
+    setSelectedExercise,
+  ] = useState(null);
 
   /* =========================================
-     FILTERED EXERCISES
+     FILTER
   ========================================= */
 
-  const filteredExercises = useMemo(() => {
-    const normalizedSearch = search
-      .trim()
-      .toLowerCase();
+  const filteredExercises =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-    return exercises.filter((exercise) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        exercise.name
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        exercise.muscle
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        exercise.equipment
-          .toLowerCase()
-          .includes(normalizedSearch);
+      return exercises.filter(
+        (exercise) => {
+          const matchesSearch =
+            !query ||
+            exercise.name
+              .toLowerCase()
+              .includes(query) ||
+            exercise.muscle
+              .toLowerCase()
+              .includes(query) ||
+            exercise.secondaryMuscles
+              ?.some((item) =>
+                item
+                  .toLowerCase()
+                  .includes(query),
+              );
 
-      const matchesMuscle =
-        muscleFilter === 'All' ||
-        exercise.muscle === muscleFilter;
+          const matchesMuscle =
+            muscle === 'All' ||
+            exercise.muscle ===
+              muscle ||
+            exercise.secondaryMuscles
+              ?.includes(muscle);
 
-      const matchesEquipment =
-        equipmentFilter === 'All' ||
-        exercise.equipment === equipmentFilter;
+          const matchesEquipment =
+            equipment === 'All' ||
+            exercise.equipment ===
+              equipment;
 
-      const matchesType =
-        typeFilter === 'All' ||
-        exercise.type === typeFilter;
+          const matchesType =
+            type === 'All' ||
+            exercise.type === type;
 
-      return (
-        matchesSearch &&
-        matchesMuscle &&
-        matchesEquipment &&
-        matchesType
+          return (
+            matchesSearch &&
+            matchesMuscle &&
+            matchesEquipment &&
+            matchesType
+          );
+        },
       );
-    });
-  }, [
-    search,
-    muscleFilter,
-    equipmentFilter,
-    typeFilter,
-  ]);
+    }, [
+      search,
+      muscle,
+      equipment,
+      type,
+    ]);
 
   const filtersActive =
-    search !== '' ||
-    muscleFilter !== 'All' ||
-    equipmentFilter !== 'All' ||
-    typeFilter !== 'All';
+    search ||
+    muscle !== 'All' ||
+    equipment !== 'All' ||
+    type !== 'All';
+
+  /* =========================================
+     RESET
+  ========================================= */
 
   function resetFilters() {
     setSearch('');
-    setMuscleFilter('All');
-    setEquipmentFilter('All');
-    setTypeFilter('All');
+    setMuscle('All');
+    setEquipment('All');
+    setType('All');
   }
 
   return (
@@ -108,122 +134,137 @@ function LibraryPage() {
           </span>
 
           <h1 className="page__title">
-            Library
+            Exercise Library
           </h1>
 
           <p className="page__description">
-            Browse exercises used to build routines and log workouts.
+            Browse the exercises
+            available when logging
+            your workouts.
           </p>
-
-        </div>
-
-        <div className="library-page__count">
-
-          <Dumbbell size={16} />
-
-          <div>
-            <strong>
-              {exercises.length}
-            </strong>
-
-            <span>
-              Exercises
-            </span>
-          </div>
 
         </div>
 
       </div>
 
       {/* =====================================
-          FILTERS
+          SEARCH + FILTERS
       ===================================== */}
 
-      <section className="library-page__filters">
+      <section className="panel library-page__filters">
 
         <div className="library-page__search">
 
-          <Search size={17} />
+          <Search size={16} />
 
           <input
             type="text"
             placeholder="Search exercises..."
             value={search}
             onChange={(event) =>
-              setSearch(event.target.value)
+              setSearch(
+                event.target.value,
+              )
             }
           />
 
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() =>
+                setSearch('')
+              }
+            >
+              <X size={15} />
+            </button>
+          )}
+
         </div>
 
         <div className="library-page__filter">
 
-          <span>
+          <label htmlFor="muscle-filter">
             Muscle
-          </span>
+          </label>
 
           <select
-            value={muscleFilter}
+            id="muscle-filter"
+            value={muscle}
             onChange={(event) =>
-              setMuscleFilter(event.target.value)
+              setMuscle(
+                event.target.value,
+              )
             }
           >
-            {muscleGroups.map((muscle) => (
-              <option
-                key={muscle}
-                value={muscle}
-              >
-                {muscle}
-              </option>
-            ))}
+            {muscleGroups.map(
+              (item) => (
+                <option
+                  value={item}
+                  key={item}
+                >
+                  {item}
+                </option>
+              ),
+            )}
           </select>
 
         </div>
 
         <div className="library-page__filter">
 
-          <span>
+          <label htmlFor="equipment-filter">
             Equipment
-          </span>
+          </label>
 
           <select
-            value={equipmentFilter}
+            id="equipment-filter"
+            value={equipment}
             onChange={(event) =>
-              setEquipmentFilter(event.target.value)
+              setEquipment(
+                event.target.value,
+              )
             }
           >
-            {equipmentTypes.map((equipment) => (
-              <option
-                key={equipment}
-                value={equipment}
-              >
-                {equipment}
-              </option>
-            ))}
+            {equipmentTypes.map(
+              (item) => (
+                <option
+                  value={item}
+                  key={item}
+                >
+                  {item}
+                </option>
+              ),
+            )}
           </select>
 
         </div>
 
         <div className="library-page__filter">
 
-          <span>
+          <label htmlFor="type-filter">
             Type
-          </span>
+          </label>
 
           <select
-            value={typeFilter}
+            id="type-filter"
+            value={type}
             onChange={(event) =>
-              setTypeFilter(event.target.value)
+              setType(
+                event.target.value,
+              )
             }
           >
-            {exerciseTypes.map((type) => (
-              <option
-                key={type}
-                value={type}
-              >
-                {type}
-              </option>
-            ))}
+            {exerciseTypes.map(
+              (item) => (
+                <option
+                  value={item}
+                  key={item}
+                >
+                  {item}
+                </option>
+              ),
+            )}
           </select>
 
         </div>
@@ -231,8 +272,8 @@ function LibraryPage() {
         <button
           type="button"
           className="library-page__reset"
-          onClick={resetFilters}
           disabled={!filtersActive}
+          onClick={resetFilters}
         >
           <RotateCcw size={15} />
           Reset
@@ -241,254 +282,276 @@ function LibraryPage() {
       </section>
 
       {/* =====================================
-          RESULTS SUMMARY
+          RESULT HEADER
       ===================================== */}
 
-      <div className="library-page__results-header">
+      <div className="library-page__section-header">
 
         <div>
 
-          <SlidersHorizontal size={15} />
+          <h2>
+            Exercises
+          </h2>
 
-          <span>
-            Showing
-            {' '}
-            <strong>
-              {filteredExercises.length}
-            </strong>
-            {' '}
-            of
-            {' '}
-            {exercises.length}
-            {' '}
-            exercises
-          </span>
+          <p>
+            {filteredExercises.length}{' '}
+            {filteredExercises.length ===
+            1
+              ? 'exercise'
+              : 'exercises'}{' '}
+            found.
+          </p>
 
         </div>
 
       </div>
 
       {/* =====================================
-          MAIN GRID
+          CONTENT
       ===================================== */}
 
-      <section className="library-page__layout">
+      <div className="library-page__layout">
 
-        {/* EXERCISE LIST */}
+        {/* ===================================
+            EXERCISE LIST
+        =================================== */}
 
-        <article className="panel library-page__list-panel">
+        <section className="panel library-page__list">
 
-          <div className="panel__header">
+          {filteredExercises.length ===
+          0 ? (
+            <div className="library-page__empty">
 
-            <div>
-              <span>Database</span>
-              <h2>Exercises</h2>
+              <Search size={26} />
+
+              <h3>
+                No exercises found
+              </h3>
+
+              <p>
+                Try changing your
+                search or filters.
+              </p>
+
+              <button
+                type="button"
+                className="button"
+                onClick={
+                  resetFilters
+                }
+              >
+                <RotateCcw
+                  size={15}
+                />
+                Reset Filters
+              </button>
+
             </div>
+          ) : (
+            filteredExercises.map(
+              (exercise) => {
+                const selected =
+                  selectedExercise?.id ===
+                  exercise.id;
 
-            <Dumbbell size={17} />
+                return (
+                  <button
+                    type="button"
+                    className={`library-page__exercise ${
+                      selected
+                        ? 'library-page__exercise--selected'
+                        : ''
+                    }`}
+                    key={
+                      exercise.id
+                    }
+                    onClick={() =>
+                      setSelectedExercise(
+                        exercise,
+                      )
+                    }
+                  >
 
-          </div>
+                    <div className="library-page__exercise-icon">
+                      <Dumbbell
+                        size={17}
+                      />
+                    </div>
 
-          <div className="library-page__exercise-list">
+                    <div className="library-page__exercise-main">
 
-            {filteredExercises.length > 0 ? (
-              filteredExercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  type="button"
-                  className={
-                    selectedExercise?.id === exercise.id
-                      ? 'library-page__exercise library-page__exercise--selected'
-                      : 'library-page__exercise'
-                  }
-                  onClick={() =>
-                    setSelectedExercise(exercise)
-                  }
-                >
+                      <strong>
+                        {
+                          exercise.name
+                        }
+                      </strong>
 
-                  <div className="library-page__exercise-icon">
-                    <Dumbbell size={17} />
-                  </div>
+                      <span>
+                        {
+                          exercise.muscle
+                        }
+                        {' · '}
+                        {
+                          exercise.equipment
+                        }
+                      </span>
 
-                  <div className="library-page__exercise-main">
+                    </div>
 
-                    <strong>
-                      {exercise.name}
-                    </strong>
-
-                    <span>
-                      {exercise.muscle}
-                    </span>
-
-                  </div>
-
-                  <div className="library-page__exercise-meta">
-
-                    <span>
-                      {exercise.equipment}
-                    </span>
-
-                    <small>
+                    <span className="library-page__exercise-type">
                       {exercise.type}
-                    </small>
+                    </span>
 
-                  </div>
+                    <ChevronRight
+                      size={16}
+                    />
 
-                </button>
-              ))
-            ) : (
-              <div className="library-page__empty">
+                  </button>
+                );
+              },
+            )
+          )}
 
-                <Search size={24} />
+        </section>
 
-                <strong>
-                  No exercises found
-                </strong>
-
-                <p>
-                  Try changing your search or filters.
-                </p>
-
-                <button
-                  type="button"
-                  className="button"
-                  onClick={resetFilters}
-                >
-                  Reset Filters
-                </button>
-
-              </div>
-            )}
-
-          </div>
-
-        </article>
-
-        {/* EXERCISE DETAILS */}
+        {/* ===================================
+            DETAILS
+        =================================== */}
 
         <aside className="panel library-page__details">
 
-          <div className="panel__header">
+          {!selectedExercise ? (
+            <div className="library-page__details-empty">
 
-            <div>
-              <span>Exercise Profile</span>
-              <h2>Details</h2>
-            </div>
-
-            <Target size={17} />
-
-          </div>
-
-          {selectedExercise && (
-            <div className="library-page__details-content">
-
-              <div className="library-page__details-icon">
+              <div>
                 <Dumbbell
-                  size={27}
-                  strokeWidth={1.6}
+                  size={25}
                 />
               </div>
 
-              <span className="library-page__details-eyebrow">
-                {selectedExercise.muscle}
-              </span>
+              <h3>
+                Select an exercise
+              </h3>
 
-              <h2>
-                {selectedExercise.name}
-              </h2>
+              <p>
+                Choose an exercise
+                from the list to view
+                its details.
+              </p>
 
-              <div className="library-page__details-tags">
+            </div>
+          ) : (
+            <>
+              <div className="library-page__details-header">
 
-                <span>
-                  {selectedExercise.equipment}
-                </span>
+                <div className="library-page__details-icon">
+                  <Dumbbell
+                    size={21}
+                  />
+                </div>
 
-                <span>
-                  {selectedExercise.type}
-                </span>
+                <div>
+
+                  <span>
+                    {
+                      selectedExercise.type
+                    }
+                  </span>
+
+                  <h2>
+                    {
+                      selectedExercise.name
+                    }
+                  </h2>
+
+                </div>
 
               </div>
 
-              <div className="library-page__details-section">
+              <div className="library-page__details-body">
 
-                <div className="library-page__details-heading">
-
-                  <Target size={15} />
+                <div className="library-page__detail">
 
                   <span>
                     Primary Muscle
                   </span>
 
+                  <strong>
+                    {
+                      selectedExercise.muscle
+                    }
+                  </strong>
+
                 </div>
 
-                <strong>
-                  {selectedExercise.muscle}
-                </strong>
+                <div className="library-page__detail">
 
-              </div>
+                  <span>
+                    Equipment
+                  </span>
 
-              <div className="library-page__details-section">
+                  <strong>
+                    {
+                      selectedExercise.equipment
+                    }
+                  </strong>
 
-                <div className="library-page__details-heading">
+                </div>
 
-                  <Layers3 size={15} />
+                <div className="library-page__detail">
+
+                  <span>
+                    Exercise Type
+                  </span>
+
+                  <strong>
+                    {
+                      selectedExercise.type
+                    }
+                  </strong>
+
+                </div>
+
+                <div className="library-page__secondary">
 
                   <span>
                     Secondary Muscles
                   </span>
 
+                  {selectedExercise
+                    .secondaryMuscles
+                    ?.length ? (
+                    <div>
+                      {selectedExercise.secondaryMuscles.map(
+                        (
+                          item,
+                        ) => (
+                          <span
+                            key={
+                              item
+                            }
+                          >
+                            {item}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <p>
+                      No secondary
+                      muscles listed.
+                    </p>
+                  )}
+
                 </div>
 
-                {selectedExercise.secondaryMuscles.length > 0 ? (
-                  <div className="library-page__secondary">
-
-                    {selectedExercise.secondaryMuscles.map(
-                      (muscle) => (
-                        <span key={muscle}>
-                          {muscle}
-                        </span>
-                      ),
-                    )}
-
-                  </div>
-                ) : (
-                  <p>
-                    No major secondary muscles listed.
-                  </p>
-                )}
-
               </div>
-
-              <div className="library-page__details-section">
-
-                <span className="library-page__details-label">
-                  Equipment
-                </span>
-
-                <strong>
-                  {selectedExercise.equipment}
-                </strong>
-
-              </div>
-
-              <div className="library-page__details-section">
-
-                <span className="library-page__details-label">
-                  Movement Type
-                </span>
-
-                <strong>
-                  {selectedExercise.type}
-                </strong>
-
-              </div>
-
-            </div>
+            </>
           )}
 
         </aside>
 
-      </section>
+      </div>
 
     </main>
   );
