@@ -18,6 +18,7 @@ import RelicVaultPage from "./pages/RelicVaultPage";
 import SystemPage from "./pages/SystemPage";
 
 import ThroneChamberPage from "./pages/palace/ThroneChamberPage";
+import WarChamberPage from './pages/palace/WarChamberPage';
 
 import AppShell from "./components/AppShell";
 
@@ -53,6 +54,8 @@ function App() {
           <Route path="/system" element={<SystemPage />} />
 
           <Route path="/palace/throne" element={<ThroneChamberPage />} />
+          
+          <Route path="/palace/war" element={<WarChamberPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
