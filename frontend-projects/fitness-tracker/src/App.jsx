@@ -1,122 +1,240 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+import AppShell from './components/AppShell';
 
+/* =========================================
+   TEMPORARY PLACEHOLDER PAGES
+
+   We will replace these one by one with
+   proper page components as we build them.
+========================================= */
+
+function DashboardPage() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Today
+          </span>
+
+          <h1 className="page__title">
+            Dashboard
+          </h1>
+
+          <p className="page__description">
+            Your training, nutrition and progress at a glance.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </div>
+
+    </main>
+  );
 }
 
-export default App
+function WorkoutsPage() {
+  return (
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Training
+          </span>
+
+          <h1 className="page__title">
+            Workouts
+          </h1>
+
+          <p className="page__description">
+            Build routines, track exercises and log your sessions.
+          </p>
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+function NutritionPage() {
+  return (
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Daily Intake
+          </span>
+
+          <h1 className="page__title">
+            Nutrition
+          </h1>
+
+          <p className="page__description">
+            Track calories, protein, carbohydrates and fats.
+          </p>
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+function ProgressPage() {
+  return (
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Performance
+          </span>
+
+          <h1 className="page__title">
+            Progress
+          </h1>
+
+          <p className="page__description">
+            Follow changes in body weight, strength and training volume.
+          </p>
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+function LibraryPage() {
+  return (
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Database
+          </span>
+
+          <h1 className="page__title">
+            Library
+          </h1>
+
+          <p className="page__description">
+            Manage reusable exercises and foods.
+          </p>
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+function SettingsPage() {
+  return (
+    <main className="page">
+
+      <div className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Preferences
+          </span>
+
+          <h1 className="page__title">
+            Settings
+          </h1>
+
+          <p className="page__description">
+            Configure your goals, units and nutrition targets.
+          </p>
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+/* =========================================
+   APP
+========================================= */
+
+function App() {
+  return (
+    <BrowserRouter>
+
+      <Routes>
+
+        <Route element={<AppShell />}>
+
+          <Route
+            path="/"
+            element={<DashboardPage />}
+          />
+
+          <Route
+            path="/workouts"
+            element={<WorkoutsPage />}
+          />
+
+          <Route
+            path="/nutrition"
+            element={<NutritionPage />}
+          />
+
+          <Route
+            path="/progress"
+            element={<ProgressPage />}
+          />
+
+          <Route
+            path="/library"
+            element={<LibraryPage />}
+          />
+
+          <Route
+            path="/settings"
+            element={<SettingsPage />}
+          />
+
+        </Route>
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+
+      </Routes>
+
+    </BrowserRouter>
+  );
+}
+
+export default App;
