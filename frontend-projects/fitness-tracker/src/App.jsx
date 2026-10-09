@@ -8,31 +8,8 @@ import WorkoutsPage from "./pages/WorkoutsPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import NutritionPage from './pages/NutritionPage';
 import ProgressPage from './pages/ProgressPage';
+import SettingsPage from './pages/SettingsPage';
 
-/* =========================================
-   TEMPORARY PLACEHOLDER PAGES
-
-   We will replace these one by one with
-   proper page components as we build them.
-========================================= */
-
-function SettingsPage() {
-  return (
-    <main className="page">
-      <div className="page__header">
-        <div className="page__header-text">
-          <span className="page__eyebrow">Preferences</span>
-
-          <h1 className="page__title">Settings</h1>
-
-          <p className="page__description">
-            Configure your goals, units and nutrition targets.
-          </p>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 /* =========================================
    APP
