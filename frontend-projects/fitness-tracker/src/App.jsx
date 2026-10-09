@@ -7,40 +7,14 @@ import {
 
 import AppShell from './components/AppShell';
 
+import DashboardPage from './pages/DashboardPage';
+
 /* =========================================
    TEMPORARY PLACEHOLDER PAGES
 
    We will replace these one by one with
    proper page components as we build them.
 ========================================= */
-
-function DashboardPage() {
-  return (
-    <main className="page">
-
-      <div className="page__header">
-
-        <div className="page__header-text">
-
-          <span className="page__eyebrow">
-            Today
-          </span>
-
-          <h1 className="page__title">
-            Dashboard
-          </h1>
-
-          <p className="page__description">
-            Your training, nutrition and progress at a glance.
-          </p>
-
-        </div>
-
-      </div>
-
-    </main>
-  );
-}
 
 function WorkoutsPage() {
   return (
