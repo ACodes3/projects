@@ -24,6 +24,7 @@ import ImperialArchivesPage from './pages/palace/ImperialArchivesPage';
 import RelicVaultChamberPage from './pages/palace/RelicVaultChamberPage';
 import CryoLaboratoryPage from './pages/palace/CryoLaboratoryPage';
 import GnosisChamberPage from './pages/palace/GnosisChamberPage';
+import RoyalRecordsPage from './pages/palace/RoyalRecordsPage';
 
 import AppShell from "./components/AppShell";
 
@@ -71,6 +72,8 @@ function App() {
           <Route path="/palace/cryo-laboratory" element={<CryoLaboratoryPage />} />
 
           <Route path="/palace/gnosis" element={<GnosisChamberPage />} />
+
+          <Route path="/palace/royal-records" element={<RoyalRecordsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

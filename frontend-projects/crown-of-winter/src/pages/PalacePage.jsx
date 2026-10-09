@@ -92,6 +92,7 @@ const chambers = [
     subtitle: "Imperial Directives",
     icon: ScrollText,
     status: "Open",
+    path: "/palace/royal-records",
     description:
       "Official decrees, diplomatic orders and directives issued under the authority of the Crown.",
   },
