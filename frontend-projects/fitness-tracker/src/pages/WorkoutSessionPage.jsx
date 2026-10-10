@@ -1,437 +1,1860 @@
-
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  Clock3,
+  Dumbbell,
+  Link as LinkIcon,
   Plus,
   Save,
   Search,
   Trash2,
-  Dumbbell,
   X,
 } from 'lucide-react';
 
-import { exercises } from '../data/exercises';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
+import {
+  exercises,
+} from '../data/exercises';
+
 import './WorkoutSessionPage.css';
 
-const HISTORY_KEY = 'forge:workoutHistory';
-const DRAFT_KEY = 'forge:workoutDraft';
+const HISTORY_KEY =
+  'forge:workoutHistory';
 
-const localDate = () => {
-  const date = new Date();
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset)
-    .toISOString()
-    .slice(0, 10);
-};
+const DRAFT_KEY =
+  'forge:workoutDraft';
 
-const newId = () => crypto.randomUUID();
+/* =========================================
+   HELPERS
+========================================= */
 
-const emptySet = () => ({
-  id: newId(),
-  weight: '',
-  reps: '',
-});
-
-const initialWorkout = () => ({
-  name: '',
-  date: localDate(),
-  exercises: [],
-});
-
-function WorkoutSessionPage() {
-  const navigate = useNavigate();
-
-  const [workout, setWorkout] = useState(() => {
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      return saved ? JSON.parse(saved) : initialWorkout();
-    } catch {
-      return initialWorkout();
-    }
-  });
-
-  const [showExercisePicker, setShowExercisePicker] = useState(false);
-  const [search, setSearch] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(workout));
-  }, [workout]);
-
-  const matchingExercises = exercises.filter((exercise) =>
-    exercise.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  function addExercise(name, exerciseId = null) {
-    setWorkout((current) => ({
-      ...current,
-      exercises: [
-        ...current.exercises,
-        {
-          id: newId(),
-          exerciseId,
-          name,
-          sets: [emptySet()],
-        },
-      ],
-    }));
-
-    setShowExercisePicker(false);
-    setSearch('');
-    setCustomName('');
-    setError('');
-  }
-
-  function updateSet(exerciseId, setId, field, value) {
-    setWorkout((current) => ({
-      ...current,
-      exercises: current.exercises.map((exercise) =>
-        exercise.id === exerciseId
-          ? {
-              ...exercise,
-              sets: exercise.sets.map((set) =>
-                set.id === setId
-                  ? { ...set, [field]: value }
-                  : set
-              ),
-            }
-          : exercise
-      ),
-    }));
-  }
-
-  function addSet(exerciseId) {
-    setWorkout((current) => ({
-      ...current,
-      exercises: current.exercises.map((exercise) =>
-        exercise.id === exerciseId
-          ? { ...exercise, sets: [...exercise.sets, emptySet()] }
-          : exercise
-      ),
-    }));
-  }
-
-  function removeSet(exerciseId, setId) {
-    setWorkout((current) => ({
-      ...current,
-      exercises: current.exercises.map((exercise) =>
-        exercise.id === exerciseId
-          ? {
-              ...exercise,
-              sets: exercise.sets.filter((set) => set.id !== setId),
-            }
-          : exercise
-      ),
-    }));
-  }
-
-  function removeExercise(exerciseId) {
-    setWorkout((current) => ({
-      ...current,
-      exercises: current.exercises.filter(
-        (exercise) => exercise.id !== exerciseId
-      ),
-    }));
-  }
-
-  function saveWorkout() {
-    const name = workout.name.trim();
-
-    if (!name) {
-      setError('Enter a workout name.');
-      return;
-    }
-
-    if (!workout.date) {
-      setError('Choose a workout date.');
-      return;
-    }
-
-    if (workout.exercises.length === 0) {
-      setError('Add at least one exercise.');
-      return;
-    }
-
-    const hasInvalidSets = workout.exercises.some(
-      (exercise) =>
-        exercise.sets.length === 0 ||
-        exercise.sets.some(
-          (set) =>
-            set.weight === '' ||
-            set.reps === '' ||
-            !Number.isFinite(Number(set.weight)) ||
-            !Number.isInteger(Number(set.reps)) ||
-            Number(set.weight) < 0 ||
-            Number(set.reps) <= 0
-        )
-    );
-
-    if (hasInvalidSets) {
-      setError('Every set needs a valid weight and a positive whole-number rep count.');
-      return;
-    }
-
-    const savedWorkout = {
-      id: newId(),
-      name,
-      date: workout.date,
-      createdAt: new Date().toISOString(),
-      exercises: workout.exercises.map((exercise) => ({
-        ...exercise,
-        sets: exercise.sets.map((set) => ({
-          ...set,
-          weight: Number(set.weight),
-          reps: Number(set.reps),
-        })),
-      })),
-    };
-
-    try {
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      const updated = [savedWorkout, ...(Array.isArray(history) ? history : [])];
-
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-      localStorage.removeItem(DRAFT_KEY);
-      navigate('/workouts');
-    } catch {
-      setError('Could not save the workout. Check your browser storage.');
-    }
-  }
-
+function createId() {
   return (
-    <main className="workout-session">
-      <div className="workout-session__header">
-        <div>
-          <Link to="/workouts" className="workout-session__back">
-            <ArrowLeft size={16} /> Back to Workouts
-          </Link>
-          <span className="page__eyebrow">Training Log</span>
-          <h1 className="page__title">Log Workout</h1>
-          <p className="page__description">
-            Record the exercises, weights and reps you performed.
-          </p>
-        </div>
-        <button type="button" className="button button--primary" onClick={saveWorkout}>
-          <Save size={16} /> Save Workout
-        </button>
-      </div>
-
-      <section className="panel workout-session__information">
-        <div className="workout-session__field">
-          <label htmlFor="workout-name">Workout Name</label>
-          <input
-            id="workout-name"
-            placeholder="e.g. Chest & Triceps"
-            value={workout.name}
-            onChange={(event) =>
-              setWorkout({ ...workout, name: event.target.value })
-            }
-          />
-        </div>
-
-        <div className="workout-session__field">
-          <label htmlFor="workout-date">Date</label>
-          <input
-            id="workout-date"
-            type="date"
-            value={workout.date}
-            onChange={(event) =>
-              setWorkout({ ...workout, date: event.target.value })
-            }
-          />
-        </div>
-      </section>
-
-      <div className="workout-session__section-header">
-        <div>
-          <h2>Exercises</h2>
-          <p>Add the exercises you completed during this workout.</p>
-        </div>
-        <button
-          type="button"
-          className="button"
-          onClick={() => setShowExercisePicker(true)}
-        >
-          <Plus size={16} /> Add Exercise
-        </button>
-      </div>
-
-      {workout.exercises.length === 0 && (
-        <div className="panel workout-session__empty">
-          <Dumbbell size={28} />
-          <h3>No exercises added</h3>
-          <p>Choose an exercise from the library or enter your own.</p>
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={() => setShowExercisePicker(true)}
-          >
-            <Plus size={16} /> Add First Exercise
-          </button>
-        </div>
-      )}
-
-      <div className="workout-session__exercise-list">
-        {workout.exercises.map((exercise, exerciseIndex) => (
-          <article className="panel workout-session__exercise" key={exercise.id}>
-            <div className="workout-session__exercise-header">
-              <div className="workout-session__exercise-number">
-                {exerciseIndex + 1}
-              </div>
-              <div className="workout-session__exercise-title">
-                <strong>{exercise.name}</strong>
-                <span>{exercise.sets.length} sets</span>
-              </div>
-              <button
-                type="button"
-                className="workout-session__remove"
-                aria-label={`Remove ${exercise.name}`}
-                onClick={() => removeExercise(exercise.id)}
-              >
-                <Trash2 size={17} />
-              </button>
-            </div>
-
-            <div className="workout-session__set-heading">
-              <span>Set</span>
-              <span>Weight (kg)</span>
-              <span>Reps</span>
-              <span />
-            </div>
-
-            <div className="workout-session__sets">
-              {exercise.sets.map((set, setIndex) => (
-                <div className="workout-session__set" key={set.id}>
-                  <span className="workout-session__set-number">
-                    {setIndex + 1}
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    placeholder="0"
-                    aria-label={`Set ${setIndex + 1} weight`}
-                    value={set.weight}
-                    onChange={(event) =>
-                      updateSet(exercise.id, set.id, 'weight', event.target.value)
-                    }
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="0"
-                    aria-label={`Set ${setIndex + 1} reps`}
-                    value={set.reps}
-                    onChange={(event) =>
-                      updateSet(exercise.id, set.id, 'reps', event.target.value)
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="workout-session__remove"
-                    aria-label={`Remove set ${setIndex + 1}`}
-                    onClick={() => removeSet(exercise.id, set.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="workout-session__exercise-footer">
-              <button type="button" onClick={() => addSet(exercise.id)}>
-                <Plus size={15} /> Add Set
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {error && <p className="workout-session__error" role="alert">{error}</p>}
-
-      <div className="workout-session__bottom">
-        <span>{workout.exercises.length} exercises added</span>
-        <button type="button" className="button button--primary" onClick={saveWorkout}>
-          <Save size={16} /> Save Workout
-        </button>
-      </div>
-
-      {showExercisePicker && (
-        <div
-          className="workout-session__overlay"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setShowExercisePicker(false);
-            }
-          }}
-        >
-          <section className="workout-session__picker" role="dialog" aria-modal="true" aria-label="Add exercise">
-            <div className="workout-session__picker-header">
-              <h2>Add Exercise</h2>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={() => setShowExercisePicker(false)}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="workout-session__picker-search">
-              <Search size={17} />
-              <input
-                autoFocus
-                placeholder="Search exercises..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </div>
-
-            <div className="workout-session__picker-list">
-              {matchingExercises.map((exercise) => (
-                <button
-                  type="button"
-                  key={exercise.id}
-                  onClick={() => addExercise(exercise.name, exercise.id)}
-                >
-                  <Dumbbell size={17} />
-                  <span>{exercise.name}</span>
-                  <small>{exercise.muscle}</small>
-                  <Plus size={16} />
-                </button>
-              ))}
-              {matchingExercises.length === 0 && (
-                <p className="workout-session__picker-empty">No matching exercises.</p>
-              )}
-            </div>
-
-            <div className="workout-session__custom">
-              <label htmlFor="custom-exercise">Custom exercise</label>
-              <div>
-                <input
-                  id="custom-exercise"
-                  placeholder="Enter exercise name"
-                  value={customName}
-                  onChange={(event) => setCustomName(event.target.value)}
-                />
-                <button
-                  type="button"
-                  className="button button--primary"
-                  disabled={!customName.trim()}
-                  onClick={() => addExercise(customName.trim())}
-                >
-                  <Plus size={15} /> Add
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-    </main>
+    crypto.randomUUID?.() ||
+    `${Date.now()}-${Math.random()}`
   );
 }
 
-export default WorkoutSessionPage;
+function getToday() {
+  const date = new Date();
+
+  const year =
+    date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1,
+  ).padStart(2, '0');
+
+  const day = String(
+    date.getDate(),
+  ).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function createEmptySet() {
+  return {
+    id: createId(),
+    weight: '',
+    reps: '',
+    durationSeconds: '',
+  };
+}
+
+function normalizeExercise(
+  exercise,
+) {
+  return {
+    id:
+      exercise.id ||
+      createId(),
+
+    exerciseId:
+      exercise.exerciseId ||
+      null,
+
+    name:
+      exercise.name ||
+      'Exercise',
+
+    trackingMode:
+      exercise.trackingMode ||
+      'reps',
+
+    sets:
+      Array.isArray(
+        exercise.sets,
+      ) &&
+      exercise.sets.length > 0
+        ? exercise.sets.map(
+            (set) => ({
+              id:
+                set.id ||
+                createId(),
+
+              weight:
+                set.weight ??
+                '',
+
+              reps:
+                set.reps ??
+                '',
+
+              durationSeconds:
+                set.durationSeconds ??
+                '',
+            }),
+          )
+        : [
+            createEmptySet(),
+          ],
+  };
+}
+
+function loadDraft() {
+  try {
+    const stored =
+      localStorage.getItem(
+        DRAFT_KEY,
+      );
+
+    if (!stored) {
+      return null;
+    }
+
+    const parsed =
+      JSON.parse(stored);
+
+    if (
+      !parsed ||
+      typeof parsed !==
+        'object'
+    ) {
+      return null;
+    }
+
+    return {
+      name:
+        parsed.name || '',
+
+      date:
+        parsed.date ||
+        getToday(),
+
+      youtubeUrl:
+        parsed.youtubeUrl ||
+        '',
+
+      exercises:
+        Array.isArray(
+          parsed.exercises,
+        )
+          ? parsed.exercises.map(
+              normalizeExercise,
+            )
+          : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readHistory() {
+  try {
+    const stored =
+      JSON.parse(
+        localStorage.getItem(
+          HISTORY_KEY,
+        ) || '[]',
+      );
+
+    return Array.isArray(
+      stored,
+    )
+      ? stored
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatDuration(
+  seconds,
+) {
+  const total =
+    Number(seconds) || 0;
+
+  const minutes =
+    Math.floor(
+      total / 60,
+    );
+
+  const remaining =
+    total % 60;
+
+  if (minutes === 0) {
+    return `${remaining}s`;
+  }
+
+  return `${minutes}:${String(
+    remaining,
+  ).padStart(2, '0')}`;
+}
+
+/* =========================================
+   PAGE
+========================================= */
+
+export default function WorkoutSessionPage() {
+  const navigate =
+    useNavigate();
+
+  const storedDraft =
+    useMemo(
+      () => loadDraft(),
+      [],
+    );
+
+  const [
+    workoutName,
+    setWorkoutName,
+  ] = useState(
+    storedDraft?.name || '',
+  );
+
+  const [
+    workoutDate,
+    setWorkoutDate,
+  ] = useState(
+    storedDraft?.date ||
+      getToday(),
+  );
+
+  const [
+    youtubeUrl,
+    setYoutubeUrl,
+  ] = useState(
+    storedDraft?.youtubeUrl ||
+      '',
+  );
+
+  const [
+    workoutExercises,
+    setWorkoutExercises,
+  ] = useState(
+    storedDraft?.exercises ||
+      [],
+  );
+
+  const [
+    showExerciseModal,
+    setShowExerciseModal,
+  ] = useState(false);
+
+  const [
+    exerciseSearch,
+    setExerciseSearch,
+  ] = useState('');
+
+  const [
+    customExerciseName,
+    setCustomExerciseName,
+  ] = useState('');
+
+  const [
+    error,
+    setError,
+  ] = useState('');
+
+  /* =========================================
+     AUTO-SAVE DRAFT
+  ========================================= */
+
+  useEffect(() => {
+    const draft = {
+      name:
+        workoutName,
+
+      date:
+        workoutDate,
+
+      youtubeUrl,
+
+      exercises:
+        workoutExercises,
+    };
+
+    localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify(
+        draft,
+      ),
+    );
+  }, [
+    workoutName,
+    workoutDate,
+    youtubeUrl,
+    workoutExercises,
+  ]);
+
+  /* =========================================
+     FILTER EXERCISES
+  ========================================= */
+
+  const filteredExercises =
+    useMemo(() => {
+      const query =
+        exerciseSearch
+          .trim()
+          .toLowerCase();
+
+      if (!query) {
+        return exercises;
+      }
+
+      return exercises.filter(
+        (exercise) =>
+          exercise.name
+            .toLowerCase()
+            .includes(query) ||
+          exercise.muscle
+            ?.toLowerCase()
+            .includes(query) ||
+          exercise.equipment
+            ?.toLowerCase()
+            .includes(query),
+      );
+    }, [
+      exerciseSearch,
+    ]);
+
+  /* =========================================
+     WORKOUT TOTALS
+  ========================================= */
+
+  const workoutTotals =
+    useMemo(() => {
+      let repSets = 0;
+      let timedIntervals = 0;
+      let totalTime = 0;
+
+      workoutExercises.forEach(
+        (exercise) => {
+          const mode =
+            exercise.trackingMode ||
+            'reps';
+
+          if (
+            mode === 'time'
+          ) {
+            timedIntervals +=
+              exercise.sets.length;
+
+            totalTime +=
+              exercise.sets.reduce(
+                (
+                  total,
+                  set,
+                ) =>
+                  total +
+                  Number(
+                    set.durationSeconds ||
+                      0,
+                  ),
+                0,
+              );
+          } else {
+            repSets +=
+              exercise.sets.length;
+          }
+        },
+      );
+
+      return {
+        exerciseCount:
+          workoutExercises.length,
+
+        repSets,
+
+        timedIntervals,
+
+        totalTime,
+      };
+    }, [
+      workoutExercises,
+    ]);
+
+  /* =========================================
+     ADD EXERCISE
+  ========================================= */
+
+  function addExercise(
+    exercise,
+  ) {
+    const next = {
+      id: createId(),
+
+      exerciseId:
+        exercise.id ||
+        null,
+
+      name:
+        exercise.name,
+
+      trackingMode:
+        'reps',
+
+      sets: [
+        createEmptySet(),
+      ],
+    };
+
+    setWorkoutExercises(
+      (current) => [
+        ...current,
+        next,
+      ],
+    );
+
+    setShowExerciseModal(
+      false,
+    );
+
+    setExerciseSearch('');
+    setCustomExerciseName('');
+    setError('');
+  }
+
+  function addCustomExercise() {
+    const name =
+      customExerciseName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    addExercise({
+      id: null,
+      name,
+    });
+  }
+
+  /* =========================================
+     REMOVE EXERCISE
+  ========================================= */
+
+  function removeExercise(
+    exerciseId,
+  ) {
+    setWorkoutExercises(
+      (current) =>
+        current.filter(
+          (exercise) =>
+            exercise.id !==
+            exerciseId,
+        ),
+    );
+  }
+
+  /* =========================================
+     TRACKING MODE
+  ========================================= */
+
+  function changeTrackingMode(
+    exerciseId,
+    mode,
+  ) {
+    setWorkoutExercises(
+      (current) =>
+        current.map(
+          (exercise) =>
+            exercise.id ===
+            exerciseId
+              ? {
+                  ...exercise,
+                  trackingMode:
+                    mode,
+                }
+              : exercise,
+        ),
+    );
+  }
+
+  /* =========================================
+     SET MANAGEMENT
+  ========================================= */
+
+  function addSet(
+    exerciseId,
+  ) {
+    setWorkoutExercises(
+      (current) =>
+        current.map(
+          (exercise) =>
+            exercise.id ===
+            exerciseId
+              ? {
+                  ...exercise,
+
+                  sets: [
+                    ...exercise.sets,
+                    createEmptySet(),
+                  ],
+                }
+              : exercise,
+        ),
+    );
+  }
+
+  function removeSet(
+    exerciseId,
+    setId,
+  ) {
+    setWorkoutExercises(
+      (current) =>
+        current.map(
+          (exercise) => {
+            if (
+              exercise.id !==
+              exerciseId
+            ) {
+              return exercise;
+            }
+
+            const remaining =
+              exercise.sets.filter(
+                (set) =>
+                  set.id !==
+                  setId,
+              );
+
+            return {
+              ...exercise,
+
+              sets:
+                remaining.length >
+                0
+                  ? remaining
+                  : [
+                      createEmptySet(),
+                    ],
+            };
+          },
+        ),
+    );
+  }
+
+  function updateSet(
+    exerciseId,
+    setId,
+    field,
+    value,
+  ) {
+    setWorkoutExercises(
+      (current) =>
+        current.map(
+          (exercise) =>
+            exercise.id ===
+            exerciseId
+              ? {
+                  ...exercise,
+
+                  sets:
+                    exercise.sets.map(
+                      (set) =>
+                        set.id ===
+                        setId
+                          ? {
+                              ...set,
+                              [field]:
+                                value,
+                            }
+                          : set,
+                    ),
+                }
+              : exercise,
+        ),
+    );
+  }
+
+  /* =========================================
+     VALIDATION
+  ========================================= */
+
+  function validateWorkout() {
+    if (
+      !workoutName.trim()
+    ) {
+      return 'Give the workout a name.';
+    }
+
+    if (!workoutDate) {
+      return 'Choose a workout date.';
+    }
+
+    if (
+      workoutExercises.length ===
+      0
+    ) {
+      return 'Add at least one exercise.';
+    }
+
+    if (
+      youtubeUrl.trim()
+    ) {
+      try {
+        const url =
+          new URL(
+            youtubeUrl.trim(),
+          );
+
+        if (
+          url.protocol !==
+            'http:' &&
+          url.protocol !==
+            'https:'
+        ) {
+          return 'Enter a valid YouTube URL.';
+        }
+      } catch {
+        return 'Enter a valid YouTube URL.';
+      }
+    }
+
+    for (
+      const exercise of
+      workoutExercises
+    ) {
+      const mode =
+        exercise.trackingMode ||
+        'reps';
+
+      if (
+        exercise.sets.length ===
+        0
+      ) {
+        return `${exercise.name} needs at least one ${
+          mode === 'time'
+            ? 'interval'
+            : 'set'
+        }.`;
+      }
+
+      for (
+        const set of
+        exercise.sets
+      ) {
+        const weight =
+          set.weight === ''
+            ? 0
+            : Number(
+                set.weight,
+              );
+
+        if (
+          !Number.isFinite(
+            weight,
+          ) ||
+          weight < 0
+        ) {
+          return `Check the weight entered for ${exercise.name}.`;
+        }
+
+        if (
+          mode === 'time'
+        ) {
+          const seconds =
+            Number(
+              set.durationSeconds,
+            );
+
+          if (
+            !Number.isFinite(
+              seconds,
+            ) ||
+            seconds <= 0
+          ) {
+            return `Enter a valid time for every interval in ${exercise.name}.`;
+          }
+        } else {
+          const reps =
+            Number(
+              set.reps,
+            );
+
+          if (
+            !Number.isFinite(
+              reps,
+            ) ||
+            reps <= 0
+          ) {
+            return `Enter valid reps for every set in ${exercise.name}.`;
+          }
+        }
+      }
+    }
+
+    return '';
+  }
+
+  /* =========================================
+     SAVE WORKOUT
+  ========================================= */
+
+  function saveWorkout() {
+    const validationError =
+      validateWorkout();
+
+    if (
+      validationError
+    ) {
+      setError(
+        validationError,
+      );
+
+      return;
+    }
+
+    const cleanedExercises =
+      workoutExercises.map(
+        (exercise) => {
+          const mode =
+            exercise.trackingMode ||
+            'reps';
+
+          return {
+            ...exercise,
+
+            trackingMode:
+              mode,
+
+            sets:
+              exercise.sets.map(
+                (set) => ({
+                  id:
+                    set.id,
+
+                  weight:
+                    set.weight ===
+                    ''
+                      ? 0
+                      : Number(
+                          set.weight,
+                        ),
+
+                  reps:
+                    mode ===
+                    'reps'
+                      ? Number(
+                          set.reps,
+                        )
+                      : null,
+
+                  durationSeconds:
+                    mode ===
+                    'time'
+                      ? Number(
+                          set.durationSeconds,
+                        )
+                      : null,
+                }),
+              ),
+          };
+        },
+      );
+
+    const workout = {
+      id: createId(),
+
+      name:
+        workoutName.trim(),
+
+      date:
+        workoutDate,
+
+      youtubeUrl:
+        youtubeUrl.trim(),
+
+      createdAt:
+        new Date().toISOString(),
+
+      exercises:
+        cleanedExercises,
+    };
+
+    const history =
+      readHistory();
+
+    const updated = [
+      workout,
+      ...history,
+    ];
+
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify(
+        updated,
+      ),
+    );
+
+    localStorage.removeItem(
+      DRAFT_KEY,
+    );
+
+    navigate('/workouts');
+  }
+
+  /* =========================================
+     DISCARD DRAFT
+  ========================================= */
+
+  function discardWorkout() {
+    const hasContent =
+      workoutName.trim() ||
+      youtubeUrl.trim() ||
+      workoutExercises.length >
+        0;
+
+    if (
+      hasContent &&
+      !window.confirm(
+        'Discard this workout draft?',
+      )
+    ) {
+      return;
+    }
+
+    localStorage.removeItem(
+      DRAFT_KEY,
+    );
+
+    navigate('/workouts');
+  }
+
+  /* =========================================
+     RENDER
+  ========================================= */
+
+  return (
+    <main className="workout-session-page">
+
+      {/* =====================================
+          HEADER
+      ===================================== */}
+
+      <header className="workout-session-page__header">
+
+        <div>
+          <Link
+            to="/workouts"
+            className="workout-session-page__back"
+          >
+            <ArrowLeft
+              size={15}
+            />
+
+            Workouts
+          </Link>
+
+          <span className="page__eyebrow">
+            Training Log
+          </span>
+
+          <h1 className="page__title">
+            Log Workout
+          </h1>
+
+          <p className="page__description">
+            Record traditional
+            sets and reps, timed
+            intervals, or both in
+            the same workout.
+          </p>
+        </div>
+
+        <div className="workout-session-page__header-actions">
+
+          <button
+            type="button"
+            className="button"
+            onClick={
+              discardWorkout
+            }
+          >
+            Discard
+          </button>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={
+              saveWorkout
+            }
+          >
+            <Save
+              size={15}
+            />
+
+            Save Workout
+          </button>
+
+        </div>
+
+      </header>
+
+      {/* =====================================
+          ERROR
+      ===================================== */}
+
+      {error && (
+        <div className="workout-session-page__error">
+          {error}
+        </div>
+      )}
+
+      {/* =====================================
+          WORKOUT INFORMATION
+      ===================================== */}
+
+      <section className="panel workout-session-page__info">
+
+        <div className="workout-session-page__section-heading">
+
+          <div>
+            <span>
+              Workout
+            </span>
+
+            <h2>
+              Session Details
+            </h2>
+          </div>
+
+        </div>
+
+        <div className="workout-session-page__info-grid">
+
+          <label className="workout-session-page__field workout-session-page__field--name">
+
+            <span>
+              Workout Name
+            </span>
+
+            <input
+              type="text"
+              value={
+                workoutName
+              }
+              placeholder="e.g. Caroline Girvan — Iron Day 12"
+              onChange={(
+                event,
+              ) => {
+                setWorkoutName(
+                  event.target
+                    .value,
+                );
+
+                setError('');
+              }}
+            />
+
+          </label>
+
+          <label className="workout-session-page__field">
+
+            <span>
+              Date
+            </span>
+
+            <input
+              type="date"
+              value={
+                workoutDate
+              }
+              onChange={(
+                event,
+              ) => {
+                setWorkoutDate(
+                  event.target
+                    .value,
+                );
+
+                setError('');
+              }}
+            />
+
+          </label>
+
+          <label className="workout-session-page__field workout-session-page__field--youtube">
+
+            <span>
+              YouTube Workout
+            </span>
+
+            <div className="workout-session-page__url-input">
+
+              <LinkIcon
+                size={15}
+              />
+
+              <input
+                type="url"
+                value={
+                  youtubeUrl
+                }
+                placeholder="https://youtube.com/watch?v=..."
+                onChange={(
+                  event,
+                ) => {
+                  setYoutubeUrl(
+                    event.target
+                      .value,
+                  );
+
+                  setError('');
+                }}
+              />
+
+            </div>
+
+          </label>
+
+        </div>
+
+        {youtubeUrl && (
+          <a
+            className="workout-session-page__youtube-preview"
+            href={youtubeUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <LinkIcon
+              size={14}
+            />
+
+            Open workout video
+          </a>
+        )}
+
+      </section>
+
+      {/* =====================================
+          SUMMARY
+      ===================================== */}
+
+      <section className="workout-session-page__summary">
+
+        <article>
+          <span>
+            Exercises
+          </span>
+
+          <strong>
+            {
+              workoutTotals.exerciseCount
+            }
+          </strong>
+        </article>
+
+        <article>
+          <span>
+            Rep Sets
+          </span>
+
+          <strong>
+            {
+              workoutTotals.repSets
+            }
+          </strong>
+        </article>
+
+        <article>
+          <span>
+            Timed Intervals
+          </span>
+
+          <strong>
+            {
+              workoutTotals.timedIntervals
+            }
+          </strong>
+        </article>
+
+        <article>
+          <span>
+            Time Under Tension
+          </span>
+
+          <strong>
+            {formatDuration(
+              workoutTotals.totalTime,
+            )}
+          </strong>
+        </article>
+
+      </section>
+
+      {/* =====================================
+          EXERCISES HEADER
+      ===================================== */}
+
+      <div className="workout-session-page__exercises-heading">
+
+        <div>
+          <h2>
+            Exercises
+          </h2>
+
+          <p>
+            Choose how each
+            exercise should be
+            tracked.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="button"
+          onClick={() =>
+            setShowExerciseModal(
+              true,
+            )
+          }
+        >
+          <Plus size={15} />
+          Add Exercise
+        </button>
+
+      </div>
+
+      {/* =====================================
+          EMPTY
+      ===================================== */}
+
+      {workoutExercises.length ===
+      0 ? (
+
+        <section className="panel workout-session-page__empty">
+
+          <Dumbbell
+            size={28}
+          />
+
+          <h3>
+            No exercises yet
+          </h3>
+
+          <p>
+            Add the exercises
+            from your workout,
+            then choose reps or
+            timed intervals for
+            each one.
+          </p>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={() =>
+              setShowExerciseModal(
+                true,
+              )
+            }
+          >
+            <Plus
+              size={15}
+            />
+            Add Exercise
+          </button>
+
+        </section>
+
+      ) : (
+
+        /* ===================================
+           EXERCISE LIST
+        =================================== */
+
+        <section className="workout-session-page__exercises">
+
+          {workoutExercises.map(
+            (
+              exercise,
+              exerciseIndex,
+            ) => {
+              const mode =
+                exercise.trackingMode ||
+                'reps';
+
+              const totalTime =
+                exercise.sets.reduce(
+                  (
+                    total,
+                    set,
+                  ) =>
+                    total +
+                    Number(
+                      set.durationSeconds ||
+                        0,
+                    ),
+                  0,
+                );
+
+              return (
+                <article
+                  className="panel workout-session-page__exercise"
+                  key={
+                    exercise.id
+                  }
+                >
+
+                  {/* =========================
+                      EXERCISE HEADER
+                  ========================= */}
+
+                  <div className="workout-session-page__exercise-header">
+
+                    <div className="workout-session-page__exercise-number">
+                      {
+                        exerciseIndex +
+                        1
+                      }
+                    </div>
+
+                    <div className="workout-session-page__exercise-name">
+
+                      <h3>
+                        {
+                          exercise.name
+                        }
+                      </h3>
+
+                      <span>
+                        {mode ===
+                        'time'
+                          ? `${exercise.sets.length} timed ${
+                              exercise.sets.length ===
+                              1
+                                ? 'interval'
+                                : 'intervals'
+                            }`
+                          : `${exercise.sets.length} ${
+                              exercise.sets.length ===
+                              1
+                                ? 'set'
+                                : 'sets'
+                            }`}
+                      </span>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      className="workout-session-page__remove-exercise"
+                      aria-label={`Remove ${exercise.name}`}
+                      onClick={() =>
+                        removeExercise(
+                          exercise.id,
+                        )
+                      }
+                    >
+                      <Trash2
+                        size={15}
+                      />
+                    </button>
+
+                  </div>
+
+                  {/* =========================
+                      TRACKING MODE
+                  ========================= */}
+
+                  <div className="workout-session-page__mode">
+
+                    <span className="workout-session-page__mode-label">
+                      Tracking
+                    </span>
+
+                    <div className="workout-session-page__mode-options">
+
+                      <button
+                        type="button"
+                        className={
+                          mode ===
+                          'reps'
+                            ? 'workout-session-page__mode-button workout-session-page__mode-button--active'
+                            : 'workout-session-page__mode-button'
+                        }
+                        onClick={() =>
+                          changeTrackingMode(
+                            exercise.id,
+                            'reps',
+                          )
+                        }
+                      >
+                        <Dumbbell
+                          size={14}
+                        />
+
+                        Weight & Reps
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          mode ===
+                          'time'
+                            ? 'workout-session-page__mode-button workout-session-page__mode-button--active'
+                            : 'workout-session-page__mode-button'
+                        }
+                        onClick={() =>
+                          changeTrackingMode(
+                            exercise.id,
+                            'time',
+                          )
+                        }
+                      >
+                        <Clock3
+                          size={14}
+                        />
+
+                        Time
+                      </button>
+
+                    </div>
+
+                    {mode ===
+                      'time' && (
+                      <span className="workout-session-page__exercise-time">
+                        TUT{' '}
+                        <strong>
+                          {formatDuration(
+                            totalTime,
+                          )}
+                        </strong>
+                      </span>
+                    )}
+
+                  </div>
+
+                  {/* =========================
+                      REP SETS
+                  ========================= */}
+
+                  {mode ===
+                    'reps' && (
+                    <div className="workout-session-page__sets">
+
+                      <div className="workout-session-page__set-heading workout-session-page__set-heading--reps">
+
+                        <span>
+                          Set
+                        </span>
+
+                        <span>
+                          Weight (kg)
+                        </span>
+
+                        <span>
+                          Reps
+                        </span>
+
+                        <span />
+
+                      </div>
+
+                      {exercise.sets.map(
+                        (
+                          set,
+                          setIndex,
+                        ) => (
+
+                          <div
+                            className="workout-session-page__set workout-session-page__set--reps"
+                            key={
+                              set.id
+                            }
+                          >
+
+                            <strong>
+                              {
+                                setIndex +
+                                1
+                              }
+                            </strong>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              placeholder="0"
+                              value={
+                                set.weight
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                updateSet(
+                                  exercise.id,
+                                  set.id,
+                                  'weight',
+                                  event
+                                    .target
+                                    .value,
+                                )
+                              }
+                            />
+
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              placeholder="0"
+                              value={
+                                set.reps
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                updateSet(
+                                  exercise.id,
+                                  set.id,
+                                  'reps',
+                                  event
+                                    .target
+                                    .value,
+                                )
+                              }
+                            />
+
+                            <button
+                              type="button"
+                              aria-label="Remove set"
+                              onClick={() =>
+                                removeSet(
+                                  exercise.id,
+                                  set.id,
+                                )
+                              }
+                            >
+                              <X
+                                size={14}
+                              />
+                            </button>
+
+                          </div>
+
+                        ),
+                      )}
+
+                    </div>
+                  )}
+
+                  {/* =========================
+                      TIMED INTERVALS
+                  ========================= */}
+
+                  {mode ===
+                    'time' && (
+                    <div className="workout-session-page__sets">
+
+                      <div className="workout-session-page__set-heading workout-session-page__set-heading--time">
+
+                        <span>
+                          Interval
+                        </span>
+
+                        <span>
+                          Weight (kg)
+                        </span>
+
+                        <span>
+                          Time (sec)
+                        </span>
+
+                        <span />
+
+                      </div>
+
+                      {exercise.sets.map(
+                        (
+                          set,
+                          setIndex,
+                        ) => (
+
+                          <div
+                            className="workout-session-page__set workout-session-page__set--time"
+                            key={
+                              set.id
+                            }
+                          >
+
+                            <strong>
+                              {
+                                setIndex +
+                                1
+                              }
+                            </strong>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              placeholder="Optional"
+                              value={
+                                set.weight
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                updateSet(
+                                  exercise.id,
+                                  set.id,
+                                  'weight',
+                                  event
+                                    .target
+                                    .value,
+                                )
+                              }
+                            />
+
+                            <div className="workout-session-page__time-input">
+
+                              <Clock3
+                                size={14}
+                              />
+
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                placeholder="40"
+                                value={
+                                  set.durationSeconds
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  updateSet(
+                                    exercise.id,
+                                    set.id,
+                                    'durationSeconds',
+                                    event
+                                      .target
+                                      .value,
+                                  )
+                                }
+                              />
+
+                            </div>
+
+                            <button
+                              type="button"
+                              aria-label="Remove interval"
+                              onClick={() =>
+                                removeSet(
+                                  exercise.id,
+                                  set.id,
+                                )
+                              }
+                            >
+                              <X
+                                size={14}
+                              />
+                            </button>
+
+                          </div>
+
+                        ),
+                      )}
+
+                    </div>
+                  )}
+
+                  {/* =========================
+                      ADD SET / INTERVAL
+                  ========================= */}
+
+                  <button
+                    type="button"
+                    className="workout-session-page__add-set"
+                    onClick={() =>
+                      addSet(
+                        exercise.id,
+                      )
+                    }
+                  >
+                    <Plus
+                      size={14}
+                    />
+
+                    {mode ===
+                    'time'
+                      ? 'Add Interval'
+                      : 'Add Set'}
+                  </button>
+
+                </article>
+              );
+            },
+          )}
+
+        </section>
+      )}
+
+      {/* =====================================
+          BOTTOM SAVE
+      ===================================== */}
+
+      {workoutExercises.length >
+        0 && (
+        <div className="workout-session-page__bottom-actions">
+
+          <button
+            type="button"
+            className="button"
+            onClick={() =>
+              setShowExerciseModal(
+                true,
+              )
+            }
+          >
+            <Plus size={15} />
+            Add Exercise
+          </button>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={
+              saveWorkout
+            }
+          >
+            <Save size={15} />
+            Save Workout
+          </button>
+
+        </div>
+      )}
+
+      {/* =====================================
+          EXERCISE MODAL
+      ===================================== */}
+
+      {showExerciseModal && (
+
+        <div
+          className="workout-session-page__modal-backdrop"
+          onMouseDown={(
+            event,
+          ) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setShowExerciseModal(
+                false,
+              );
+            }
+          }}
+        >
+
+          <div className="workout-session-page__modal">
+
+            <div className="workout-session-page__modal-header">
+
+              <div>
+
+                <span>
+                  Workout Exercise
+                </span>
+
+                <h2>
+                  Add Exercise
+                </h2>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowExerciseModal(
+                    false,
+                  )
+                }
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+
+            </div>
+
+            {/* SEARCH */}
+
+            <div className="workout-session-page__modal-search">
+
+              <Search size={15} />
+
+              <input
+                type="search"
+                value={
+                  exerciseSearch
+                }
+                placeholder="Search exercise library..."
+                onChange={(
+                  event,
+                ) =>
+                  setExerciseSearch(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+
+            </div>
+
+            {/* CUSTOM */}
+
+            <div className="workout-session-page__custom">
+
+              <div>
+
+                <strong>
+                  Custom exercise
+                </strong>
+
+                <span>
+                  Add something
+                  that is not in
+                  the library.
+                </span>
+
+              </div>
+
+              <div className="workout-session-page__custom-form">
+
+                <input
+                  type="text"
+                  placeholder="Exercise name"
+                  value={
+                    customExerciseName
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setCustomExerciseName(
+                      event.target
+                        .value,
+                    )
+                  }
+                  onKeyDown={(
+                    event,
+                  ) => {
+                    if (
+                      event.key ===
+                      'Enter'
+                    ) {
+                      event.preventDefault();
+
+                      addCustomExercise();
+                    }
+                  }}
+                />
+
+                <button
+                  type="button"
+                  className="button"
+                  onClick={
+                    addCustomExercise
+                  }
+                >
+                  <Plus
+                    size={14}
+                  />
+                  Add
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* LIBRARY */}
+
+            <div className="workout-session-page__library">
+
+              {filteredExercises.length ===
+              0 ? (
+
+                <div className="workout-session-page__library-empty">
+                  No exercises
+                  found.
+                </div>
+
+              ) : (
+
+                filteredExercises.map(
+                  (exercise) => (
+
+                    <button
+                      type="button"
+                      className="workout-session-page__library-item"
+                      key={
+                        exercise.id
+                      }
+                      onClick={() =>
+                        addExercise(
+                          exercise,
+                        )
+                      }
+                    >
+
+                      <div>
+
+                        <strong>
+                          {
+                            exercise.name
+                          }
+                        </strong>
+
+                        <span>
+                          {
+                            exercise.muscle
+                          }
+
+                          {exercise.equipment
+                            ? ` · ${exercise.equipment}`
+                            : ''}
+                        </span>
+
+                      </div>
+
+                      <Plus
+                        size={15}
+                      />
+
+                    </button>
+
+                  ),
+                )
+
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+    </main>
+  );
+}
