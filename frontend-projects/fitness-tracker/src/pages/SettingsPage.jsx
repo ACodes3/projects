@@ -1,392 +1,412 @@
 import {
-  Database,
   Download,
-  Dumbbell,
-  HardDrive,
-  Scale,
-  ShieldCheck,
+  RotateCcw,
+  Save,
+  Target,
   Trash2,
   Upload,
-  Utensils,
 } from 'lucide-react';
 
 import {
+  useRef,
   useState,
 } from 'react';
 
 import './SettingsPage.css';
 
-const WORKOUTS_KEY =
-  'forge:workoutHistory';
+const STORAGE_KEYS = {
+  workouts: 'forge:workoutHistory',
+  workoutDraft: 'forge:workoutDraft',
+  nutrition: 'forge:nutritionLogs',
+  progress: 'forge:progressEntries',
+  profile: 'forge:profile',
+  restDays: 'forge:restDays',
+  nutritionGoals: 'forge:nutritionGoals',
+};
 
-const WORKOUT_DRAFT_KEY =
-  'forge:workoutDraft';
+/* =========================================
+   GOALS
+========================================= */
 
-const NUTRITION_KEY =
-  'forge:nutritionLogs';
+const EMPTY_GOALS = {
+  calories: '',
+  protein: '',
+  carbs: '',
+  fat: '',
+};
 
-const PROGRESS_KEY =
-  'forge:progressEntries';
+function loadNutritionGoals() {
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem(
+        STORAGE_KEYS.nutritionGoals,
+      ) || '{}',
+    );
+
+    return {
+      calories:
+        stored.calories ?? '',
+
+      protein:
+        stored.protein ?? '',
+
+      carbs:
+        stored.carbs ?? '',
+
+      fat:
+        stored.fat ?? '',
+    };
+  } catch {
+    return EMPTY_GOALS;
+  }
+}
 
 /* =========================================
    STORAGE HELPERS
 ========================================= */
 
-function readArray(key) {
-  try {
-    const stored =
-      localStorage.getItem(key);
+function readStorageValue(key) {
+  const stored =
+    localStorage.getItem(key);
 
-    if (!stored) {
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-  } catch {
-    return [];
+  if (stored === null) {
+    return null;
   }
-}
 
-function readObject(key) {
   try {
-    const stored =
-      localStorage.getItem(key);
-
-    if (!stored) {
-      return {};
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    return (
-      parsed &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed)
-        ? parsed
-        : {}
-    );
+    return JSON.parse(stored);
   } catch {
-    return {};
+    return stored;
   }
 }
 
 /* =========================================
-   SETTINGS PAGE
+   SETTINGS
 ========================================= */
 
-function SettingsPage() {
+export default function SettingsPage() {
+  const fileInputRef =
+    useRef(null);
+
   const [
-    ,
-    setRevision,
-  ] = useState(0);
+    goals,
+    setGoals,
+  ] = useState(
+    loadNutritionGoals,
+  );
 
   const [
     message,
     setMessage,
   ] = useState('');
 
-  const [
-    error,
-    setError,
-  ] = useState('');
-
   /* =========================================
-     STORAGE SUMMARY
+     GOALS
   ========================================= */
 
-  const workouts =
-    readArray(
-      WORKOUTS_KEY,
+  function updateGoal(
+    field,
+    value,
+  ) {
+    if (
+      value !== '' &&
+      Number(value) < 0
+    ) {
+      return;
+    }
+
+    setGoals(
+      (current) => ({
+        ...current,
+        [field]: value,
+      }),
     );
 
-  const progress =
-    readArray(
-      PROGRESS_KEY,
-    );
-
-  const nutrition =
-    readObject(
-      NUTRITION_KEY,
-    );
-
-  const nutritionDays =
-    Object.keys(
-      nutrition,
-    ).length;
-
-  const foodEntries =
-    Object.values(
-      nutrition,
-    ).reduce(
-      (
-        total,
-        day,
-      ) =>
-        total +
-        (
-          Array.isArray(day)
-            ? day.length
-            : 0
-        ),
-      0,
-    );
-
-  const summary = {
-    workouts:
-      workouts.length,
-
-    measurements:
-      progress.length,
-
-    nutritionDays,
-
-    foodEntries,
-  };
-
-  /* =========================================
-     MESSAGE
-  ========================================= */
-
-  function showMessage(text) {
-    setError('');
-    setMessage(text);
-  }
-
-  function showError(text) {
     setMessage('');
-    setError(text);
+  }
+
+  function saveGoals() {
+    const cleaned = {};
+
+    Object.entries(
+      goals,
+    ).forEach(
+      ([key, value]) => {
+        if (
+          value === ''
+        ) {
+          return;
+        }
+
+        const number =
+          Number(value);
+
+        if (
+          Number.isFinite(number) &&
+          number >= 0
+        ) {
+          cleaned[key] =
+            number;
+        }
+      },
+    );
+
+    localStorage.setItem(
+      STORAGE_KEYS.nutritionGoals,
+      JSON.stringify(cleaned),
+    );
+
+    setMessage(
+      'Nutrition targets saved.',
+    );
+  }
+
+  function clearGoals() {
+    const confirmed =
+      window.confirm(
+        'Clear all nutrition targets?',
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    localStorage.removeItem(
+      STORAGE_KEYS.nutritionGoals,
+    );
+
+    setGoals(
+      EMPTY_GOALS,
+    );
+
+    setMessage(
+      'Nutrition targets cleared.',
+    );
   }
 
   /* =========================================
-     EXPORT BACKUP
+     EXPORT
   ========================================= */
 
   function exportBackup() {
-    try {
-      const backup = {
-        app: 'FORGE',
+    const backup = {
+      version: 1,
 
-        version: 1,
+      exportedAt:
+        new Date().toISOString(),
 
-        exportedAt:
-          new Date().toISOString(),
+      data: {
+        workouts:
+          readStorageValue(
+            STORAGE_KEYS.workouts,
+          ),
 
-        data: {
-          workouts:
-            readArray(
-              WORKOUTS_KEY,
-            ),
+        workoutDraft:
+          readStorageValue(
+            STORAGE_KEYS.workoutDraft,
+          ),
 
-          workoutDraft:
-            localStorage.getItem(
-              WORKOUT_DRAFT_KEY,
-            )
-              ? JSON.parse(
-                  localStorage.getItem(
-                    WORKOUT_DRAFT_KEY,
-                  ),
-                )
-              : null,
+        nutrition:
+          readStorageValue(
+            STORAGE_KEYS.nutrition,
+          ),
 
-          nutritionLogs:
-            readObject(
-              NUTRITION_KEY,
-            ),
+        progress:
+          readStorageValue(
+            STORAGE_KEYS.progress,
+          ),
 
-          progressEntries:
-            readArray(
-              PROGRESS_KEY,
-            ),
+        profile:
+          readStorageValue(
+            STORAGE_KEYS.profile,
+          ),
+
+        restDays:
+          readStorageValue(
+            STORAGE_KEYS.restDays,
+          ),
+
+        nutritionGoals:
+          readStorageValue(
+            STORAGE_KEYS.nutritionGoals,
+          ),
+      },
+    };
+
+    const blob =
+      new Blob(
+        [
+          JSON.stringify(
+            backup,
+            null,
+            2,
+          ),
+        ],
+        {
+          type: 'application/json',
         },
-      };
-
-      const blob =
-        new Blob(
-          [
-            JSON.stringify(
-              backup,
-              null,
-              2,
-            ),
-          ],
-          {
-            type:
-              'application/json',
-          },
-        );
-
-      const url =
-        URL.createObjectURL(
-          blob,
-        );
-
-      const link =
-        document.createElement(
-          'a',
-        );
-
-      link.href = url;
-
-      link.download =
-        `forge-backup-${getLocalDateString()}.json`;
-
-      document.body.appendChild(
-        link,
       );
 
-      link.click();
-
-      link.remove();
-
-      URL.revokeObjectURL(
-        url,
+    const url =
+      URL.createObjectURL(
+        blob,
       );
 
-      showMessage(
-        'Backup exported successfully.',
+    const link =
+      document.createElement(
+        'a',
       );
-    } catch {
-      showError(
-        'Could not export your backup.',
-      );
-    }
+
+    const date =
+      new Date()
+        .toISOString()
+        .slice(0, 10);
+
+    link.href = url;
+
+    link.download =
+      `forge-backup-${date}.json`;
+
+    document.body.appendChild(
+      link,
+    );
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(
+      url,
+    );
+
+    setMessage(
+      'Backup exported.',
+    );
   }
 
   /* =========================================
-     RESTORE BACKUP
+     IMPORT
   ========================================= */
 
-  async function restoreBackup(
-    event,
-  ) {
+  function openImport() {
+    fileInputRef.current?.click();
+  }
+
+  function importBackup(event) {
     const file =
       event.target.files?.[0];
+
+    event.target.value = '';
 
     if (!file) {
       return;
     }
 
-    try {
-      const text =
-        await file.text();
+    const reader =
+      new FileReader();
 
-      const backup =
-        JSON.parse(text);
+    reader.onload = () => {
+      try {
+        const backup =
+          JSON.parse(
+            reader.result,
+          );
 
-      if (
-        !backup ||
-        backup.app !==
-          'FORGE' ||
-        !backup.data ||
-        typeof backup.data !==
-          'object'
-      ) {
-        throw new Error(
-          'Invalid backup',
+        const data =
+          backup?.data;
+
+        if (
+          !data ||
+          typeof data !==
+            'object'
+        ) {
+          throw new Error(
+            'Invalid backup.',
+          );
+        }
+
+        const confirmed =
+          window.confirm(
+            'Restore this FORGE backup? Existing tracker data may be replaced.',
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        restoreValue(
+          STORAGE_KEYS.workouts,
+          data.workouts,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.workoutDraft,
+          data.workoutDraft,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.nutrition,
+          data.nutrition,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.progress,
+          data.progress,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.profile,
+          data.profile,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.restDays,
+          data.restDays,
+        );
+
+        restoreValue(
+          STORAGE_KEYS.nutritionGoals,
+          data.nutritionGoals,
+        );
+
+        setGoals(
+          loadNutritionGoals(),
+        );
+
+        setMessage(
+          'Backup restored.',
+        );
+      } catch {
+        setMessage(
+          'That file is not a valid FORGE backup.',
         );
       }
+    };
 
-      const confirmed =
-        window.confirm(
-          'Restore this backup? Your current FORGE tracker data will be replaced.',
-        );
+    reader.readAsText(
+      file,
+    );
+  }
 
-      if (!confirmed) {
-        return;
-      }
-
-      const workouts =
-        Array.isArray(
-          backup.data
-            .workouts,
-        )
-          ? backup.data
-              .workouts
-          : [];
-
-      const progress =
-        Array.isArray(
-          backup.data
-            .progressEntries,
-        )
-          ? backup.data
-              .progressEntries
-          : [];
-
-      const nutrition =
-        backup.data
-          .nutritionLogs &&
-        typeof backup.data
-          .nutritionLogs ===
-          'object' &&
-        !Array.isArray(
-          backup.data
-            .nutritionLogs,
-        )
-          ? backup.data
-              .nutritionLogs
-          : {};
-
-      localStorage.setItem(
-        WORKOUTS_KEY,
-        JSON.stringify(
-          workouts,
-        ),
+  function restoreValue(
+    key,
+    value,
+  ) {
+    if (
+      value === undefined ||
+      value === null
+    ) {
+      localStorage.removeItem(
+        key,
       );
 
-      localStorage.setItem(
-        PROGRESS_KEY,
-        JSON.stringify(
-          progress,
-        ),
-      );
-
-      localStorage.setItem(
-        NUTRITION_KEY,
-        JSON.stringify(
-          nutrition,
-        ),
-      );
-
-      if (
-        backup.data
-          .workoutDraft
-      ) {
-        localStorage.setItem(
-          WORKOUT_DRAFT_KEY,
-          JSON.stringify(
-            backup.data
-              .workoutDraft,
-          ),
-        );
-      } else {
-        localStorage.removeItem(
-          WORKOUT_DRAFT_KEY,
-        );
-      }
-
-      setRevision(
-        (current) =>
-          current + 1,
-      );
-
-      showMessage(
-        'Backup restored successfully.',
-      );
-    } catch {
-      showError(
-        'That file is not a valid FORGE backup.',
-      );
-    } finally {
-      event.target.value =
-        '';
+      return;
     }
+
+    localStorage.setItem(
+      key,
+      JSON.stringify(value),
+    );
   }
 
   /* =========================================
@@ -394,79 +414,24 @@ function SettingsPage() {
   ========================================= */
 
   function clearSection(
-    type,
+    key,
+    label,
   ) {
-    const settings = {
-      workouts: {
-        message:
-          'Delete all workout history? This cannot be undone unless you have a backup.',
-
-        clear: () => {
-          localStorage.removeItem(
-            WORKOUTS_KEY,
-          );
-
-          localStorage.removeItem(
-            WORKOUT_DRAFT_KEY,
-          );
-        },
-
-        success:
-          'Workout data cleared.',
-      },
-
-      nutrition: {
-        message:
-          'Delete all nutrition history? This cannot be undone unless you have a backup.',
-
-        clear: () =>
-          localStorage.removeItem(
-            NUTRITION_KEY,
-          ),
-
-        success:
-          'Nutrition data cleared.',
-      },
-
-      progress: {
-        message:
-          'Delete all body measurement history? This cannot be undone unless you have a backup.',
-
-        clear: () =>
-          localStorage.removeItem(
-            PROGRESS_KEY,
-          ),
-
-        success:
-          'Progress data cleared.',
-      },
-    };
-
-    const selected =
-      settings[type];
-
-    if (!selected) {
-      return;
-    }
-
     const confirmed =
       window.confirm(
-        selected.message,
+        `Clear all ${label}? This cannot be undone.`,
       );
 
     if (!confirmed) {
       return;
     }
 
-    selected.clear();
-
-    setRevision(
-      (current) =>
-        current + 1,
+    localStorage.removeItem(
+      key,
     );
 
-    showMessage(
-      selected.success,
+    setMessage(
+      `${label} cleared.`,
     );
   }
 
@@ -474,39 +439,32 @@ function SettingsPage() {
      CLEAR EVERYTHING
   ========================================= */
 
-  function clearEverything() {
+  function clearAllData() {
     const confirmed =
       window.confirm(
-        'Delete all FORGE tracker data? Workout history, nutrition logs and body measurements will all be removed.',
+        'Clear all FORGE tracker data? Workouts, nutrition, progress, profile, rest days and goals will be deleted.',
       );
 
     if (!confirmed) {
       return;
     }
 
-    localStorage.removeItem(
-      WORKOUTS_KEY,
+    Object.values(
+      STORAGE_KEYS,
+    ).forEach(
+      (key) => {
+        localStorage.removeItem(
+          key,
+        );
+      },
     );
 
-    localStorage.removeItem(
-      WORKOUT_DRAFT_KEY,
+    setGoals(
+      EMPTY_GOALS,
     );
 
-    localStorage.removeItem(
-      NUTRITION_KEY,
-    );
-
-    localStorage.removeItem(
-      PROGRESS_KEY,
-    );
-
-    setRevision(
-      (current) =>
-        current + 1,
-    );
-
-    showMessage(
-      'All FORGE tracker data has been cleared.',
+    setMessage(
+      'All FORGE data cleared.',
     );
   }
 
@@ -517,12 +475,12 @@ function SettingsPage() {
           HEADER
       ===================================== */}
 
-      <div className="page__header">
+      <header className="page__header">
 
         <div className="page__header-text">
 
           <span className="page__eyebrow">
-            Application
+            Preferences
           </span>
 
           <h1 className="page__title">
@@ -530,375 +488,14 @@ function SettingsPage() {
           </h1>
 
           <p className="page__description">
-            Manage your FORGE data,
-            backups and local storage.
+            Set your nutrition
+            targets and manage
+            your local FORGE data.
           </p>
 
         </div>
 
-      </div>
-
-      {/* =====================================
-          STORAGE SUMMARY
-      ===================================== */}
-
-      <div className="settings-page__section-heading">
-
-        <div>
-
-          <h2>
-            Your Data
-          </h2>
-
-          <p>
-            Data currently stored on
-            this device.
-          </p>
-
-        </div>
-
-      </div>
-
-      <section className="settings-page__stats">
-
-        <article className="settings-page__stat">
-
-          <div>
-            <Dumbbell
-              size={18}
-            />
-          </div>
-
-          <span>
-            Workouts
-          </span>
-
-          <strong>
-            {summary.workouts}
-          </strong>
-
-        </article>
-
-        <article className="settings-page__stat">
-
-          <div>
-            <Utensils
-              size={18}
-            />
-          </div>
-
-          <span>
-            Food Entries
-          </span>
-
-          <strong>
-            {summary.foodEntries}
-          </strong>
-
-        </article>
-
-        <article className="settings-page__stat">
-
-          <div>
-            <Scale
-              size={18}
-            />
-          </div>
-
-          <span>
-            Measurements
-          </span>
-
-          <strong>
-            {summary.measurements}
-          </strong>
-
-        </article>
-
-        <article className="settings-page__stat">
-
-          <div>
-            <Database
-              size={18}
-            />
-          </div>
-
-          <span>
-            Nutrition Days
-          </span>
-
-          <strong>
-            {summary.nutritionDays}
-          </strong>
-
-        </article>
-
-      </section>
-
-      {/* =====================================
-          BACKUP
-      ===================================== */}
-
-      <section className="panel settings-page__card">
-
-        <div className="settings-page__card-icon">
-          <HardDrive
-            size={20}
-          />
-        </div>
-
-        <div className="settings-page__card-content">
-
-          <h3>
-            Backup & Restore
-          </h3>
-
-          <p>
-            Export your FORGE data to
-            a JSON backup file or
-            restore a previous backup.
-          </p>
-
-        </div>
-
-        <div className="settings-page__actions">
-
-          <button
-            type="button"
-            className="button"
-            onClick={
-              exportBackup
-            }
-          >
-            <Download
-              size={16}
-            />
-            Export Backup
-          </button>
-
-          <label
-            htmlFor="forge-restore"
-            className="button"
-          >
-            <Upload
-              size={16}
-            />
-            Restore Backup
-          </label>
-
-          <input
-            id="forge-restore"
-            className="settings-page__file-input"
-            type="file"
-            accept=".json,application/json"
-            onChange={
-              restoreBackup
-            }
-          />
-
-        </div>
-
-      </section>
-
-      {/* =====================================
-          LOCAL STORAGE
-      ===================================== */}
-
-      <section className="panel settings-page__card">
-
-        <div className="settings-page__card-icon">
-          <ShieldCheck
-            size={20}
-          />
-        </div>
-
-        <div className="settings-page__card-content">
-
-          <h3>
-            Local Storage
-          </h3>
-
-          <p>
-            Your workout, nutrition
-            and progress data is stored
-            locally in this browser.
-          </p>
-
-        </div>
-
-        <div className="settings-page__storage-label">
-          This Device
-        </div>
-
-      </section>
-
-      {/* =====================================
-          DATA MANAGEMENT
-      ===================================== */}
-
-      <div className="settings-page__section-heading settings-page__section-heading--danger">
-
-        <div>
-
-          <h2>
-            Data Management
-          </h2>
-
-          <p>
-            Permanently remove tracker
-            records from this device.
-          </p>
-
-        </div>
-
-      </div>
-
-      <section className="panel settings-page__data">
-
-        <div className="settings-page__data-row">
-
-          <div>
-
-            <strong>
-              Workout History
-            </strong>
-
-            <span>
-              {summary.workouts}{' '}
-              logged{' '}
-              {summary.workouts === 1
-                ? 'workout'
-                : 'workouts'}
-            </span>
-
-          </div>
-
-          <button
-            type="button"
-            className="settings-page__delete"
-            onClick={() =>
-              clearSection(
-                'workouts',
-              )
-            }
-          >
-            <Trash2
-              size={15}
-            />
-            Clear
-          </button>
-
-        </div>
-
-        <div className="settings-page__data-row">
-
-          <div>
-
-            <strong>
-              Nutrition History
-            </strong>
-
-            <span>
-              {summary.foodEntries}{' '}
-              recorded food{' '}
-              {summary.foodEntries === 1
-                ? 'entry'
-                : 'entries'}
-            </span>
-
-          </div>
-
-          <button
-            type="button"
-            className="settings-page__delete"
-            onClick={() =>
-              clearSection(
-                'nutrition',
-              )
-            }
-          >
-            <Trash2
-              size={15}
-            />
-            Clear
-          </button>
-
-        </div>
-
-        <div className="settings-page__data-row">
-
-          <div>
-
-            <strong>
-              Body Measurements
-            </strong>
-
-            <span>
-              {summary.measurements}{' '}
-              recorded{' '}
-              {summary.measurements === 1
-                ? 'measurement'
-                : 'measurements'}
-            </span>
-
-          </div>
-
-          <button
-            type="button"
-            className="settings-page__delete"
-            onClick={() =>
-              clearSection(
-                'progress',
-              )
-            }
-          >
-            <Trash2
-              size={15}
-            />
-            Clear
-          </button>
-
-        </div>
-
-      </section>
-
-      {/* =====================================
-          CLEAR EVERYTHING
-      ===================================== */}
-
-      <section className="panel settings-page__danger">
-
-        <div>
-
-          <strong>
-            Clear All Tracker Data
-          </strong>
-
-          <p>
-            Removes workouts,
-            nutrition logs, workout
-            drafts and body
-            measurements.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          className="settings-page__danger-button"
-          onClick={
-            clearEverything
-          }
-        >
-          <Trash2 size={16} />
-          Clear Everything
-        </button>
-
-      </section>
-
-      {/* =====================================
-          STATUS
-      ===================================== */}
+      </header>
 
       {message && (
         <div className="settings-page__message">
@@ -906,33 +503,512 @@ function SettingsPage() {
         </div>
       )}
 
-      {error && (
-        <div className="settings-page__error">
-          {error}
+      {/* =====================================
+          NUTRITION GOALS
+      ===================================== */}
+
+      <section className="panel settings-page__section">
+
+        <div className="settings-page__section-heading">
+
+          <div className="settings-page__section-icon">
+            <Target
+              size={18}
+            />
+          </div>
+
+          <div>
+
+            <h2>
+              Nutrition Targets
+            </h2>
+
+            <p>
+              Used to judge
+              nutrition quality
+              in your daily
+              progress score.
+            </p>
+
+          </div>
+
         </div>
-      )}
+
+        <div className="settings-page__goal-note">
+          Leave any target blank
+          if you do not want FORGE
+          to score that macro.
+        </div>
+
+        <div className="settings-page__goals">
+
+          <label>
+
+            <span>
+              Calories
+            </span>
+
+            <div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Not set"
+                value={
+                  goals.calories
+                }
+                onChange={(
+                  event,
+                ) =>
+                  updateGoal(
+                    'calories',
+                    event.target
+                      .value,
+                  )
+                }
+              />
+
+              <small>
+                kcal
+              </small>
+            </div>
+
+          </label>
+
+          <label>
+
+            <span>
+              Protein
+            </span>
+
+            <div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Not set"
+                value={
+                  goals.protein
+                }
+                onChange={(
+                  event,
+                ) =>
+                  updateGoal(
+                    'protein',
+                    event.target
+                      .value,
+                  )
+                }
+              />
+
+              <small>
+                g
+              </small>
+            </div>
+
+          </label>
+
+          <label>
+
+            <span>
+              Carbohydrates
+            </span>
+
+            <div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Not set"
+                value={
+                  goals.carbs
+                }
+                onChange={(
+                  event,
+                ) =>
+                  updateGoal(
+                    'carbs',
+                    event.target
+                      .value,
+                  )
+                }
+              />
+
+              <small>
+                g
+              </small>
+            </div>
+
+          </label>
+
+          <label>
+
+            <span>
+              Fat
+            </span>
+
+            <div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Not set"
+                value={
+                  goals.fat
+                }
+                onChange={(
+                  event,
+                ) =>
+                  updateGoal(
+                    'fat',
+                    event.target
+                      .value,
+                  )
+                }
+              />
+
+              <small>
+                g
+              </small>
+            </div>
+
+          </label>
+
+        </div>
+
+        <div className="settings-page__section-actions">
+
+          <button
+            type="button"
+            className="button"
+            onClick={
+              clearGoals
+            }
+          >
+            <RotateCcw
+              size={14}
+            />
+
+            Clear Targets
+          </button>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={
+              saveGoals
+            }
+          >
+            <Save size={14} />
+
+            Save Targets
+          </button>
+
+        </div>
+
+      </section>
+
+      {/* =====================================
+          BACKUP
+      ===================================== */}
+
+      <section className="panel settings-page__section">
+
+        <div className="settings-page__section-heading">
+
+          <div className="settings-page__section-icon">
+            <Download
+              size={18}
+            />
+          </div>
+
+          <div>
+
+            <h2>
+              Backup & Restore
+            </h2>
+
+            <p>
+              Export all FORGE
+              data to a JSON file
+              or restore a
+              previous backup.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="settings-page__backup-actions">
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={
+              exportBackup
+            }
+          >
+            <Download
+              size={15}
+            />
+
+            Export Backup
+          </button>
+
+          <button
+            type="button"
+            className="button"
+            onClick={
+              openImport
+            }
+          >
+            <Upload
+              size={15}
+            />
+
+            Restore Backup
+          </button>
+
+          <input
+            ref={
+              fileInputRef
+            }
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={
+              importBackup
+            }
+          />
+
+        </div>
+
+      </section>
+
+      {/* =====================================
+          CLEAR DATA
+      ===================================== */}
+
+      <section className="panel settings-page__section">
+
+        <div className="settings-page__section-heading">
+
+          <div className="settings-page__section-icon settings-page__section-icon--danger">
+            <Trash2
+              size={18}
+            />
+          </div>
+
+          <div>
+
+            <h2>
+              Data Management
+            </h2>
+
+            <p>
+              Remove individual
+              parts of your
+              tracker history.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="settings-page__data-list">
+
+          <div>
+
+            <div>
+              <strong>
+                Workouts
+              </strong>
+
+              <span>
+                Completed workouts
+                and workout draft
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const confirmed =
+                  window.confirm(
+                    'Clear all workouts and the current workout draft?',
+                  );
+
+                if (!confirmed) {
+                  return;
+                }
+
+                localStorage.removeItem(
+                  STORAGE_KEYS.workouts,
+                );
+
+                localStorage.removeItem(
+                  STORAGE_KEYS.workoutDraft,
+                );
+
+                setMessage(
+                  'Workout data cleared.',
+                );
+              }}
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <div>
+
+            <div>
+              <strong>
+                Nutrition
+              </strong>
+
+              <span>
+                All food and meal
+                history
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                clearSection(
+                  STORAGE_KEYS.nutrition,
+                  'nutrition history',
+                )
+              }
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <div>
+
+            <div>
+              <strong>
+                Progress
+              </strong>
+
+              <span>
+                Weight and body
+                measurements
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                clearSection(
+                  STORAGE_KEYS.progress,
+                  'progress history',
+                )
+              }
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <div>
+
+            <div>
+              <strong>
+                Rest Days
+              </strong>
+
+              <span>
+                Calendar recovery
+                day history
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                clearSection(
+                  STORAGE_KEYS.restDays,
+                  'rest days',
+                )
+              }
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <div>
+
+            <div>
+              <strong>
+                Profile
+              </strong>
+
+              <span>
+                Your FORGE profile
+                information
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                clearSection(
+                  STORAGE_KEYS.profile,
+                  'profile data',
+                )
+              }
+            >
+              Clear
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================
+          DANGER ZONE
+      ===================================== */}
+
+      <section className="panel settings-page__section settings-page__danger">
+
+        <div>
+
+          <strong>
+            Clear all FORGE data
+          </strong>
+
+          <span>
+            Permanently removes
+            workouts, nutrition,
+            progress, profile,
+            rest days and targets.
+          </span>
+
+        </div>
+
+        <button
+          type="button"
+          className="settings-page__danger-button"
+          onClick={
+            clearAllData
+          }
+        >
+          <Trash2
+            size={14}
+          />
+
+          Clear Everything
+        </button>
+
+      </section>
 
     </main>
   );
 }
-
-/* =========================================
-   DATE
-========================================= */
-
-function getLocalDateString() {
-  const date =
-    new Date();
-
-  const offset =
-    date.getTimezoneOffset() *
-    60000;
-
-  return new Date(
-    date.getTime() - offset,
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-export default SettingsPage;
