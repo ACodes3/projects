@@ -9,6 +9,7 @@ import {
   Cookie,
   Plus,
   Search,
+  Target,
   Trash2,
   Utensils,
   X,
@@ -17,6 +18,7 @@ import {
 import './NutritionPage.css';
 
 const STORAGE_KEY = 'forge:nutritionLogs';
+const GOALS_KEY = 'forge:nutritionGoals';
 
 const MEALS = [
   'Breakfast',
@@ -45,6 +47,44 @@ function loadNutritionLogs() {
   }
 }
 
+function loadNutritionGoals() {
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem(GOALS_KEY) || '{}',
+    );
+
+    return stored &&
+      typeof stored === 'object' &&
+      !Array.isArray(stored)
+      ? {
+          calories:
+            Number(stored.calories) || 0,
+
+          protein:
+            Number(stored.protein) || 0,
+
+          carbs:
+            Number(stored.carbs) || 0,
+
+          fat:
+            Number(stored.fat) || 0,
+        }
+      : {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+        };
+  } catch {
+    return {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+    };
+  }
+}
+
 function saveNutritionLogs(logs) {
   localStorage.setItem(
     STORAGE_KEY,
@@ -60,6 +100,7 @@ function getToday() {
   const date = new Date();
 
   const year = date.getFullYear();
+
   const month = String(
     date.getMonth() + 1,
   ).padStart(2, '0');
@@ -85,22 +126,6 @@ function formatDate(dateString) {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
-    },
-  );
-}
-
-function formatShortDate(dateString) {
-  if (!dateString) {
-    return '';
-  }
-
-  return new Date(
-    `${dateString}T12:00:00`,
-  ).toLocaleDateString(
-    'en-US',
-    {
-      month: 'short',
-      day: 'numeric',
     },
   );
 }
@@ -164,6 +189,49 @@ function getMealIcon(meal) {
   }
 }
 
+function hasNutritionGoals(goals) {
+  return (
+    goals.calories > 0 ||
+    goals.protein > 0 ||
+    goals.carbs > 0 ||
+    goals.fat > 0
+  );
+}
+
+function getPercentage(
+  value,
+  target,
+) {
+  if (!target) {
+    return null;
+  }
+
+  return Math.round(
+    (Number(value || 0) /
+      target) *
+      100,
+  );
+}
+
+function getProgressWidth(
+  value,
+  target,
+) {
+  if (!target) {
+    return 0;
+  }
+
+  return Math.min(
+    100,
+    Math.max(
+      0,
+      (Number(value || 0) /
+        target) *
+        100,
+    ),
+  );
+}
+
 /* =========================================
    EMPTY FORM
 ========================================= */
@@ -184,95 +252,136 @@ function createEmptyForm(
 }
 
 /* =========================================
-   NUTRITION PAGE
+   PAGE
 ========================================= */
 
 export default function NutritionPage() {
   const [logs, setLogs] =
-    useState(loadNutritionLogs);
+    useState(
+      loadNutritionLogs,
+    );
 
-  const [expandedDate, setExpandedDate] =
-    useState(null);
+  const [goals] =
+    useState(
+      loadNutritionGoals,
+    );
 
-  const [search, setSearch] =
-    useState('');
+  const [
+    expandedDate,
+    setExpandedDate,
+  ] = useState(null);
 
-  const [showModal, setShowModal] =
-    useState(false);
+  const [
+    search,
+    setSearch,
+  ] = useState('');
 
-  const [form, setForm] =
-    useState(() =>
-      createEmptyForm(),
+  const [
+    showModal,
+    setShowModal,
+  ] = useState(false);
+
+  const [
+    form,
+    setForm,
+  ] = useState(() =>
+    createEmptyForm(),
+  );
+
+  const goalsConfigured =
+    hasNutritionGoals(
+      goals,
     );
 
   /* =========================================
      DAYS
   ========================================= */
 
-  const days = useMemo(() => {
-    const query =
-      search
-        .trim()
-        .toLowerCase();
+  const days =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-    return Object.entries(logs)
-      .filter(
-        ([, entries]) =>
-          Array.isArray(entries) &&
-          entries.length > 0,
+      return Object.entries(
+        logs,
       )
-      .sort(
-        ([dateA], [dateB]) =>
-          dateB.localeCompare(
-            dateA,
-          ),
-      )
-      .filter(
-        ([date, entries]) => {
-          if (!query) {
-            return true;
-          }
+        .filter(
+          ([, entries]) =>
+            Array.isArray(
+              entries,
+            ) &&
+            entries.length > 0,
+        )
+        .sort(
+          ([dateA], [dateB]) =>
+            dateB.localeCompare(
+              dateA,
+            ),
+        )
+        .filter(
+          ([date, entries]) => {
+            if (!query) {
+              return true;
+            }
 
-          const dateMatch =
-            formatDate(date)
-              .toLowerCase()
-              .includes(query);
+            const dateMatch =
+              formatDate(date)
+                .toLowerCase()
+                .includes(
+                  query,
+                );
 
-          const foodMatch =
-            entries.some(
-              (entry) =>
-                entry.name
-                  ?.toLowerCase()
-                  .includes(query),
+            const foodMatch =
+              entries.some(
+                (entry) =>
+                  entry.name
+                    ?.toLowerCase()
+                    .includes(
+                      query,
+                    ),
+              );
+
+            return (
+              dateMatch ||
+              foodMatch
             );
-
-          return (
-            dateMatch ||
-            foodMatch
-          );
-        },
-      );
-  }, [logs, search]);
+          },
+        );
+    }, [
+      logs,
+      search,
+    ]);
 
   /* =========================================
-     OVERALL STATS
+     PAGE STATS
   ========================================= */
 
-  const stats = useMemo(() => {
-    const allEntries =
-      Object.values(logs)
-        .filter(Array.isArray)
-        .flat();
+  const stats =
+    useMemo(() => {
+      const allEntries =
+        Object.values(
+          logs,
+        )
+          .filter(
+            Array.isArray,
+          )
+          .flat();
 
-    const todayEntries =
-      logs[getToday()] || [];
+      const todayEntries =
+        logs[getToday()] ||
+        [];
 
-    const todayTotals =
-      getTotals(todayEntries);
+      const todayTotals =
+        getTotals(
+          todayEntries,
+        );
 
-    const trackedDays =
-      Object.values(logs)
-        .filter(
+      const trackedDays =
+        Object.values(
+          logs,
+        ).filter(
           (entries) =>
             Array.isArray(
               entries,
@@ -280,19 +389,22 @@ export default function NutritionPage() {
             entries.length > 0,
         ).length;
 
-    return {
-      trackedDays,
-      totalEntries:
-        allEntries.length,
-      todayCalories:
-        todayTotals.calories,
-      todayProtein:
-        todayTotals.protein,
-    };
-  }, [logs]);
+      return {
+        trackedDays,
+
+        totalEntries:
+          allEntries.length,
+
+        todayCalories:
+          todayTotals.calories,
+
+        todayProtein:
+          todayTotals.protein,
+      };
+    }, [logs]);
 
   /* =========================================
-     OPEN ADD FOOD
+     ADD FOOD
   ========================================= */
 
   function openAddFood(
@@ -306,25 +418,27 @@ export default function NutritionPage() {
       ),
     );
 
-    setShowModal(true);
+    setShowModal(
+      true,
+    );
   }
 
   function closeModal() {
-    setShowModal(false);
+    setShowModal(
+      false,
+    );
   }
-
-  /* =========================================
-     FORM
-  ========================================= */
 
   function updateForm(
     field,
     value,
   ) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    setForm(
+      (current) => ({
+        ...current,
+        [field]: value,
+      }),
+    );
   }
 
   /* =========================================
@@ -348,23 +462,28 @@ export default function NutritionPage() {
 
       name,
 
-      meal: form.meal,
+      meal:
+        form.meal,
 
       calories:
-        Number(form.calories) ||
-        0,
+        Number(
+          form.calories,
+        ) || 0,
 
       protein:
-        Number(form.protein) ||
-        0,
+        Number(
+          form.protein,
+        ) || 0,
 
       carbs:
-        Number(form.carbs) ||
-        0,
+        Number(
+          form.carbs,
+        ) || 0,
 
       fat:
-        Number(form.fat) ||
-        0,
+        Number(
+          form.fat,
+        ) || 0,
 
       createdAt:
         new Date().toISOString(),
@@ -381,15 +500,21 @@ export default function NutritionPage() {
       ],
     };
 
-    saveNutritionLogs(updated);
+    saveNutritionLogs(
+      updated,
+    );
 
-    setLogs(updated);
+    setLogs(
+      updated,
+    );
 
     setExpandedDate(
       form.date,
     );
 
-    setShowModal(false);
+    setShowModal(
+      false,
+    );
   }
 
   /* =========================================
@@ -434,23 +559,34 @@ export default function NutritionPage() {
     };
 
     if (
-      remaining.length === 0
+      remaining.length ===
+      0
     ) {
-      delete updated[date];
+      delete updated[
+        date
+      ];
     } else {
-      updated[date] =
-        remaining;
+      updated[
+        date
+      ] = remaining;
     }
 
-    saveNutritionLogs(updated);
+    saveNutritionLogs(
+      updated,
+    );
 
-    setLogs(updated);
+    setLogs(
+      updated,
+    );
 
     if (
-      remaining.length === 0 &&
+      remaining.length ===
+        0 &&
       expandedDate === date
     ) {
-      setExpandedDate(null);
+      setExpandedDate(
+        null,
+      );
     }
   }
 
@@ -474,8 +610,10 @@ export default function NutritionPage() {
           </h1>
 
           <p className="page__description">
-            Your nutrition history,
-            organized by day and meal.
+            Track each day,
+            meal and food entry
+            against your personal
+            nutrition targets.
           </p>
 
         </div>
@@ -494,7 +632,7 @@ export default function NutritionPage() {
       </header>
 
       {/* =====================================
-          STATS
+          TODAY STATS
       ===================================== */}
 
       <section className="nutrition-page__stats">
@@ -502,7 +640,7 @@ export default function NutritionPage() {
         <article className="nutrition-page__stat">
 
           <span>
-            Today
+            Calories Today
           </span>
 
           <strong>
@@ -512,7 +650,9 @@ export default function NutritionPage() {
           </strong>
 
           <small>
-            calories
+            {goals.calories
+              ? `of ${goals.calories} kcal`
+              : 'kcal logged'}
           </small>
 
         </article>
@@ -530,7 +670,9 @@ export default function NutritionPage() {
           </strong>
 
           <small>
-            protein
+            {goals.protein
+              ? `of ${goals.protein}g`
+              : 'protein logged'}
           </small>
 
         </article>
@@ -542,7 +684,9 @@ export default function NutritionPage() {
           </span>
 
           <strong>
-            {stats.trackedDays}
+            {
+              stats.trackedDays
+            }
           </strong>
 
           <small>
@@ -558,7 +702,9 @@ export default function NutritionPage() {
           </span>
 
           <strong>
-            {stats.totalEntries}
+            {
+              stats.totalEntries
+            }
           </strong>
 
           <small>
@@ -570,7 +716,118 @@ export default function NutritionPage() {
       </section>
 
       {/* =====================================
-          DAYS HEADER
+          GOALS INFO
+      ===================================== */}
+
+      {goalsConfigured ? (
+
+        <section className="panel nutrition-page__goals">
+
+          <div className="nutrition-page__goals-heading">
+
+            <div className="nutrition-page__goals-icon">
+              <Target
+                size={17}
+              />
+            </div>
+
+            <div>
+              <h2>
+                Daily Targets
+              </h2>
+
+              <p>
+                These targets are
+                used when evaluating
+                your nutrition days.
+              </p>
+            </div>
+
+          </div>
+
+          <div className="nutrition-page__goal-values">
+
+            {goals.calories >
+              0 && (
+              <div>
+                <strong>
+                  {
+                    goals.calories
+                  }
+                </strong>
+
+                <span>
+                  kcal
+                </span>
+              </div>
+            )}
+
+            {goals.protein >
+              0 && (
+              <div>
+                <strong>
+                  {
+                    goals.protein
+                  }g
+                </strong>
+
+                <span>
+                  protein
+                </span>
+              </div>
+            )}
+
+            {goals.carbs >
+              0 && (
+              <div>
+                <strong>
+                  {
+                    goals.carbs
+                  }g
+                </strong>
+
+                <span>
+                  carbs
+                </span>
+              </div>
+            )}
+
+            {goals.fat >
+              0 && (
+              <div>
+                <strong>
+                  {
+                    goals.fat
+                  }g
+                </strong>
+
+                <span>
+                  fat
+                </span>
+              </div>
+            )}
+
+          </div>
+
+        </section>
+
+      ) : (
+
+        <section className="nutrition-page__no-goals">
+
+          <Target size={15} />
+
+          <span>
+            No nutrition targets
+            configured yet.
+          </span>
+
+        </section>
+
+      )}
+
+      {/* =====================================
+          HISTORY HEADER
       ===================================== */}
 
       <div className="nutrition-page__section-header">
@@ -583,22 +840,30 @@ export default function NutritionPage() {
 
           <p>
             Open a day to see
-            everything you ate.
+            meals, foods and
+            target progress.
           </p>
 
         </div>
 
         <div className="nutrition-page__search">
 
-          <Search size={15} />
+          <Search
+            size={15}
+          />
 
           <input
             type="search"
             placeholder="Search days or foods..."
-            value={search}
-            onChange={(event) =>
+            value={
+              search
+            }
+            onChange={(
+              event,
+            ) =>
               setSearch(
-                event.target.value,
+                event.target
+                  .value,
               )
             }
           />
@@ -608,29 +873,34 @@ export default function NutritionPage() {
       </div>
 
       {/* =====================================
-          EMPTY STATE
+          EMPTY
       ===================================== */}
 
       {days.length === 0 ? (
 
         <section className="panel nutrition-page__empty">
 
-          <Apple size={28} />
+          <Apple
+            size={28}
+          />
 
           <h3>
-            {stats.trackedDays === 0
+            {stats.trackedDays ===
+            0
               ? 'No nutrition logged'
               : 'No matching entries'}
           </h3>
 
           <p>
-            {stats.trackedDays === 0
+            {stats.trackedDays ===
+            0
               ? 'Start logging food and your nutrition days will appear here.'
               : 'Try a different search.'}
           </p>
 
           {stats.trackedDays ===
             0 && (
+
             <button
               type="button"
               className="button button--primary"
@@ -638,9 +908,13 @@ export default function NutritionPage() {
                 openAddFood()
               }
             >
-              <Plus size={15} />
+              <Plus
+                size={15}
+              />
+
               Add Food
             </button>
+
           )}
 
         </section>
@@ -648,7 +922,7 @@ export default function NutritionPage() {
       ) : (
 
         /* ===================================
-           DAY LIST
+           DAYS
         =================================== */
 
         <section className="nutrition-page__days">
@@ -670,13 +944,40 @@ export default function NutritionPage() {
                     getMealEntries(
                       entries,
                       meal,
-                    ).length > 0,
+                    ).length >
+                    0,
                 ).length;
+
+              const caloriePercent =
+                getPercentage(
+                  totals.calories,
+                  goals.calories,
+                );
+
+              const proteinPercent =
+                getPercentage(
+                  totals.protein,
+                  goals.protein,
+                );
+
+              const carbPercent =
+                getPercentage(
+                  totals.carbs,
+                  goals.carbs,
+                );
+
+              const fatPercent =
+                getPercentage(
+                  totals.fat,
+                  goals.fat,
+                );
 
               return (
                 <article
                   className="panel nutrition-page__day"
-                  key={date}
+                  key={
+                    date
+                  }
                 >
 
                   {/* =========================
@@ -706,6 +1007,7 @@ export default function NutritionPage() {
                       <div className="nutrition-page__day-heading">
 
                         <div>
+
                           <h3>
                             {formatDate(
                               date,
@@ -713,20 +1015,17 @@ export default function NutritionPage() {
                           </h3>
 
                           <span>
-                            {formatShortDate(
-                              date,
-                            ) ===
-                            formatShortDate(
-                              getToday(),
-                            )
+                            {date ===
+                            getToday()
                               ? 'Today'
-                              : `${entries.length} food ${
+                              : `${entries.length} ${
                                   entries.length ===
                                   1
-                                    ? 'entry'
-                                    : 'entries'
+                                    ? 'food entry'
+                                    : 'food entries'
                                 }`}
                           </span>
+
                         </div>
 
                       </div>
@@ -739,8 +1038,11 @@ export default function NutritionPage() {
                               totals.calories,
                             )}
                           </strong>
+
                           <span>
-                            kcal
+                            {goals.calories
+                              ? `/ ${goals.calories} kcal`
+                              : 'kcal'}
                           </span>
                         </div>
 
@@ -750,8 +1052,11 @@ export default function NutritionPage() {
                               totals.protein,
                             )}g
                           </strong>
+
                           <span>
-                            protein
+                            {goals.protein
+                              ? `/ ${goals.protein}g protein`
+                              : 'protein'}
                           </span>
                         </div>
 
@@ -761,8 +1066,11 @@ export default function NutritionPage() {
                               totals.carbs,
                             )}g
                           </strong>
+
                           <span>
-                            carbs
+                            {goals.carbs
+                              ? `/ ${goals.carbs}g carbs`
+                              : 'carbs'}
                           </span>
                         </div>
 
@@ -772,21 +1080,27 @@ export default function NutritionPage() {
                               totals.fat,
                             )}g
                           </strong>
+
                           <span>
-                            fat
+                            {goals.fat
+                              ? `/ ${goals.fat}g fat`
+                              : 'fat'}
                           </span>
                         </div>
 
                       </div>
 
                       <div className="nutrition-page__day-meta">
+
                         <span>
                           {mealCount}{' '}
-                          {mealCount === 1
+                          {mealCount ===
+                          1
                             ? 'meal'
                             : 'meals'}{' '}
                           logged
                         </span>
+
                       </div>
 
                     </div>
@@ -804,12 +1118,234 @@ export default function NutritionPage() {
                   </button>
 
                   {/* =========================
-                      DAY DETAILS
+                      EXPANDED DAY
                   ========================= */}
 
                   {expanded && (
 
                     <div className="nutrition-page__day-details">
+
+                      {/* =====================
+                          TARGET PROGRESS
+                      ===================== */}
+
+                      {goalsConfigured && (
+
+                        <section className="nutrition-page__target-progress">
+
+                          <div className="nutrition-page__target-progress-heading">
+
+                            <div>
+
+                              <span>
+                                Daily Targets
+                              </span>
+
+                              <h4>
+                                Nutrition Progress
+                              </h4>
+
+                            </div>
+
+                            <Target
+                              size={16}
+                            />
+
+                          </div>
+
+                          <div className="nutrition-page__target-list">
+
+                            {goals.calories >
+                              0 && (
+
+                              <div className="nutrition-page__target">
+
+                                <div className="nutrition-page__target-heading">
+
+                                  <span>
+                                    Calories
+                                  </span>
+
+                                  <strong>
+                                    {Math.round(
+                                      totals.calories,
+                                    )}{' '}
+                                    /{' '}
+                                    {
+                                      goals.calories
+                                    }{' '}
+                                    kcal
+                                  </strong>
+
+                                  <small>
+                                    {
+                                      caloriePercent
+                                    }%
+                                  </small>
+
+                                </div>
+
+                                <div className="nutrition-page__target-bar">
+
+                                  <span
+                                    style={{
+                                      width: `${getProgressWidth(
+                                        totals.calories,
+                                        goals.calories,
+                                      )}%`,
+                                    }}
+                                  />
+
+                                </div>
+
+                              </div>
+
+                            )}
+
+                            {goals.protein >
+                              0 && (
+
+                              <div className="nutrition-page__target">
+
+                                <div className="nutrition-page__target-heading">
+
+                                  <span>
+                                    Protein
+                                  </span>
+
+                                  <strong>
+                                    {Math.round(
+                                      totals.protein,
+                                    )}g /{' '}
+                                    {
+                                      goals.protein
+                                    }g
+                                  </strong>
+
+                                  <small>
+                                    {
+                                      proteinPercent
+                                    }%
+                                  </small>
+
+                                </div>
+
+                                <div className="nutrition-page__target-bar">
+
+                                  <span
+                                    style={{
+                                      width: `${getProgressWidth(
+                                        totals.protein,
+                                        goals.protein,
+                                      )}%`,
+                                    }}
+                                  />
+
+                                </div>
+
+                              </div>
+
+                            )}
+
+                            {goals.carbs >
+                              0 && (
+
+                              <div className="nutrition-page__target">
+
+                                <div className="nutrition-page__target-heading">
+
+                                  <span>
+                                    Carbs
+                                  </span>
+
+                                  <strong>
+                                    {Math.round(
+                                      totals.carbs,
+                                    )}g /{' '}
+                                    {
+                                      goals.carbs
+                                    }g
+                                  </strong>
+
+                                  <small>
+                                    {
+                                      carbPercent
+                                    }%
+                                  </small>
+
+                                </div>
+
+                                <div className="nutrition-page__target-bar">
+
+                                  <span
+                                    style={{
+                                      width: `${getProgressWidth(
+                                        totals.carbs,
+                                        goals.carbs,
+                                      )}%`,
+                                    }}
+                                  />
+
+                                </div>
+
+                              </div>
+
+                            )}
+
+                            {goals.fat >
+                              0 && (
+
+                              <div className="nutrition-page__target">
+
+                                <div className="nutrition-page__target-heading">
+
+                                  <span>
+                                    Fat
+                                  </span>
+
+                                  <strong>
+                                    {Math.round(
+                                      totals.fat,
+                                    )}g /{' '}
+                                    {
+                                      goals.fat
+                                    }g
+                                  </strong>
+
+                                  <small>
+                                    {
+                                      fatPercent
+                                    }%
+                                  </small>
+
+                                </div>
+
+                                <div className="nutrition-page__target-bar">
+
+                                  <span
+                                    style={{
+                                      width: `${getProgressWidth(
+                                        totals.fat,
+                                        goals.fat,
+                                      )}%`,
+                                    }}
+                                  />
+
+                                </div>
+
+                              </div>
+
+                            )}
+
+                          </div>
+
+                        </section>
+
+                      )}
+
+                      {/* =====================
+                          MEALS
+                      ===================== */}
 
                       {MEALS.map(
                         (meal) => {
@@ -832,12 +1368,12 @@ export default function NutritionPage() {
                           return (
                             <section
                               className="nutrition-page__meal"
-                              key={meal}
+                              key={
+                                meal
+                              }
                             >
 
-                              {/* =================
-                                  MEAL HEADER
-                              ================= */}
+                              {/* MEAL HEADER */}
 
                               <div className="nutrition-page__meal-header">
 
@@ -856,7 +1392,9 @@ export default function NutritionPage() {
                                     </h4>
 
                                     <span>
-                                      {mealEntries.length}{' '}
+                                      {
+                                        mealEntries.length
+                                      }{' '}
                                       {mealEntries.length ===
                                       1
                                         ? 'item'
@@ -880,17 +1418,17 @@ export default function NutritionPage() {
                                   <Plus
                                     size={14}
                                   />
+
                                   Add Food
                                 </button>
 
                               </div>
 
-                              {/* =================
-                                  MEAL TOTALS
-                              ================= */}
+                              {/* MEAL TOTALS */}
 
                               {mealEntries.length >
                                 0 && (
+
                                 <div className="nutrition-page__meal-totals">
 
                                   <span>
@@ -930,11 +1468,10 @@ export default function NutritionPage() {
                                   </span>
 
                                 </div>
+
                               )}
 
-                              {/* =================
-                                  FOOD LIST
-                              ================= */}
+                              {/* FOOD */}
 
                               {mealEntries.length ===
                               0 ? (
@@ -975,9 +1512,7 @@ export default function NutritionPage() {
                                   </div>
 
                                   {mealEntries.map(
-                                    (
-                                      entry,
-                                    ) => (
+                                    (entry) => (
 
                                       <div
                                         className="nutrition-page__food"
@@ -987,7 +1522,9 @@ export default function NutritionPage() {
                                       >
 
                                         <strong>
-                                          {entry.name}
+                                          {
+                                            entry.name
+                                          }
                                         </strong>
 
                                         <span>
@@ -1065,6 +1602,7 @@ export default function NutritionPage() {
           )}
 
         </section>
+
       )}
 
       {/* =====================================
@@ -1110,7 +1648,9 @@ export default function NutritionPage() {
                 }
                 aria-label="Close"
               >
-                <X size={18} />
+                <X
+                  size={18}
+                />
               </button>
 
             </div>
@@ -1140,8 +1680,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'name',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
@@ -1166,8 +1705,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'date',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
@@ -1191,14 +1729,15 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'meal',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
                   >
+
                     {MEALS.map(
                       (meal) => (
+
                         <option
                           value={
                             meal
@@ -1209,8 +1748,10 @@ export default function NutritionPage() {
                         >
                           {meal}
                         </option>
+
                       ),
                     )}
+
                   </select>
 
                 </label>
@@ -1234,8 +1775,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'calories',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
@@ -1262,8 +1802,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'protein',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
@@ -1290,8 +1829,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'carbs',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
@@ -1318,8 +1856,7 @@ export default function NutritionPage() {
                     ) =>
                       updateForm(
                         'fat',
-                        event
-                          .target
+                        event.target
                           .value,
                       )
                     }
