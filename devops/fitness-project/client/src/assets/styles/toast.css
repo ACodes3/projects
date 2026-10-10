@@ -1,0 +1,91 @@
+.toast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  margin: 0.8rem 0;
+  background: #fff;
+  font-family: "Inter", sans-serif;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border-left: 5px solid transparent;
+  max-width: 500px;
+}
+
+.toast-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+}
+
+.toast-text h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.toast-text p {
+  margin: 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* Close button */
+.toast-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.toast-close:hover {
+  color: #000;
+}
+
+/* ✅ SUCCESS */
+.toast-success {
+  background-color: #eaf9f1;
+  border-color: #2ecc71;
+}
+
+.toast-success .toast-icon {
+  color: #2ecc71;
+}
+
+/* ℹ️ INFO */
+.toast-info {
+  background-color: #e8f2ff;
+  border-color: #3498db;
+}
+
+.toast-info .toast-icon {
+  color: #3498db;
+}
+
+/* ⚠️ WARNING */
+.toast-warning {
+  background-color: #fff7e6;
+  border-color: #f1c40f;
+}
+
+.toast-warning .toast-icon {
+  color: #f1c40f;
+}
+
+/* ❌ ERROR */
+.toast-error {
+  background-color: #fdecea;
+  border-color: #e74c3c;
+}
+
+.toast-error .toast-icon {
+  color: #e74c3c;
+}

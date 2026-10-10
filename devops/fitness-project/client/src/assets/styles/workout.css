@@ -1,0 +1,232 @@
+.workout-container {
+  background-color: var(--bg);
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  width: 95%;
+  overflow-x: auto;
+}
+
+.workout-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: auto;
+}
+
+.workout-title {
+  text-align: center;
+  color: #17ba96;
+    .workout-container {
+      background-color: var(--card-bg);
+      color: var(--text);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      width: 95%;
+      margin: auto;
+      overflow-x: auto;
+    }
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.workout-top-buttons{
+    display: flex;
+    gap: 1rem;
+}
+
+.add-workout-button{
+    background-color: #17ba96;
+    .workout-title {
+      text-align: center;
+      color: var(--accent);
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-workout-button:hover{
+    .add-workout-button{
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: filter 0.2s ease;
+    }
+    background-color: #139b7d;
+}
+
+    .add-workout-button:hover{
+        filter: brightness(0.9);
+    }
+.workout-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+    .workout-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      color: var(--text);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+.workout-table th,
+.workout-table td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.95rem;
+    .workout-table th,
+    .workout-table td {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+}
+
+.workout-table th {
+  background-color: #17ba96;
+  color: white;
+    .workout-table th {
+      background-color: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+  font-weight: 600;
+}
+
+    .workout-table tr:hover {
+      background-color: var(--hover-bg) !important;
+    }
+.workout-table tr:hover {
+  background-color: #f1fdf9;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+    .pagination button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.2s ease;
+    }
+  margin-top: 1.5rem;
+}
+
+    .pagination button:hover:not(:disabled) {
+      filter: brightness(0.9);
+    }
+.pagination button {
+  background-color: #17ba96;
+  color: white;
+  border: none;
+    .pagination span {
+      color: var(--text);
+      opacity: 0.85;
+      font-size: 0.95rem;
+    }
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+    .icon-button.view {
+      color: var(--accent);
+    }
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+    .icon-button.view:hover {
+      background-color: var(--hover-bg);
+    }
+.pagination button:hover:not(:disabled) {
+  background-color: #139b7d;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: #444;
+  font-size: 0.95rem;
+}
+
+/* Action Buttons inside Table */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base icon button style */
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+/* Individual button color themes */
+.icon-button.view {
+  color: #17ba96; /* teal */
+}
+.icon-button.view:hover {
+  background-color: #e8f9f5;
+  color: #0e8d72;
+}
+
+.icon-button.edit {
+  color: #007bff; /* blue */
+}
+.icon-button.edit:hover {
+  background-color: #e7f1ff;
+  color: #0056b3;
+}
+
+.icon-button.delete {
+  color: #dc3545; /* red */
+}
+.icon-button.delete:hover {
+  background-color: #fceaea;
+  color: #a71d2a;
+}
+
+/* Subtle hover scale for all icons */
+.icon-button:hover {
+  transform: scale(1.15);
+}
+
+.icon-button svg {
+  width: 1.2em;
+  height: 1.2em;
+}

@@ -1,0 +1,82 @@
+.sidebar {
+  width: 250px;
+  background-color: var(--card-bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+/* === HEADER WITH LOGO === */
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+}
+
+.sidebar-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* === MENU === */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  font-size: 1.15rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.25);
+  padding-left: 1.3rem;
+}
+
+/* === ICON === */
+.menu-icon {
+  font-size: 1.2rem;
+  color: var(--accent);
+  min-width: 20px;
+}
+
+/* === ACTIVE STATE === */
+.sidebar-menu li.active .sidebar-link {
+  background-color: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sidebar-menu li.active .menu-icon {
+  color: #ffffff;
+}
