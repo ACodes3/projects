@@ -9,6 +9,7 @@ import {
   Moon,
   Plus,
   Scale,
+  Target,
   Utensils,
 } from 'lucide-react';
 
@@ -20,12 +21,20 @@ const WORKOUT_KEY = 'forge:workoutHistory';
 const NUTRITION_KEY = 'forge:nutritionLogs';
 const PROGRESS_KEY = 'forge:progressEntries';
 const REST_DAYS_KEY = 'forge:restDays';
+const GOALS_KEY = 'forge:nutritionGoals';
 
 const MEALS = [
   'Breakfast',
   'Lunch',
   'Snacks',
   'Dinner',
+];
+
+const GOAL_KEYS = [
+  'calories',
+  'protein',
+  'carbs',
+  'fat',
 ];
 
 /* =========================================
@@ -57,6 +66,38 @@ function readObject(key) {
       !Array.isArray(parsed)
       ? parsed
       : {};
+  } catch {
+    return {};
+  }
+}
+
+function readGoals() {
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(GOALS_KEY) || '{}',
+    );
+
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      return {};
+    }
+
+    return {
+      calories:
+        Number(parsed.calories) || 0,
+
+      protein:
+        Number(parsed.protein) || 0,
+
+      carbs:
+        Number(parsed.carbs) || 0,
+
+      fat:
+        Number(parsed.fat) || 0,
+    };
   } catch {
     return {};
   }
@@ -335,6 +376,126 @@ function getNutritionTotals(entries = []) {
   );
 }
 
+function getConfiguredGoals(goals) {
+  return GOAL_KEYS.filter(
+    (key) =>
+      Number(goals[key]) > 0,
+  );
+}
+
+function getTargetRatio(
+  key,
+  actual,
+  target,
+) {
+  const value =
+    Math.max(
+      0,
+      Number(actual) || 0,
+    );
+
+  if (!target) {
+    return 0;
+  }
+
+  if (key === 'protein') {
+    return Math.min(
+      1,
+      value / target,
+    );
+  }
+
+  const deviation =
+    Math.abs(
+      value - target,
+    ) / target;
+
+  return Math.max(
+    0,
+    1 - deviation,
+  );
+}
+
+function calculateNutritionScore(
+  entries,
+  goals,
+) {
+  const totals =
+    getNutritionTotals(
+      entries,
+    );
+
+  const configuredGoals =
+    getConfiguredGoals(
+      goals,
+    );
+
+  if (
+    configuredGoals.length ===
+    0
+  ) {
+    const loggedMeals =
+      MEALS.filter(
+        (meal) =>
+          entries.some(
+            (entry) =>
+              entry.meal === meal,
+          ),
+      );
+
+    return {
+      score:
+        loggedMeals.length *
+        15,
+
+      totals,
+
+      mode: 'logging',
+
+      loggedMeals,
+    };
+  }
+
+  const pointsPerGoal =
+    60 /
+    configuredGoals.length;
+
+  const score =
+    configuredGoals.reduce(
+      (total, key) => {
+        const target =
+          Number(goals[key]);
+
+        const ratio =
+          getTargetRatio(
+            key,
+            totals[key],
+            target,
+          );
+
+        return (
+          total +
+          ratio *
+            pointsPerGoal
+        );
+      },
+      0,
+    );
+
+  return {
+    score:
+      Math.round(
+        score,
+      ),
+
+    totals,
+
+    mode: 'targets',
+
+    loggedMeals: [],
+  };
+}
+
 /* =========================================
    DAILY SCORE
 ========================================= */
@@ -343,16 +504,8 @@ function getDailyScore({
   hasWorkout,
   isRestDay,
   nutritionEntries,
+  goals,
 }) {
-  const loggedMeals =
-    MEALS.filter(
-      (meal) =>
-        nutritionEntries.some(
-          (entry) =>
-            entry.meal === meal,
-        ),
-    );
-
   const training =
     hasWorkout ||
     isRestDay
@@ -360,16 +513,29 @@ function getDailyScore({
       : 0;
 
   const nutrition =
-    loggedMeals.length * 15;
+    calculateNutritionScore(
+      nutritionEntries,
+      goals,
+    );
 
   return {
     total:
       training +
-      nutrition,
+      nutrition.score,
 
     training,
-    nutrition,
-    loggedMeals,
+
+    nutrition:
+      nutrition.score,
+
+    nutritionMode:
+      nutrition.mode,
+
+    nutritionTotals:
+      nutrition.totals,
+
+    loggedMeals:
+      nutrition.loggedMeals,
   };
 }
 
@@ -434,8 +600,18 @@ export default function DashboardPage() {
       ),
     );
 
+  const [goals] =
+    useState(
+      readGoals,
+    );
+
   const today =
     getToday();
+
+  const goalsConfigured =
+    getConfiguredGoals(
+      goals,
+    ).length > 0;
 
   /* =========================================
      SORTED DATA
@@ -528,6 +704,8 @@ export default function DashboardPage() {
 
       nutritionEntries:
         todayNutrition,
+
+      goals,
     });
 
   const scoreLevel =
@@ -560,7 +738,7 @@ export default function DashboardPage() {
     ).length;
 
   /* =========================================
-     LATEST WORKOUT STATS
+     LAST WORKOUT
   ========================================= */
 
   const latestWorkoutStats =
@@ -575,7 +753,7 @@ export default function DashboardPage() {
   ========================================= */
 
   const recentActivity =
-    (() => {
+    useMemo(() => {
       const items = [];
 
       workouts.forEach(
@@ -716,11 +894,12 @@ export default function DashboardPage() {
             ),
         )
         .slice(0, 6);
-    })();
-
-  /* =========================================
-     RENDER
-  ========================================= */
+    }, [
+      workouts,
+      nutrition,
+      progress,
+      restDays,
+    ]);
 
   return (
     <main className="dashboard-page">
@@ -755,13 +934,14 @@ export default function DashboardPage() {
           className="button button--primary"
         >
           <Plus size={16} />
+
           Log Workout
         </Link>
 
       </header>
 
       {/* =====================================
-          TOP STATS
+          STATS
       ===================================== */}
 
       <section className="dashboard-page__stats">
@@ -845,7 +1025,9 @@ export default function DashboardPage() {
             </strong>
 
             <small>
-              kcal logged
+              {goals.calories
+                ? `of ${goals.calories} kcal`
+                : 'kcal logged'}
             </small>
 
           </div>
@@ -873,7 +1055,9 @@ export default function DashboardPage() {
             </strong>
 
             <small>
-              logged
+              {goals.protein
+                ? `of ${goals.protein}g`
+                : 'logged'}
             </small>
 
           </div>
@@ -908,10 +1092,9 @@ export default function DashboardPage() {
 
             </div>
 
-            <Link
-              to="/calendar"
-            >
+            <Link to="/calendar">
               Calendar
+
               <ArrowRight
                 size={14}
               />
@@ -960,6 +1143,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="dashboard-page__progress-bar">
+
                   <span
                     style={{
                       width: `${
@@ -971,6 +1155,7 @@ export default function DashboardPage() {
                       }%`,
                     }}
                   />
+
                 </div>
 
               </div>
@@ -993,6 +1178,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="dashboard-page__progress-bar">
+
                   <span
                     style={{
                       width: `${
@@ -1004,6 +1190,7 @@ export default function DashboardPage() {
                       }%`,
                     }}
                   />
+
                 </div>
 
               </div>
@@ -1030,6 +1217,7 @@ export default function DashboardPage() {
             ) : todayIsRestDay ? (
 
               <div className="dashboard-page__today-rest">
+
                 <Moon
                   size={16}
                 />
@@ -1037,11 +1225,13 @@ export default function DashboardPage() {
                 <span>
                   Recovery day
                 </span>
+
               </div>
 
             ) : (
 
               <div>
+
                 <Dumbbell
                   size={16}
                 />
@@ -1049,9 +1239,24 @@ export default function DashboardPage() {
                 <span>
                   No workout yet
                 </span>
+
               </div>
 
             )}
+
+          </div>
+
+          <div className="dashboard-page__score-source">
+
+            <Target
+              size={13}
+            />
+
+            <span>
+              {goalsConfigured
+                ? 'Nutrition score uses your calorie and macro targets.'
+                : 'Nutrition targets are not set yet, so meal logging is used.'}
+            </span>
 
           </div>
 
@@ -1077,10 +1282,9 @@ export default function DashboardPage() {
 
             </div>
 
-            <Link
-              to="/workouts"
-            >
+            <Link to="/workouts">
               View All
+
               <ArrowRight
                 size={14}
               />
@@ -1146,6 +1350,7 @@ export default function DashboardPage() {
                       latestWorkoutStats.exercises
                     }
                   </strong>
+
                   <span>
                     exercises
                   </span>
@@ -1153,58 +1358,78 @@ export default function DashboardPage() {
 
                 {latestWorkoutStats.repSets >
                   0 && (
+
                   <div>
+
                     <strong>
                       {
                         latestWorkoutStats.repSets
                       }
                     </strong>
+
                     <span>
                       sets
                     </span>
+
                   </div>
+
                 )}
 
                 {latestWorkoutStats.intervals >
                   0 && (
+
                   <div>
+
                     <strong>
                       {
                         latestWorkoutStats.intervals
                       }
                     </strong>
+
                     <span>
                       intervals
                     </span>
+
                   </div>
+
                 )}
 
                 {latestWorkoutStats.tut >
                   0 && (
+
                   <div>
+
                     <strong>
                       {formatDuration(
                         latestWorkoutStats.tut,
                       )}
                     </strong>
+
                     <span>
                       TUT
                     </span>
+
                   </div>
+
                 )}
 
                 {latestWorkoutStats.volume >
                   0 && (
+
                   <div>
+
                     <strong>
                       {formatVolume(
                         latestWorkoutStats.volume,
                       )}
                     </strong>
+
                     <span>
                       volume
                     </span>
+
                   </div>
+
                 )}
 
               </div>
@@ -1224,6 +1449,7 @@ export default function DashboardPage() {
                           exercise.id
                         }
                       >
+
                         <span>
                           {
                             exercise.name
@@ -1248,6 +1474,7 @@ export default function DashboardPage() {
                                 0
                               } sets`}
                         </small>
+
                       </div>
 
                     ),
@@ -1281,7 +1508,7 @@ export default function DashboardPage() {
         </article>
 
         {/* =================================
-            TODAY'S NUTRITION
+            NUTRITION
         ================================= */}
 
         <article className="panel dashboard-page__nutrition">
@@ -1300,10 +1527,9 @@ export default function DashboardPage() {
 
             </div>
 
-            <Link
-              to="/nutrition"
-            >
+            <Link to="/nutrition">
               Open Log
+
               <ArrowRight
                 size={14}
               />
@@ -1314,47 +1540,67 @@ export default function DashboardPage() {
           <div className="dashboard-page__macro-grid">
 
             <div>
+
               <strong>
                 {Math.round(
                   todayTotals.calories,
                 )}
               </strong>
+
               <span>
-                kcal
+                {goals.calories
+                  ? `/ ${goals.calories} kcal`
+                  : 'kcal'}
               </span>
+
             </div>
 
             <div>
+
               <strong>
                 {Math.round(
                   todayTotals.protein,
                 )}g
               </strong>
+
               <span>
-                protein
+                {goals.protein
+                  ? `/ ${goals.protein}g protein`
+                  : 'protein'}
               </span>
+
             </div>
 
             <div>
+
               <strong>
                 {Math.round(
                   todayTotals.carbs,
                 )}g
               </strong>
+
               <span>
-                carbs
+                {goals.carbs
+                  ? `/ ${goals.carbs}g carbs`
+                  : 'carbs'}
               </span>
+
             </div>
 
             <div>
+
               <strong>
                 {Math.round(
                   todayTotals.fat,
                 )}g
               </strong>
+
               <span>
-                fat
+                {goals.fat
+                  ? `/ ${goals.fat}g fat`
+                  : 'fat'}
               </span>
+
             </div>
 
           </div>
@@ -1385,6 +1631,7 @@ export default function DashboardPage() {
                   >
 
                     <div>
+
                       <span>
                         {meal}
                       </span>
@@ -1399,6 +1646,7 @@ export default function DashboardPage() {
                             }`
                           : 'Not logged'}
                       </small>
+
                     </div>
 
                     <span className="dashboard-page__meal-status">
@@ -1417,7 +1665,7 @@ export default function DashboardPage() {
         </article>
 
         {/* =================================
-            RECENT ACTIVITY
+            ACTIVITY
         ================================= */}
 
         <article className="panel dashboard-page__activity">
@@ -1465,7 +1713,6 @@ export default function DashboardPage() {
 
               {recentActivity.map(
                 (item) => {
-
                   let Icon =
                     CalendarDays;
 
@@ -1565,6 +1812,7 @@ export default function DashboardPage() {
           />
 
           <div>
+
             <strong>
               Log Workout
             </strong>
@@ -1572,6 +1820,7 @@ export default function DashboardPage() {
             <span>
               Reps or timed intervals
             </span>
+
           </div>
 
           <ArrowRight
@@ -1588,6 +1837,7 @@ export default function DashboardPage() {
           />
 
           <div>
+
             <strong>
               Add Food
             </strong>
@@ -1595,6 +1845,7 @@ export default function DashboardPage() {
             <span>
               Update today's nutrition
             </span>
+
           </div>
 
           <ArrowRight
@@ -1611,6 +1862,7 @@ export default function DashboardPage() {
           />
 
           <div>
+
             <strong>
               Calendar
             </strong>
@@ -1618,6 +1870,7 @@ export default function DashboardPage() {
             <span>
               Progress and rest days
             </span>
+
           </div>
 
           <ArrowRight
@@ -1634,6 +1887,7 @@ export default function DashboardPage() {
           />
 
           <div>
+
             <strong>
               Measurements
             </strong>
@@ -1641,6 +1895,7 @@ export default function DashboardPage() {
             <span>
               Update body progress
             </span>
+
           </div>
 
           <ArrowRight
