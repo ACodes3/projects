@@ -8,6 +8,7 @@ import {
   Cookie,
   Dumbbell,
   Moon,
+  Target,
   Utensils,
 } from 'lucide-react';
 
@@ -16,6 +17,7 @@ import './CalendarPage.css';
 const WORKOUT_KEY = 'forge:workoutHistory';
 const NUTRITION_KEY = 'forge:nutritionLogs';
 const REST_DAYS_KEY = 'forge:restDays';
+const GOALS_KEY = 'forge:nutritionGoals';
 
 const MEALS = [
   'Breakfast',
@@ -33,6 +35,28 @@ const WEEKDAYS = [
   'Sat',
   'Sun',
 ];
+
+const GOAL_DEFINITIONS = {
+  calories: {
+    label: 'Calories',
+    unit: 'kcal',
+  },
+
+  protein: {
+    label: 'Protein',
+    unit: 'g',
+  },
+
+  carbs: {
+    label: 'Carbs',
+    unit: 'g',
+  },
+
+  fat: {
+    label: 'Fat',
+    unit: 'g',
+  },
+};
 
 /* =========================================
    STORAGE
@@ -82,6 +106,38 @@ function readRestDays() {
   }
 }
 
+function readNutritionGoals() {
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(GOALS_KEY) || '{}',
+    );
+
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      return {};
+    }
+
+    return {
+      calories:
+        Number(parsed.calories) || 0,
+
+      protein:
+        Number(parsed.protein) || 0,
+
+      carbs:
+        Number(parsed.carbs) || 0,
+
+      fat:
+        Number(parsed.fat) || 0,
+    };
+  } catch {
+    return {};
+  }
+}
+
 function saveRestDays(restDays) {
   localStorage.setItem(
     REST_DAYS_KEY,
@@ -98,15 +154,11 @@ function toDateKey(
   month,
   day,
 ) {
-  const monthString = String(
+  return `${year}-${String(
     month + 1,
-  ).padStart(2, '0');
-
-  const dayString = String(
+  ).padStart(2, '0')}-${String(
     day,
-  ).padStart(2, '0');
-
-  return `${year}-${monthString}-${dayString}`;
+  ).padStart(2, '0')}`;
 }
 
 function getTodayKey() {
@@ -194,34 +246,214 @@ function getNutritionTotals(
   );
 }
 
+function getConfiguredGoals(
+  goals,
+) {
+  return Object.entries(
+    GOAL_DEFINITIONS,
+  )
+    .map(
+      ([key, definition]) => ({
+        key,
+
+        ...definition,
+
+        target:
+          Number(
+            goals[key],
+          ) || 0,
+      }),
+    )
+    .filter(
+      (goal) =>
+        goal.target > 0,
+    );
+}
+
 /* =========================================
-   SCORE
+   TARGET SCORING
+========================================= */
+
+function getTargetRatio(
+  key,
+  actual,
+  target,
+) {
+  if (!target) {
+    return 0;
+  }
+
+  const value =
+    Math.max(
+      0,
+      Number(actual) || 0,
+    );
+
+  /*
+    Protein is treated as a minimum.
+
+    Hitting or exceeding the target
+    earns full credit.
+  */
+
+  if (key === 'protein') {
+    return Math.min(
+      1,
+      value / target,
+    );
+  }
+
+  /*
+    Calories, carbs and fat are
+    scored by closeness.
+
+    Target = 100%
+    10% under/over = 90%
+    50% under/over = 50%
+    100% away = 0%
+  */
+
+  const deviation =
+    Math.abs(
+      value - target,
+    ) / target;
+
+  return Math.max(
+    0,
+    1 - deviation,
+  );
+}
+
+function calculateNutritionScore(
+  nutritionEntries,
+  goals,
+) {
+  const totals =
+    getNutritionTotals(
+      nutritionEntries,
+    );
+
+  const configuredGoals =
+    getConfiguredGoals(
+      goals,
+    );
+
+  /*
+    If targets have not been set yet,
+    preserve the old logging-based
+    behavior so nutrition does not
+    suddenly become 0/60.
+  */
+
+  if (
+    configuredGoals.length ===
+    0
+  ) {
+    const loggedMeals =
+      MEALS.filter(
+        (meal) =>
+          nutritionEntries.some(
+            (entry) =>
+              entry.meal ===
+              meal,
+          ),
+      );
+
+    return {
+      score:
+        loggedMeals.length *
+        15,
+
+      mode: 'logging',
+
+      totals,
+
+      loggedMeals,
+
+      goalScores: [],
+    };
+  }
+
+  const pointsPerGoal =
+    60 /
+    configuredGoals.length;
+
+  const goalScores =
+    configuredGoals.map(
+      (goal) => {
+        const actual =
+          totals[
+            goal.key
+          ];
+
+        const ratio =
+          getTargetRatio(
+            goal.key,
+            actual,
+            goal.target,
+          );
+
+        return {
+          ...goal,
+
+          actual,
+
+          ratio,
+
+          points:
+            ratio *
+            pointsPerGoal,
+
+          percentage:
+            Math.round(
+              (
+                actual /
+                goal.target
+              ) *
+                100,
+            ),
+        };
+      },
+    );
+
+  const score =
+    Math.round(
+      goalScores.reduce(
+        (
+          total,
+          goal,
+        ) =>
+          total +
+          goal.points,
+        0,
+      ),
+    );
+
+  return {
+    score,
+
+    mode: 'targets',
+
+    totals,
+
+    loggedMeals: [],
+
+    goalScores,
+  };
+}
+
+/* =========================================
+   DAILY SCORE
 ========================================= */
 
 function calculateDayScore(
   workouts,
   nutritionEntries,
   isRestDay,
+  goals,
 ) {
   const hasWorkout =
     workouts.length > 0;
-
-  const loggedMeals =
-    MEALS.filter(
-      (meal) =>
-        nutritionEntries.some(
-          (entry) =>
-            entry.meal === meal,
-        ),
-    );
-
-  /*
-    Training / recovery = 40%
-
-    Workout completed = 40
-    OR
-    Intentional rest day = 40
-  */
 
   const trainingScore =
     hasWorkout ||
@@ -229,29 +461,43 @@ function calculateDayScore(
       ? 40
       : 0;
 
-  /*
-    Nutrition = 60%
-
-    4 meal sections × 15
-  */
-
-  const nutritionScore =
-    loggedMeals.length * 15;
+  const nutrition =
+    calculateNutritionScore(
+      nutritionEntries,
+      goals,
+    );
 
   return {
     total:
       trainingScore +
-      nutritionScore,
+      nutrition.score,
 
     trainingScore,
-    nutritionScore,
+
+    nutritionScore:
+      nutrition.score,
 
     hasWorkout,
+
     isRestDay,
 
-    loggedMeals,
+    nutritionMode:
+      nutrition.mode,
+
+    nutritionTotals:
+      nutrition.totals,
+
+    loggedMeals:
+      nutrition.loggedMeals,
+
+    goalScores:
+      nutrition.goalScores,
   };
 }
+
+/* =========================================
+   SCORE LEVEL
+========================================= */
 
 function getScoreLevel(
   score,
@@ -296,7 +542,7 @@ function getScoreLabel(
 }
 
 /* =========================================
-   MEAL ICON
+   MEALS
 ========================================= */
 
 function getMealIcon(meal) {
@@ -321,15 +567,26 @@ export default function CalendarPage() {
     new Date();
 
   const [workouts] =
-    useState(readWorkouts);
+    useState(
+      readWorkouts,
+    );
 
   const [nutrition] =
-    useState(readNutrition);
+    useState(
+      readNutrition,
+    );
+
+  const [goals] =
+    useState(
+      readNutritionGoals,
+    );
 
   const [
     restDays,
     setRestDays,
-  ] = useState(readRestDays);
+  ] = useState(
+    readRestDays,
+  );
 
   const [
     currentMonth,
@@ -460,6 +717,7 @@ export default function CalendarPage() {
             dayWorkouts,
             dayNutrition,
             restDay,
+            goals,
           );
 
         cells.push({
@@ -496,6 +754,7 @@ export default function CalendarPage() {
       workoutsByDate,
       nutrition,
       restDays,
+      goals,
     ]);
 
   /* =========================================
@@ -529,6 +788,7 @@ export default function CalendarPage() {
       selectedWorkouts,
       selectedNutrition,
       selectedIsRestDay,
+      goals,
     );
 
   const selectedLevel =
@@ -538,9 +798,12 @@ export default function CalendarPage() {
     );
 
   const selectedTotals =
-    getNutritionTotals(
-      selectedNutrition,
-    );
+    selectedScore.nutritionTotals;
+
+  const goalsConfigured =
+    getConfiguredGoals(
+      goals,
+    ).length > 0;
 
   /* =========================================
      REST DAY
@@ -663,8 +926,9 @@ export default function CalendarPage() {
           </h1>
 
           <p className="page__description">
-            Track training,
-            recovery and nutrition
+            See training,
+            recovery and
+            nutrition quality
             together across each
             day.
           </p>
@@ -742,8 +1006,8 @@ export default function CalendarPage() {
         </div>
 
         <p>
-          Workout or intentional
-          rest = 40% · nutrition =
+          Training / recovery =
+          40% · nutrition targets =
           60%
         </p>
 
@@ -790,13 +1054,10 @@ export default function CalendarPage() {
 
         </div>
 
-        {/* WEEKDAYS */}
-
         <div className="calendar-page__weekdays">
 
           {WEEKDAYS.map(
             (weekday) => (
-
               <span
                 key={
                   weekday
@@ -804,13 +1065,10 @@ export default function CalendarPage() {
               >
                 {weekday}
               </span>
-
             ),
           )}
 
         </div>
-
-        {/* DAYS */}
 
         <div className="calendar-page__grid">
 
@@ -878,9 +1136,7 @@ export default function CalendarPage() {
                       ? 'calendar-page__day--today'
                       : '',
                   ]
-                    .filter(
-                      Boolean,
-                    )
+                    .filter(Boolean)
                     .join(' ')}
                   onClick={() =>
                     setSelectedDate(
@@ -964,13 +1220,13 @@ export default function CalendarPage() {
       </section>
 
       {/* =====================================
-          SELECTED DAY DETAILS
+          SELECTED DAY
       ===================================== */}
 
       <section className="calendar-page__details">
 
         {/* =================================
-            SCORE
+            SCORE SUMMARY
         ================================= */}
 
         <article className="panel calendar-page__summary">
@@ -1048,7 +1304,7 @@ export default function CalendarPage() {
 
               <div className="calendar-page__breakdown">
 
-                {/* TRAINING / RECOVERY */}
+                {/* TRAINING */}
 
                 <div>
 
@@ -1124,7 +1380,152 @@ export default function CalendarPage() {
               </div>
 
               {/* =============================
-                  REST DAY CONTROL
+                  NUTRITION SCORE DETAIL
+              ============================= */}
+
+              <div className="calendar-page__nutrition-score">
+
+                <div className="calendar-page__nutrition-score-heading">
+
+                  <div>
+                    <Target
+                      size={15}
+                    />
+
+                    <div>
+                      <strong>
+                        Nutrition Score
+                      </strong>
+
+                      <span>
+                        {selectedScore.nutritionMode ===
+                        'targets'
+                          ? 'Based on your configured daily targets'
+                          : 'Targets are not configured yet — using meal logging'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <strong>
+                    {
+                      selectedScore.nutritionScore
+                    }
+                    /60
+                  </strong>
+
+                </div>
+
+                {selectedScore.nutritionMode ===
+                'targets' ? (
+
+                  <div className="calendar-page__nutrition-targets">
+
+                    {selectedScore.goalScores.map(
+                      (
+                        goal,
+                      ) => (
+
+                        <div
+                          className="calendar-page__nutrition-target"
+                          key={
+                            goal.key
+                          }
+                        >
+
+                          <div className="calendar-page__nutrition-target-heading">
+
+                            <span>
+                              {
+                                goal.label
+                              }
+                            </span>
+
+                            <strong>
+                              {Math.round(
+                                goal.actual,
+                              )}
+                              {goal.unit ===
+                              'g'
+                                ? 'g'
+                                : ''}{' '}
+                              /{' '}
+                              {
+                                goal.target
+                              }
+                              {goal.unit ===
+                              'g'
+                                ? 'g'
+                                : ` ${goal.unit}`}
+                            </strong>
+
+                            <small>
+                              {
+                                goal.percentage
+                              }%
+                            </small>
+
+                          </div>
+
+                          <div className="calendar-page__nutrition-target-bar">
+
+                            <span
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  Math.max(
+                                    0,
+                                    goal.ratio *
+                                      100,
+                                  ),
+                                )}%`,
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+
+                      ),
+                    )}
+
+                  </div>
+
+                ) : (
+
+                  <div className="calendar-page__logging-score">
+
+                    {MEALS.map(
+                      (meal) => {
+                        const logged =
+                          selectedScore.loggedMeals.includes(
+                            meal,
+                          );
+
+                        return (
+                          <span
+                            className={
+                              logged
+                                ? 'calendar-page__logging-meal calendar-page__logging-meal--complete'
+                                : 'calendar-page__logging-meal'
+                            }
+                            key={
+                              meal
+                            }
+                          >
+                            {meal}
+                          </span>
+                        );
+                      },
+                    )}
+
+                  </div>
+
+                )}
+
+              </div>
+
+              {/* =============================
+                  REST CONTROL
               ============================= */}
 
               <div className="calendar-page__rest-control">
@@ -1419,8 +1820,11 @@ export default function CalendarPage() {
                   selectedTotals.calories,
                 )}
               </strong>
+
               <span>
-                kcal
+                {goals.calories
+                  ? `/ ${goals.calories} kcal`
+                  : 'kcal'}
               </span>
             </div>
 
@@ -1430,8 +1834,11 @@ export default function CalendarPage() {
                   selectedTotals.protein,
                 )}g
               </strong>
+
               <span>
-                protein
+                {goals.protein
+                  ? `/ ${goals.protein}g protein`
+                  : 'protein'}
               </span>
             </div>
 
@@ -1441,8 +1848,11 @@ export default function CalendarPage() {
                   selectedTotals.carbs,
                 )}g
               </strong>
+
               <span>
-                carbs
+                {goals.carbs
+                  ? `/ ${goals.carbs}g carbs`
+                  : 'carbs'}
               </span>
             </div>
 
@@ -1452,12 +1862,30 @@ export default function CalendarPage() {
                   selectedTotals.fat,
                 )}g
               </strong>
+
               <span>
-                fat
+                {goals.fat
+                  ? `/ ${goals.fat}g fat`
+                  : 'fat'}
               </span>
             </div>
 
           </div>
+
+          {!goalsConfigured && (
+            <div className="calendar-page__goal-notice">
+              <Target
+                size={14}
+              />
+
+              Nutrition targets
+              have not been set
+              yet. Calendar
+              nutrition scoring is
+              temporarily based on
+              meal logging.
+            </div>
+          )}
 
           <div className="calendar-page__meals">
 
@@ -1493,9 +1921,7 @@ export default function CalendarPage() {
                         ? 'calendar-page__meal--logged'
                         : '',
                     ]
-                      .filter(
-                        Boolean,
-                      )
+                      .filter(Boolean)
                       .join(' ')}
                     key={
                       meal
@@ -1568,7 +1994,6 @@ export default function CalendarPage() {
 
                           {entries.map(
                             (entry) => (
-
                               <span
                                 key={
                                   entry.id
@@ -1578,7 +2003,6 @@ export default function CalendarPage() {
                                   entry.name
                                 }
                               </span>
-
                             ),
                           )}
 
