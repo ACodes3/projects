@@ -1,5 +1,6 @@
 .calendar-page {
   width: 100%;
+  max-width: 1180px;
 
   margin: 0 auto;
 }
@@ -213,7 +214,7 @@
 }
 
 /* =========================================
-   SCORE DAY COLORS
+   SCORE COLORS
 ========================================= */
 
 .calendar-page__day--good {
@@ -551,7 +552,7 @@
 }
 
 /* =========================================
-   BREAKDOWN
+   MAIN BREAKDOWN
 ========================================= */
 
 .calendar-page__breakdown {
@@ -607,7 +608,208 @@
 }
 
 /* =========================================
-   REST DAY CONTROL
+   NUTRITION SCORE
+========================================= */
+
+.calendar-page__nutrition-score {
+  margin-top: 22px;
+
+  padding: 14px;
+
+  border: 1px solid rgba(217, 255, 119, 0.08);
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(217, 255, 119, 0.025),
+      transparent 55%
+    ),
+    #111416;
+}
+
+.calendar-page__nutrition-score-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+}
+
+.calendar-page__nutrition-score-heading > div {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  min-width: 0;
+}
+
+.calendar-page__nutrition-score-heading > div > svg {
+  flex-shrink: 0;
+
+  color: #d9ff77;
+}
+
+.calendar-page__nutrition-score-heading > div > div {
+  min-width: 0;
+}
+
+.calendar-page__nutrition-score-heading > div strong {
+  display: block;
+
+  color: #d8dcde;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.calendar-page__nutrition-score-heading > div span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6e767c;
+
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.calendar-page__nutrition-score-heading > strong {
+  flex-shrink: 0;
+
+  color: #d9ff77;
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* =========================================
+   NUTRITION TARGETS
+========================================= */
+
+.calendar-page__nutrition-targets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 13px 18px;
+
+  margin-top: 15px;
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calendar-page__nutrition-target {
+  min-width: 0;
+}
+
+.calendar-page__nutrition-target-heading {
+  display: grid;
+  grid-template-columns:
+    minmax(55px, 0.65fr)
+    minmax(100px, 1.35fr)
+    auto;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 7px;
+}
+
+.calendar-page__nutrition-target-heading > span {
+  color: #858d93;
+
+  font-size: 9px;
+  font-weight: 550;
+}
+
+.calendar-page__nutrition-target-heading strong {
+  color: #c8cdd0;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  text-align: right;
+}
+
+.calendar-page__nutrition-target-heading small {
+  min-width: 36px;
+
+  color: #d9ff77;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  text-align: right;
+}
+
+.calendar-page__nutrition-target-bar {
+  height: 5px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.calendar-page__nutrition-target-bar span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #d9ff77;
+}
+
+/* =========================================
+   FALLBACK LOGGING SCORE
+========================================= */
+
+.calendar-page__logging-score {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 6px;
+
+  margin-top: 15px;
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calendar-page__logging-meal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 30px;
+
+  padding: 0 7px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.02);
+
+  color: #656d73;
+
+  font-size: 8px;
+}
+
+.calendar-page__logging-meal--complete {
+  border-color: rgba(217, 255, 119, 0.11);
+
+  background: rgba(217, 255, 119, 0.045);
+
+  color: #c2df70;
+}
+
+/* =========================================
+   REST CONTROL
 ========================================= */
 
 .calendar-page__rest-control {
@@ -900,9 +1102,47 @@
 }
 
 .calendar-page__macro-summary span {
+  overflow: hidden;
+
   color: #697177;
 
   font-size: 8px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   GOAL NOTICE
+========================================= */
+
+.calendar-page__goal-notice {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 7px;
+
+  margin-bottom: 13px;
+
+  padding: 9px 10px;
+
+  border: 1px solid rgba(217, 255, 119, 0.08);
+  border-radius: 6px;
+
+  background: rgba(217, 255, 119, 0.025);
+
+  color: #747c82;
+
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.calendar-page__goal-notice svg {
+  flex-shrink: 0;
+
+  margin-top: 1px;
+
+  color: #d9ff77;
 }
 
 /* =========================================
@@ -1048,6 +1288,10 @@
 
     margin-left: 0;
   }
+
+  .calendar-page__nutrition-targets {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 700px) {
@@ -1083,6 +1327,11 @@
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
+
+  .calendar-page__logging-score {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
@@ -1097,6 +1346,10 @@
 
   .calendar-page__rest-control-note {
     align-self: flex-start;
+  }
+
+  .calendar-page__nutrition-score-heading {
+    align-items: flex-start;
   }
 }
 
@@ -1126,6 +1379,13 @@
   .calendar-page__breakdown {
     grid-template-columns: 1fr;
   }
+
+  .calendar-page__nutrition-target-heading {
+    grid-template-columns:
+      minmax(52px, 0.7fr)
+      minmax(95px, 1.3fr)
+      auto;
+  }
 }
 
 @media (max-width: 430px) {
@@ -1142,5 +1402,25 @@
 
   .calendar-page__macro-summary {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .calendar-page__nutrition-score-heading {
+    flex-direction: column;
+  }
+
+  .calendar-page__nutrition-target-heading {
+    grid-template-columns: 1fr auto;
+  }
+
+  .calendar-page__nutrition-target-heading strong {
+    grid-column: 1 / -1;
+    grid-row: 2;
+
+    text-align: left;
+  }
+
+  .calendar-page__nutrition-target-heading small {
+    grid-column: 2;
+    grid-row: 1;
   }
 }
