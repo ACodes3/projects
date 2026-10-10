@@ -6,6 +6,7 @@ import {
 
 import AppShell from './components/AppShell';
 
+import CalendarPage from './pages/CalendarPage';
 import DashboardPage from './pages/DashboardPage';
 import LibraryPage from './pages/LibraryPage';
 import NutritionPage from './pages/NutritionPage';
@@ -47,7 +48,7 @@ export default function App() {
     <Routes>
 
       {/* ===================================
-          LANDING PAGE
+          START PAGE
       =================================== */}
 
       <Route
@@ -56,10 +57,11 @@ export default function App() {
       />
 
       {/* ===================================
-          TRACKER
+          FORGE APP
       =================================== */}
 
       <Route element={<RequireEntry />}>
+
         <Route
           path="/"
           element={<DashboardPage />}
@@ -81,6 +83,11 @@ export default function App() {
         />
 
         <Route
+          path="/calendar"
+          element={<CalendarPage />}
+        />
+
+        <Route
           path="/progress"
           element={<ProgressPage />}
         />
@@ -99,10 +106,11 @@ export default function App() {
           path="/settings"
           element={<SettingsPage />}
         />
+
       </Route>
 
       {/* ===================================
-          UNKNOWN ROUTES
+          FALLBACK
       =================================== */}
 
       <Route
