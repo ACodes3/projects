@@ -108,7 +108,7 @@
 }
 
 /* =========================================
-   SIDEBAR NAV
+   NAV
 ========================================= */
 
 .app-shell__nav {
@@ -490,10 +490,6 @@
   cursor: default;
 }
 
-/* =========================================
-   PRIMARY BUTTON
-========================================= */
-
 .button--primary {
   border-color: #d9ff77;
 
@@ -514,18 +510,15 @@
    SCROLLBARS
 ========================================= */
 
-.app-shell__nav::-webkit-scrollbar,
-.app-shell__content::-webkit-scrollbar {
+.app-shell__nav::-webkit-scrollbar {
   width: 6px;
 }
 
-.app-shell__nav::-webkit-scrollbar-track,
-.app-shell__content::-webkit-scrollbar-track {
+.app-shell__nav::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.app-shell__nav::-webkit-scrollbar-thumb,
-.app-shell__content::-webkit-scrollbar-thumb {
+.app-shell__nav::-webkit-scrollbar-thumb {
   border-radius: 20px;
 
   background:
@@ -560,7 +553,7 @@
 }
 
 /* =========================================
-   TABLET
+   TABLET / BOTTOM NAV
 ========================================= */
 
 @media (max-width: 850px) {
@@ -602,6 +595,8 @@
   .app-shell__nav {
     flex: 1;
 
+    min-width: 0;
+
     padding: 7px 8px;
 
     overflow: visible;
@@ -614,8 +609,18 @@
   .app-shell__nav-list {
     display: grid;
 
+    /*
+      Dashboard
+      Workouts
+      Nutrition
+      Calendar
+      Progress
+      Library
+      Profile
+    */
+
     grid-template-columns:
-      repeat(6, minmax(0, 1fr));
+      repeat(7, minmax(0, 1fr));
 
     height: 100%;
 
@@ -628,6 +633,7 @@
 
     gap: 4px;
 
+    min-width: 0;
     min-height: 52px;
 
     padding: 5px 3px;
@@ -635,6 +641,15 @@
     font-size: 9px;
 
     text-align: center;
+  }
+
+  .app-shell__nav-link span {
+    overflow: hidden;
+
+    max-width: 100%;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .app-shell__nav-link svg {
@@ -661,22 +676,22 @@
     padding: 7px 5px;
 
     border-top: none;
+
     border-left:
       1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .app-shell__sidebar-bottom
-  .app-shell__nav-link {
+  .app-shell__sidebar-bottom .app-shell__nav-link {
     width: 100%;
   }
 
-  .app-shell__sidebar-bottom
-  .app-shell__nav-link span {
+  .app-shell__sidebar-bottom .app-shell__nav-link span {
     display: none;
   }
 
   .app-shell__main {
-    min-height: calc(100vh - 68px);
+    min-height:
+      calc(100vh - 68px);
   }
 
   .app-shell__topbar {

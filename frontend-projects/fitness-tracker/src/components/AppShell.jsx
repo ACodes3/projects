@@ -1,5 +1,6 @@
 import {
   Activity,
+  CalendarDays,
   Dumbbell,
   LayoutDashboard,
   Library,
@@ -15,10 +16,6 @@ import {
 } from 'react-router-dom';
 
 import './AppShell.css';
-
-/* =========================================
-   NAVIGATION
-========================================= */
 
 const navigation = [
   {
@@ -37,6 +34,11 @@ const navigation = [
     icon: Utensils,
   },
   {
+    label: 'Calendar',
+    path: '/calendar',
+    icon: CalendarDays,
+  },
+  {
     label: 'Progress',
     path: '/progress',
     icon: TrendingUp,
@@ -53,11 +55,7 @@ const navigation = [
   },
 ];
 
-/* =========================================
-   APP SHELL
-========================================= */
-
-function AppShell() {
+export default function AppShell() {
   return (
     <div className="app-shell">
 
@@ -76,20 +74,13 @@ function AppShell() {
           </div>
 
           <div className="app-shell__brand-text">
-
-            <strong>
-              FORGE
-            </strong>
-
-            <span>
-              Training & Nutrition
-            </span>
-
+            <strong>FORGE</strong>
+            <span>Training & Nutrition</span>
           </div>
 
         </div>
 
-        {/* MAIN NAV */}
+        {/* NAVIGATION */}
 
         <nav className="app-shell__nav">
 
@@ -105,6 +96,7 @@ function AppShell() {
                 path,
                 icon: Icon,
               }) => (
+
                 <NavLink
                   key={path}
                   to={path}
@@ -112,11 +104,14 @@ function AppShell() {
                   className={({
                     isActive,
                   }) =>
-                    `app-shell__nav-link ${
+                    [
+                      'app-shell__nav-link',
                       isActive
                         ? 'app-shell__nav-link--active'
-                        : ''
-                    }`
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
                   }
                 >
                   <Icon
@@ -128,6 +123,7 @@ function AppShell() {
                     {label}
                   </span>
                 </NavLink>
+
               ),
             )}
 
@@ -135,7 +131,7 @@ function AppShell() {
 
         </nav>
 
-        {/* BOTTOM NAV */}
+        {/* SETTINGS */}
 
         <div className="app-shell__sidebar-bottom">
 
@@ -144,11 +140,14 @@ function AppShell() {
             className={({
               isActive,
             }) =>
-              `app-shell__nav-link ${
+              [
+                'app-shell__nav-link',
                 isActive
                   ? 'app-shell__nav-link--active'
-                  : ''
-              }`
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
             }
           >
             <Settings
@@ -166,7 +165,7 @@ function AppShell() {
       </aside>
 
       {/* =====================================
-          MAIN AREA
+          MAIN
       ===================================== */}
 
       <div className="app-shell__main">
@@ -189,6 +188,7 @@ function AppShell() {
             to="/profile"
             className="app-shell__profile-link"
           >
+
             <div className="app-shell__profile-icon">
               <UserRound size={16} />
             </div>
@@ -196,6 +196,7 @@ function AppShell() {
             <span>
               Profile
             </span>
+
           </NavLink>
 
         </header>
@@ -211,5 +212,3 @@ function AppShell() {
     </div>
   );
 }
-
-export default AppShell;
