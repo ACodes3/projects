@@ -64,6 +64,10 @@
   background: #e36c6c;
 }
 
+.calendar-page__legend-dot--rest {
+  background: #8ea2ff;
+}
+
 /* =========================================
    CALENDAR
 ========================================= */
@@ -115,9 +119,9 @@
 }
 
 .calendar-page__calendar-header button:hover {
-  color: #d9ff77;
-
   border-color: rgba(217, 255, 119, 0.16);
+
+  color: #d9ff77;
 }
 
 /* =========================================
@@ -161,7 +165,7 @@
 }
 
 /* =========================================
-   DAY CELL
+   DAY
 ========================================= */
 
 .calendar-page__day {
@@ -186,7 +190,6 @@
   color: inherit;
 
   font: inherit;
-
   text-align: left;
 
   cursor: pointer;
@@ -211,14 +214,14 @@
 }
 
 /* =========================================
-   SCORE COLORS
+   SCORE DAY COLORS
 ========================================= */
 
 .calendar-page__day--good {
   background:
     linear-gradient(
       180deg,
-      rgba(111, 220, 140, 0.08),
+      rgba(111, 220, 140, 0.09),
       rgba(111, 220, 140, 0.025)
     ),
     #131619;
@@ -228,7 +231,7 @@
   background:
     linear-gradient(
       180deg,
-      rgba(224, 168, 74, 0.08),
+      rgba(224, 168, 74, 0.09),
       rgba(224, 168, 74, 0.025)
     ),
     #131619;
@@ -238,15 +241,63 @@
   background:
     linear-gradient(
       180deg,
-      rgba(227, 108, 108, 0.07),
+      rgba(227, 108, 108, 0.075),
       rgba(227, 108, 108, 0.02)
     ),
     #131619;
 }
 
+/* =========================================
+   REST DAY
+========================================= */
+
+.calendar-page__day--rest {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(142, 162, 255, 0.11),
+      rgba(142, 162, 255, 0.025)
+    ),
+    #131619;
+}
+
+.calendar-page__day--rest .calendar-page__day-number {
+  color: #aebaff;
+}
+
+.calendar-page__day--rest .calendar-page__day-progress span {
+  background: #8ea2ff;
+}
+
+/* =========================================
+   FUTURE DAY
+========================================= */
+
+.calendar-page__day--future {
+  background: #111416;
+
+  opacity: 0.58;
+}
+
+.calendar-page__day--future:hover {
+  background: #141719;
+}
+
+.calendar-page__day--future .calendar-page__day-number {
+  color: #646c72;
+}
+
+.calendar-page__day--future .calendar-page__day-activity {
+  opacity: 0.6;
+}
+
+/* =========================================
+   SELECTED / TODAY
+========================================= */
+
 .calendar-page__day--selected {
   box-shadow:
-    inset 0 0 0 1px rgba(217, 255, 119, 0.34);
+    inset 0 0 0 1px rgba(217, 255, 119, 0.38);
 }
 
 .calendar-page__day--today .calendar-page__day-number {
@@ -313,8 +364,9 @@
 .calendar-page__day-activity {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 
-  gap: 7px;
+  gap: 6px;
 
   margin-top: auto;
   padding-top: 14px;
@@ -340,6 +392,14 @@
   font-size: 9px;
 }
 
+.calendar-page__day-activity .calendar-page__rest-badge {
+  border-color: rgba(142, 162, 255, 0.13);
+
+  background: rgba(142, 162, 255, 0.06);
+
+  color: #aebaff;
+}
+
 /* =========================================
    DETAILS GRID
 ========================================= */
@@ -354,7 +414,7 @@
 }
 
 /* =========================================
-   SCORE SUMMARY
+   SUMMARY
 ========================================= */
 
 .calendar-page__summary {
@@ -394,6 +454,33 @@
   font-weight: 620;
 
   letter-spacing: -0.02em;
+}
+
+/* =========================================
+   REST STATUS
+========================================= */
+
+.calendar-page__rest-status {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 9px;
+
+  min-height: 28px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(142, 162, 255, 0.14);
+  border-radius: 6px;
+
+  background: rgba(142, 162, 255, 0.055);
+
+  color: #aebaff;
+
+  font-size: 9px;
+  font-weight: 550;
 }
 
 /* =========================================
@@ -454,6 +541,16 @@
   color: #e36c6c;
 }
 
+.calendar-page__score-circle--future {
+  border-color: rgba(255, 255, 255, 0.08);
+
+  color: #737b81;
+}
+
+.calendar-page__score-circle--future svg {
+  color: #737b81;
+}
+
 /* =========================================
    BREAKDOWN
 ========================================= */
@@ -511,6 +608,95 @@
 }
 
 /* =========================================
+   REST DAY CONTROL
+========================================= */
+
+.calendar-page__rest-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-top: 22px;
+  padding-top: 18px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.calendar-page__rest-control > div {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+}
+
+.calendar-page__rest-control > div > svg {
+  flex-shrink: 0;
+
+  color: #8ea2ff;
+}
+
+.calendar-page__rest-control strong {
+  display: block;
+
+  color: #d9dcde;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.calendar-page__rest-control span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #70787e;
+
+  font-size: 9px;
+}
+
+.calendar-page__rest-button {
+  flex-shrink: 0;
+
+  min-height: 36px;
+
+  font-size: 10px;
+}
+
+.calendar-page__rest-button--active {
+  border-color: rgba(142, 162, 255, 0.2);
+
+  background: rgba(142, 162, 255, 0.07);
+
+  color: #aebaff;
+}
+
+.calendar-page__rest-button--active:hover {
+  border-color: rgba(142, 162, 255, 0.34);
+
+  color: #bdc6ff;
+}
+
+.calendar-page__rest-control-note {
+  flex-shrink: 0;
+
+  margin: 0 !important;
+
+  padding: 7px 9px;
+
+  border-radius: 5px;
+
+  background: rgba(217, 255, 119, 0.05);
+
+  color: #b5cf6b !important;
+
+  font-size: 9px !important;
+}
+
+/* =========================================
    DETAILS SECTION
 ========================================= */
 
@@ -559,6 +745,52 @@
   color: #6d757b;
 
   font-size: 9px;
+}
+
+/* =========================================
+   RECOVERY CARD
+========================================= */
+
+.calendar-page__recovery {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 70px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(142, 162, 255, 0.12);
+  border-radius: 7px;
+
+  background: rgba(142, 162, 255, 0.045);
+}
+
+.calendar-page__recovery > svg {
+  flex-shrink: 0;
+
+  color: #9dabff;
+}
+
+.calendar-page__recovery strong {
+  display: block;
+
+  color: #d8dcde;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.calendar-page__recovery span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #7a8288;
+
+  font-size: 9px;
+  line-height: 1.5;
 }
 
 /* =========================================
@@ -627,6 +859,8 @@
 }
 
 .calendar-page__workout > svg {
+  flex-shrink: 0;
+
   color: #d9ff77;
 }
 
@@ -849,6 +1083,21 @@
   .calendar-page__macro-summary {
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .calendar-page__rest-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-page__rest-button {
+    width: 100%;
+  }
+
+  .calendar-page__rest-control-note {
+    align-self: flex-start;
   }
 }
 

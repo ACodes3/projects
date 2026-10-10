@@ -7,6 +7,7 @@ import {
   Coffee,
   Cookie,
   Dumbbell,
+  Moon,
   Utensils,
 } from 'lucide-react';
 
@@ -14,6 +15,7 @@ import './CalendarPage.css';
 
 const WORKOUT_KEY = 'forge:workoutHistory';
 const NUTRITION_KEY = 'forge:nutritionLogs';
+const REST_DAYS_KEY = 'forge:restDays';
 
 const MEALS = [
   'Breakfast',
@@ -66,6 +68,27 @@ function readNutrition() {
   }
 }
 
+function readRestDays() {
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(REST_DAYS_KEY) || '[]',
+    );
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRestDays(restDays) {
+  localStorage.setItem(
+    REST_DAYS_KEY,
+    JSON.stringify(restDays),
+  );
+}
+
 /* =========================================
    DATE HELPERS
 ========================================= */
@@ -94,6 +117,10 @@ function getTodayKey() {
     today.getMonth(),
     today.getDate(),
   );
+}
+
+function isFutureDate(dateKey) {
+  return dateKey > getTodayKey();
 }
 
 function formatMonth(
@@ -144,27 +171,19 @@ function getNutritionTotals(
     (totals, entry) => ({
       calories:
         totals.calories +
-        Number(
-          entry.calories || 0,
-        ),
+        Number(entry.calories || 0),
 
       protein:
         totals.protein +
-        Number(
-          entry.protein || 0,
-        ),
+        Number(entry.protein || 0),
 
       carbs:
         totals.carbs +
-        Number(
-          entry.carbs || 0,
-        ),
+        Number(entry.carbs || 0),
 
       fat:
         totals.fat +
-        Number(
-          entry.fat || 0,
-        ),
+        Number(entry.fat || 0),
     }),
     {
       calories: 0,
@@ -182,6 +201,7 @@ function getNutritionTotals(
 function calculateDayScore(
   workouts,
   nutritionEntries,
+  isRestDay,
 ) {
   const hasWorkout =
     workouts.length > 0;
@@ -195,27 +215,52 @@ function calculateDayScore(
         ),
     );
 
+  /*
+    Training / recovery = 40%
+
+    Workout completed = 40
+    OR
+    Intentional rest day = 40
+  */
+
   const trainingScore =
-    hasWorkout
+    hasWorkout ||
+    isRestDay
       ? 40
       : 0;
+
+  /*
+    Nutrition = 60%
+
+    4 meal sections × 15
+  */
 
   const nutritionScore =
     loggedMeals.length * 15;
 
-  const total =
-    trainingScore +
-    nutritionScore;
-
   return {
-    total,
+    total:
+      trainingScore +
+      nutritionScore,
+
     trainingScore,
     nutritionScore,
+
+    hasWorkout,
+    isRestDay,
+
     loggedMeals,
   };
 }
 
-function getScoreLevel(score) {
+function getScoreLevel(
+  score,
+  future,
+) {
+  if (future) {
+    return 'future';
+  }
+
   if (score >= 80) {
     return 'good';
   }
@@ -227,7 +272,14 @@ function getScoreLevel(score) {
   return 'poor';
 }
 
-function getScoreLabel(score) {
+function getScoreLabel(
+  score,
+  future,
+) {
+  if (future) {
+    return 'Upcoming';
+  }
+
   if (score >= 80) {
     return 'Good day';
   }
@@ -244,7 +296,7 @@ function getScoreLabel(score) {
 }
 
 /* =========================================
-   ICONS
+   MEAL ICON
 ========================================= */
 
 function getMealIcon(meal) {
@@ -265,13 +317,19 @@ function getMealIcon(meal) {
 ========================================= */
 
 export default function CalendarPage() {
-  const today = new Date();
+  const today =
+    new Date();
 
   const [workouts] =
     useState(readWorkouts);
 
   const [nutrition] =
     useState(readNutrition);
+
+  const [
+    restDays,
+    setRestDays,
+  ] = useState(readRestDays);
 
   const [
     currentMonth,
@@ -292,7 +350,7 @@ export default function CalendarPage() {
   );
 
   /* =========================================
-     GROUP WORKOUTS BY DATE
+     WORKOUTS BY DATE
   ========================================= */
 
   const workoutsByDate =
@@ -329,7 +387,7 @@ export default function CalendarPage() {
     }, [workouts]);
 
   /* =========================================
-     CALENDAR DAYS
+     CALENDAR CELLS
   ========================================= */
 
   const calendarDays =
@@ -353,14 +411,6 @@ export default function CalendarPage() {
           1,
         ).getDay();
 
-      /*
-        JavaScript:
-        Sunday = 0
-
-        Calendar:
-        Monday = 0
-      */
-
       const mondayOffset =
         (firstDay + 6) % 7;
 
@@ -377,7 +427,8 @@ export default function CalendarPage() {
 
       for (
         let day = 1;
-        day <= daysInMonth;
+        day <=
+        daysInMonth;
         day += 1
       ) {
         const date =
@@ -397,19 +448,37 @@ export default function CalendarPage() {
             date
           ] || [];
 
+        const restDay =
+          restDays.includes(
+            date,
+          ) &&
+          dayWorkouts.length ===
+            0;
+
         const score =
           calculateDayScore(
             dayWorkouts,
             dayNutrition,
+            restDay,
           );
 
         cells.push({
           day,
           date,
+
           workouts:
             dayWorkouts,
+
           nutrition:
             dayNutrition,
+
+          restDay,
+
+          future:
+            isFutureDate(
+              date,
+            ),
+
           score,
         });
       }
@@ -426,6 +495,7 @@ export default function CalendarPage() {
       currentMonth,
       workoutsByDate,
       nutrition,
+      restDays,
     ]);
 
   /* =========================================
@@ -442,21 +512,79 @@ export default function CalendarPage() {
       selectedDate
     ] || [];
 
+  const selectedIsRestDay =
+    restDays.includes(
+      selectedDate,
+    ) &&
+    selectedWorkouts.length ===
+      0;
+
+  const selectedIsFuture =
+    isFutureDate(
+      selectedDate,
+    );
+
   const selectedScore =
     calculateDayScore(
       selectedWorkouts,
       selectedNutrition,
+      selectedIsRestDay,
     );
 
   const selectedLevel =
     getScoreLevel(
       selectedScore.total,
+      selectedIsFuture,
     );
 
   const selectedTotals =
     getNutritionTotals(
       selectedNutrition,
     );
+
+  /* =========================================
+     REST DAY
+  ========================================= */
+
+  function toggleRestDay() {
+    if (
+      selectedIsFuture
+    ) {
+      return;
+    }
+
+    if (
+      selectedWorkouts.length >
+      0
+    ) {
+      return;
+    }
+
+    const exists =
+      restDays.includes(
+        selectedDate,
+      );
+
+    const updated =
+      exists
+        ? restDays.filter(
+            (date) =>
+              date !==
+              selectedDate,
+          )
+        : [
+            ...restDays,
+            selectedDate,
+          ];
+
+    saveRestDays(
+      updated,
+    );
+
+    setRestDays(
+      updated,
+    );
+  }
 
   /* =========================================
      MONTH NAVIGATION
@@ -511,6 +639,10 @@ export default function CalendarPage() {
     );
   }
 
+  /* =========================================
+     RENDER
+  ========================================= */
+
   return (
     <main className="calendar-page">
 
@@ -531,9 +663,10 @@ export default function CalendarPage() {
           </h1>
 
           <p className="page__description">
-            See how training and
-            nutrition come together
-            across each day.
+            Track training,
+            recovery and nutrition
+            together across each
+            day.
           </p>
 
         </div>
@@ -555,7 +688,7 @@ export default function CalendarPage() {
       </header>
 
       {/* =====================================
-          SCORE EXPLANATION
+          LEGEND
       ===================================== */}
 
       <section className="calendar-page__legend">
@@ -596,9 +729,22 @@ export default function CalendarPage() {
           </span>
         </div>
 
+        <div>
+          <span className="calendar-page__legend-dot calendar-page__legend-dot--rest" />
+
+          <strong>
+            Rest
+          </strong>
+
+          <span>
+            Recovery day
+          </span>
+        </div>
+
         <p>
-          40% training + 60%
-          nutrition completion
+          Workout or intentional
+          rest = 40% · nutrition =
+          60%
         </p>
 
       </section>
@@ -650,6 +796,7 @@ export default function CalendarPage() {
 
           {WEEKDAYS.map(
             (weekday) => (
+
               <span
                 key={
                   weekday
@@ -657,6 +804,7 @@ export default function CalendarPage() {
               >
                 {weekday}
               </span>
+
             ),
           )}
 
@@ -689,6 +837,8 @@ export default function CalendarPage() {
                   dayWorkouts,
                 nutrition:
                   dayNutrition,
+                restDay,
+                future,
                 score,
               } =
                 calendarDay;
@@ -696,6 +846,7 @@ export default function CalendarPage() {
               const level =
                 getScoreLevel(
                   score.total,
+                  future,
                 );
 
               const isSelected =
@@ -712,10 +863,17 @@ export default function CalendarPage() {
                   key={date}
                   className={[
                     'calendar-page__day',
+
                     `calendar-page__day--${level}`,
+
+                    restDay
+                      ? 'calendar-page__day--rest'
+                      : '',
+
                     isSelected
                       ? 'calendar-page__day--selected'
                       : '',
+
                     isToday
                       ? 'calendar-page__day--today'
                       : '',
@@ -737,35 +895,52 @@ export default function CalendarPage() {
                       {day}
                     </span>
 
-                    <strong className="calendar-page__score">
-                      {
-                        score.total
-                      }%
-                    </strong>
+                    {!future && (
+                      <strong className="calendar-page__score">
+                        {
+                          score.total
+                        }%
+                      </strong>
+                    )}
 
                   </div>
 
-                  <div className="calendar-page__day-progress">
+                  {!future && (
+                    <div className="calendar-page__day-progress">
 
-                    <span
-                      style={{
-                        width: `${score.total}%`,
-                      }}
-                    />
+                      <span
+                        style={{
+                          width: `${score.total}%`,
+                        }}
+                      />
 
-                  </div>
+                    </div>
+                  )}
 
                   <div className="calendar-page__day-activity">
 
-                    <span>
-                      <Dumbbell
-                        size={12}
-                      />
+                    {restDay ? (
 
-                      {
-                        dayWorkouts.length
-                      }
-                    </span>
+                      <span className="calendar-page__rest-badge">
+                        <Moon
+                          size={12}
+                        />
+                        Rest
+                      </span>
+
+                    ) : (
+
+                      <span>
+                        <Dumbbell
+                          size={12}
+                        />
+
+                        {
+                          dayWorkouts.length
+                        }
+                      </span>
+
+                    )}
 
                     <span>
                       <Utensils
@@ -794,7 +969,9 @@ export default function CalendarPage() {
 
       <section className="calendar-page__details">
 
-        {/* SCORE */}
+        {/* =================================
+            SCORE
+        ================================= */}
 
         <article className="panel calendar-page__summary">
 
@@ -812,100 +989,210 @@ export default function CalendarPage() {
                 )}
               </h2>
 
+              {selectedIsRestDay && (
+                <div className="calendar-page__rest-status">
+
+                  <Moon
+                    size={13}
+                  />
+
+                  Intentional recovery day
+
+                </div>
+              )}
+
             </div>
 
             <div
               className={`calendar-page__score-circle calendar-page__score-circle--${selectedLevel}`}
             >
-              <strong>
-                {
-                  selectedScore.total
-                }%
-              </strong>
 
-              <span>
-                {getScoreLabel(
-                  selectedScore.total,
+              {selectedIsFuture ? (
+
+                <>
+                  <CalendarDays
+                    size={20}
+                  />
+
+                  <span>
+                    Upcoming
+                  </span>
+                </>
+
+              ) : (
+
+                <>
+                  <strong>
+                    {
+                      selectedScore.total
+                    }%
+                  </strong>
+
+                  <span>
+                    {getScoreLabel(
+                      selectedScore.total,
+                      false,
+                    )}
+                  </span>
+                </>
+
+              )}
+
+            </div>
+
+          </div>
+
+          {!selectedIsFuture && (
+
+            <>
+
+              <div className="calendar-page__breakdown">
+
+                {/* TRAINING / RECOVERY */}
+
+                <div>
+
+                  <div className="calendar-page__breakdown-heading">
+
+                    <span>
+                      Training /
+                      Recovery
+                    </span>
+
+                    <strong>
+                      {
+                        selectedScore.trainingScore
+                      }
+                      /40
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-page__breakdown-bar">
+
+                    <span
+                      style={{
+                        width: `${
+                          (
+                            selectedScore.trainingScore /
+                            40
+                          ) * 100
+                        }%`,
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+                {/* NUTRITION */}
+
+                <div>
+
+                  <div className="calendar-page__breakdown-heading">
+
+                    <span>
+                      Nutrition
+                    </span>
+
+                    <strong>
+                      {
+                        selectedScore.nutritionScore
+                      }
+                      /60
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-page__breakdown-bar">
+
+                    <span
+                      style={{
+                        width: `${
+                          (
+                            selectedScore.nutritionScore /
+                            60
+                          ) * 100
+                        }%`,
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* =============================
+                  REST DAY CONTROL
+              ============================= */}
+
+              <div className="calendar-page__rest-control">
+
+                <div>
+
+                  <Moon
+                    size={16}
+                  />
+
+                  <div>
+
+                    <strong>
+                      Recovery Day
+                    </strong>
+
+                    <span>
+                      Rest is part of
+                      progress too.
+                    </span>
+
+                  </div>
+
+                </div>
+
+                {selectedWorkouts.length >
+                0 ? (
+
+                  <span className="calendar-page__rest-control-note">
+                    Workout completed
+                  </span>
+
+                ) : (
+
+                  <button
+                    type="button"
+                    className={
+                      selectedIsRestDay
+                        ? 'button calendar-page__rest-button calendar-page__rest-button--active'
+                        : 'button calendar-page__rest-button'
+                    }
+                    onClick={
+                      toggleRestDay
+                    }
+                  >
+
+                    <Moon
+                      size={14}
+                    />
+
+                    {selectedIsRestDay
+                      ? 'Remove Rest Day'
+                      : 'Mark Rest Day'}
+
+                  </button>
+
                 )}
-              </span>
-            </div>
-
-          </div>
-
-          <div className="calendar-page__breakdown">
-
-            <div>
-
-              <div className="calendar-page__breakdown-heading">
-
-                <span>
-                  Training
-                </span>
-
-                <strong>
-                  {
-                    selectedScore.trainingScore
-                  }
-                  /40
-                </strong>
 
               </div>
 
-              <div className="calendar-page__breakdown-bar">
+            </>
 
-                <span
-                  style={{
-                    width: `${
-                      (selectedScore.trainingScore /
-                        40) *
-                      100
-                    }%`,
-                  }}
-                />
-
-              </div>
-
-            </div>
-
-            <div>
-
-              <div className="calendar-page__breakdown-heading">
-
-                <span>
-                  Nutrition
-                </span>
-
-                <strong>
-                  {
-                    selectedScore.nutritionScore
-                  }
-                  /60
-                </strong>
-
-              </div>
-
-              <div className="calendar-page__breakdown-bar">
-
-                <span
-                  style={{
-                    width: `${
-                      (selectedScore.nutritionScore /
-                        60) *
-                      100
-                    }%`,
-                  }}
-                />
-
-              </div>
-
-            </div>
-
-          </div>
+          )}
 
         </article>
 
         {/* =================================
-            WORKOUTS
+            TRAINING
         ================================= */}
 
         <article className="panel calendar-page__section">
@@ -913,33 +1200,68 @@ export default function CalendarPage() {
           <div className="calendar-page__section-heading">
 
             <div className="calendar-page__section-icon">
-              <Dumbbell
-                size={17}
-              />
+
+              {selectedIsRestDay ? (
+                <Moon
+                  size={17}
+                />
+              ) : (
+                <Dumbbell
+                  size={17}
+                />
+              )}
+
             </div>
 
             <div>
 
               <h3>
-                Training
+                {selectedIsRestDay
+                  ? 'Recovery'
+                  : 'Training'}
               </h3>
 
               <span>
-                {
-                  selectedWorkouts.length
-                }{' '}
-                {selectedWorkouts.length ===
-                1
-                  ? 'workout'
-                  : 'workouts'}
+                {selectedIsRestDay
+                  ? 'Rest day'
+                  : `${selectedWorkouts.length} ${
+                      selectedWorkouts.length ===
+                      1
+                        ? 'workout'
+                        : 'workouts'
+                    }`}
               </span>
 
             </div>
 
           </div>
 
-          {selectedWorkouts.length ===
-          0 ? (
+          {selectedIsRestDay ? (
+
+            <div className="calendar-page__recovery">
+
+              <Moon
+                size={20}
+              />
+
+              <div>
+
+                <strong>
+                  Intentional Rest Day
+                </strong>
+
+                <span>
+                  Recovery counts
+                  toward the daily
+                  training score.
+                </span>
+
+              </div>
+
+            </div>
+
+          ) : selectedWorkouts.length ===
+            0 ? (
 
             <div className="calendar-page__empty">
               No workout completed
@@ -952,20 +1274,59 @@ export default function CalendarPage() {
 
               {selectedWorkouts.map(
                 (workout) => {
-                  const setCount =
-                    (
-                      workout.exercises ||
-                      []
-                    ).reduce(
+                  const exercises =
+                    workout.exercises ||
+                    [];
+
+                  const repSets =
+                    exercises.reduce(
                       (
                         total,
                         exercise,
-                      ) =>
-                        total +
-                        (
-                          exercise.sets ||
-                          []
-                        ).length,
+                      ) => {
+                        const mode =
+                          exercise.trackingMode ||
+                          'reps';
+
+                        if (
+                          mode !==
+                          'reps'
+                        ) {
+                          return total;
+                        }
+
+                        return (
+                          total +
+                          (
+                            exercise.sets ||
+                            []
+                          ).length
+                        );
+                      },
+                      0,
+                    );
+
+                  const intervals =
+                    exercises.reduce(
+                      (
+                        total,
+                        exercise,
+                      ) => {
+                        if (
+                          exercise.trackingMode !==
+                          'time'
+                        ) {
+                          return total;
+                        }
+
+                        return (
+                          total +
+                          (
+                            exercise.sets ||
+                            []
+                          ).length
+                        );
+                      },
                       0,
                     );
 
@@ -986,14 +1347,17 @@ export default function CalendarPage() {
 
                         <span>
                           {
-                            workout
-                              .exercises
-                              ?.length ||
-                            0
+                            exercises.length
                           }{' '}
-                          exercises ·{' '}
-                          {setCount}{' '}
-                          sets
+                          exercises
+
+                          {repSets >
+                            0 &&
+                            ` · ${repSets} sets`}
+
+                          {intervals >
+                            0 &&
+                            ` · ${intervals} intervals`}
                         </span>
 
                       </div>
@@ -1124,6 +1488,7 @@ export default function CalendarPage() {
                   <div
                     className={[
                       'calendar-page__meal',
+
                       logged
                         ? 'calendar-page__meal--logged'
                         : '',
@@ -1132,7 +1497,9 @@ export default function CalendarPage() {
                         Boolean,
                       )
                       .join(' ')}
-                    key={meal}
+                    key={
+                      meal
+                    }
                   >
 
                     <div className="calendar-page__meal-heading">
@@ -1167,39 +1534,32 @@ export default function CalendarPage() {
                     {logged && (
 
                       <>
+
                         <div className="calendar-page__meal-macros">
 
                           <span>
-                            {
-                              Math.round(
-                                totals.calories,
-                              )
-                            }{' '}
+                            {Math.round(
+                              totals.calories,
+                            )}{' '}
                             kcal
                           </span>
 
                           <span>
-                            {
-                              Math.round(
-                                totals.protein,
-                              )
-                            }g P
+                            {Math.round(
+                              totals.protein,
+                            )}g P
                           </span>
 
                           <span>
-                            {
-                              Math.round(
-                                totals.carbs,
-                              )
-                            }g C
+                            {Math.round(
+                              totals.carbs,
+                            )}g C
                           </span>
 
                           <span>
-                            {
-                              Math.round(
-                                totals.fat,
-                              )
-                            }g F
+                            {Math.round(
+                              totals.fat,
+                            )}g F
                           </span>
 
                         </div>
@@ -1208,6 +1568,7 @@ export default function CalendarPage() {
 
                           {entries.map(
                             (entry) => (
+
                               <span
                                 key={
                                   entry.id
@@ -1217,10 +1578,12 @@ export default function CalendarPage() {
                                   entry.name
                                 }
                               </span>
+
                             ),
                           )}
 
                         </div>
+
                       </>
 
                     )}
