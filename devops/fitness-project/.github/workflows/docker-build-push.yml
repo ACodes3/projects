@@ -1,0 +1,50 @@
+name: Build and push Docker images
+
+# ko se pusha na main vejo
+on: 
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # prenese kodo iz repozitorija
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+    # nastavi Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+    # prijava v GitHub Container Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+    # zgradi in push-a backend in frontend slike
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          push: true
+          tags: |
+            ghcr.io/acodes3/fitness-backend:latest
+            ghcr.io/acodes3/fitness-backend:${{ github.sha }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          push: true
+          tags: |
+            ghcr.io/acodes3/fitness-frontend:latest
+            ghcr.io/acodes3/fitness-frontend:${{ github.sha }}

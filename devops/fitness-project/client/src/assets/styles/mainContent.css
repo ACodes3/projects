@@ -1,0 +1,203 @@
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--bg);
+  overflow-y: auto;
+}
+
+.welcome-text {
+  color: var(--text);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* === DASHBOARD CARDS === */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+  font-size: 2rem;
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+.card-text h3 {
+  color: var(--text);
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.card-text p {
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* === ICON COLORS === */
+.card-icon.workout {
+  background-color: #65b89d;
+  box-shadow: 0 4px 10px rgba(101, 184, 157, 0.3);
+}
+
+.card-icon.steps {
+  background-color: #f7b500;
+  box-shadow: 0 4px 10px rgba(247, 181, 0, 0.3);
+}
+
+.card-icon.active {
+  background-color: #ff6b6b;
+  box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+}
+
+/* === CHART SECTION === */
+.chart-section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.chart-section h3 {
+  color: var(--text);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* === RECENT ACTIVITY === */
+.recent-activity {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.recent-activity h3 {
+  color: var(--text);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.recent-activity ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-activity li {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.recent-activity li:last-child {
+  border-bottom: none;
+}
+
+/* === ACTIVITY ITEM LAYOUT === */
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.activity-icon {
+  font-size: 1.3rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  transition: transform 0.2s ease;
+}
+
+.activity-item p {
+  color: #495e57;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* === INDIVIDUAL ICON COLORS === */
+.activity-icon.run {
+  background-color: #65b89d; /* mint green */
+  box-shadow: 0 3px 8px rgba(101, 184, 157, 0.3);
+}
+
+.activity-icon.strength {
+  background-color: #ff6b6b; /* coral red */
+  box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
+}
+
+.activity-icon.yoga {
+  background-color: #f7b500; /* golden yellow */
+  box-shadow: 0 3px 8px rgba(247, 181, 0, 0.3);
+}
+
+/* === SUBTLE ANIMATION === */
+.activity-icon:hover {
+  transform: scale(1.1);
+}
+
+/* === SCROLLBAR === */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.wave-icon {
+  color: #30b982;
+  margin-left: 0.4rem;
+  font-size: 1.5rem;
+  transform-origin: bottom center;
+  animation: wave 1.5s infinite ease-in-out;
+}
+
+/* Subtle wave motion */
+@keyframes wave {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

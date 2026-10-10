@@ -1,0 +1,383 @@
+#cloud-config
+
+# Update and upgrade packages on first boot
+package_update: true
+package_upgrade: true
+
+# Install required packages
+packages:
+  - curl
+  - git
+  - nginx
+  - postgresql
+  - ufw
+  - build-essential
+  - openssl
+  - tomcat9
+  - libcairo2-dev
+  - libjpeg-turbo8-dev
+  - libpng-dev
+  - libtool-bin
+  - libossp-uuid-dev
+  - freerdp2-dev
+  - libpango1.0-dev
+  - libssh2-1-dev
+  - libtelnet-dev
+  - libvncserver-dev
+  - libpulse-dev
+  - libssl-dev
+  - libvorbis-dev
+  - libwebp-dev
+  - libpostgresql-jdbc-java
+  - redis-server
+  - certbot
+  - python3-certbot-nginx
+
+write_files:
+  ###########################################################
+  # NGINX HTTP CONFIG (Certbot will upgrade to HTTPS)
+  ###########################################################
+  # Nginx config for serving the fitness app (frontend + backend)
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /etc/nginx/sites-available/fitness
+    permissions: "0644"
+    content: |
+      server {
+          listen 80;
+          server_name __DOMAIN__;
+
+          # Root for SPA frontend
+          root /var/www/fitness-client;
+          index index.html;
+
+          # ACME challenge location (for Let's Encrypt HTTP-01)
+          location /.well-known/acme-challenge/ {
+              root /var/www/html;
+          }
+
+          # Backend API proxy
+          location /api/ {
+              proxy_pass http://127.0.0.1:3001/api/;
+              proxy_http_version 1.1;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+
+          # SPA frontend
+          location / {
+              try_files $uri /index.html;
+          }
+      }
+
+  ###########################################################
+  # FITNESS BACKEND SYSTEMD SERVICE
+  ###########################################################
+  # Systemd service for the fitness app backend
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /etc/systemd/system/fitness-backend.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Fitness App Backend
+      After=network-online.target postgresql.service redis-server.service
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      WorkingDirectory=/opt/fitness-project/server
+      ExecStart=/usr/bin/node /opt/fitness-project/server/server.js
+      EnvironmentFile=/opt/fitness-project/server/.env
+      User=fitness
+      Group=fitness
+      Restart=on-failure
+      RestartSec=5
+      TimeoutStartSec=30
+
+      [Install]
+      WantedBy=multi-user.target
+
+  ###########################################################
+  # RELIABLE CERTBOT SCRIPT (IDEMPOTENT + RETRIES + FALLBACK)
+  ###########################################################
+  # Script to reliably obtain and install Let's Encrypt certs with retries and staging fallback
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /usr/local/bin/run-certbot-reliable.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      DOMAIN="__DOMAIN__"
+      EMAIL="admin@__DOMAIN__"
+      LOGFILE="/var/log/certbot-setup.log"
+
+      mkdir -p "$(dirname "$LOGFILE")"
+      touch "$LOGFILE"
+
+      log() {
+          echo "[certbot] $*" | tee -a "$LOGFILE"
+      }
+
+      log "=== Certbot automated setup starting for $DOMAIN ==="
+
+      # If a valid cert already exists, do nothing (idempotent).
+      if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+          log "Certificate already exists for $DOMAIN. Exiting."
+          exit 0
+      fi
+
+      # Ensure Nginx is running (try to start if not)
+      log "Ensuring Nginx is running..."
+      if ! systemctl is-active --quiet nginx; then
+          log "Nginx not active, attempting to start..."
+          systemctl start nginx || log "Failed to start Nginx (continuing retries)."
+      fi
+
+      log "Waiting for Nginx to be active..."
+      for i in {1..30}; do
+          if systemctl is-active --quiet nginx; then
+              log "Nginx is active."
+              break
+          fi
+          log "Nginx not ready yet... retrying ($i/30)"
+          sleep 3
+      done
+
+      # DNS resolution check
+      log "Checking DNS resolution for $DOMAIN..."
+      for i in {1..20}; do
+          RESOLVED_IP="$(getent ahosts "$DOMAIN" | head -n1 | awk '{print $1}')"
+          if [[ -n "${RESOLVED_IP:-}" ]]; then
+              log "Domain resolves to: $RESOLVED_IP"
+              break
+          fi
+          log "DNS not ready yet... retrying ($i/20)"
+          sleep 3
+      done
+
+      if [[ -z "${RESOLVED_IP:-}" ]]; then
+          log "WARNING: $DOMAIN does not resolve. Certbot will likely fail."
+      fi
+
+      # HTTP reachability check on port 80
+      log "Checking HTTP reachability on port 80..."
+      for i in {1..30}; do
+          if curl -I "http://$DOMAIN" --max-time 3 >/dev/null 2>&1; then
+              log "Port 80 reachable at $DOMAIN."
+              break
+          fi
+          log "Port 80 NOT reachable... retrying ($i/30)"
+          sleep 5
+      done
+
+      log "Attempting production certificate issuance..."
+
+      # Try production certificate up to 5 times
+      for attempt in {1..5}; do
+          if certbot --nginx \
+              -d "$DOMAIN" \
+              -m "$EMAIL" \
+              --non-interactive \
+              --agree-tos \
+              --redirect; then
+
+              log "Production certificate installed successfully for $DOMAIN."
+              exit 0
+          else
+              log "Production cert attempt $attempt/5 FAILED. Retrying in 10s..."
+              sleep 10
+          fi
+      done
+
+      log "Production certificate FAILED after 5 attempts. Checking for rate limits..."
+
+      RATE_LIMITED="no"
+      if grep -q "too many certificates" /var/log/letsencrypt/letsencrypt.log 2>/dev/null; then
+          RATE_LIMITED="yes"
+          log "Let's Encrypt rate limit detected."
+      fi
+
+      log "Attempting STAGING certificate issuance as fallback (rate-limited=$RATE_LIMITED)..."
+
+      # Try staging certificate up to 5 times
+      for attempt in {1..5}; do
+          if certbot --nginx \
+              --test-cert \
+              -d "$DOMAIN" \
+              -m "$EMAIL" \
+              --non-interactive \
+              --agree-tos \
+              --redirect; then
+
+              log "Staging (test) certificate installed successfully for $DOMAIN."
+              exit 0
+          else
+              log "Staging cert attempt $attempt/5 FAILED. Retrying in 10s..."
+              sleep 10
+          fi
+      done
+
+      log "Both production AND staging certificate issuance FAILED after multiple attempts."
+      exit 1
+
+  ###########################################################
+  # CERTBOT RELIABLE SERVICE (RUN BY TIMER)
+  ###########################################################
+  # Systemd service to run the reliable certbot script
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /etc/systemd/system/certbot-reliable.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Reliable Certbot Setup (Delayed + Retried)
+      Wants=network-online.target nginx.service
+      After=network-online.target nginx.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/run-certbot-reliable.sh
+
+      [Install]
+      WantedBy=multi-user.target
+
+  ###########################################################
+  # CERTBOT TIMER (RETRIES UNTIL CERT SUCCESS)
+  ###########################################################
+  # Systemd timer to run the certbot reliable service periodically until success
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /etc/systemd/system/certbot-reliable.timer
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Run Certbot reliable setup periodically until success
+
+      [Timer]
+      OnBootSec=60
+      OnUnitActiveSec=900   # every 15 minutes
+      Unit=certbot-reliable.service
+
+      [Install]
+      WantedBy=timers.target
+
+  ###########################################################
+  # MAIN FITNESS SETUP SCRIPT
+  ###########################################################
+  # Main provisioning script for the fitness app
+  # Note: Domain placeholder __DOMAIN__ will be replaced via deploy.sh
+  - path: /usr/local/bin/fitness-setup.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      export DEBIAN_FRONTEND=noninteractive
+
+      # DOMAIN is already written via deploy.sh (sed replacement)
+      DOMAIN="__DOMAIN__"
+      EMAIL="admin@${DOMAIN}"
+
+      log() { echo "[fitness-setup] $*"; }
+
+      log "Starting provisioning for domain: ${DOMAIN}"
+
+      # Make sure Nginx won't start with an invalid config (stop it first)
+      systemctl stop nginx || true
+
+      # Ensure time sync (TLS + cert validity)
+      timedatectl set-ntp true || true
+
+      # Install Node.js 20.x
+      if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+      fi
+
+      # System user for app
+      if ! id fitness >/dev/null 2>&1; then
+        useradd --system --create-home --shell /usr/sbin/nologin fitness
+      fi
+
+      # Replace domain placeholders in configs/scripts
+      sed -i "s/__DOMAIN__/${DOMAIN}/g" /etc/nginx/sites-available/fitness
+      sed -i "s/__DOMAIN__/${DOMAIN}/g" /usr/local/bin/run-certbot-reliable.sh
+
+      # Basic web root for ACME challenge
+      mkdir -p /var/www/html/.well-known/acme-challenge
+      chown -R www-data:www-data /var/www/html
+
+      # Clone or refresh project
+      rm -rf /opt/fitness-project
+      git clone https://github.com/ACodes3/fitness-project.git /opt/fitness-project
+      chown -R fitness:fitness /opt/fitness-project
+
+      # Client env
+      cat > /opt/fitness-project/client/.env.production <<EOF
+      VITE_API_URL=/api
+      EOF
+
+      # Server env
+      cat > /opt/fitness-project/server/.env <<EOF
+      PORT=3001
+      DB_USER=fitness
+      DB_PASS=fitness123
+      DB_HOST=localhost
+      DB_NAME=fitnessdb
+      DB_PORT=5432
+      EOF
+
+      # PostgreSQL setup
+      log "Configuring PostgreSQL..."
+      sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = 'fitness'" | grep -q 1 || \
+        sudo -u postgres psql -c "CREATE USER fitness WITH PASSWORD 'fitness123';"
+
+      sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'fitnessdb'" | grep -q 1 || \
+        sudo -u postgres psql -c "CREATE DATABASE fitnessdb OWNER fitness;"
+
+      if [ -f /opt/fitness-project/server/schema.sql ]; then
+        sudo -u postgres psql -d fitnessdb -f /opt/fitness-project/server/schema.sql || true
+      fi
+
+      sudo -u postgres psql -d fitnessdb -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO fitness;" || true
+      sudo -u postgres psql -d fitnessdb -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO fitness;" || true
+
+      # Node dependencies and build
+      log "Installing Node dependencies..."
+      su -s /bin/bash -c "cd /opt/fitness-project/server && npm install" fitness
+      su -s /bin/bash -c "cd /opt/fitness-project/client && npm install && npm run build" fitness
+
+      # Deploy frontend
+      log "Deploying frontend to /var/www/fitness-client..."
+      mkdir -p /var/www/fitness-client
+      rm -rf /var/www/fitness-client/*
+      cp -a /opt/fitness-project/client/dist/. /var/www/fitness-client/
+      chown -R www-data:www-data /var/www/fitness-client
+
+      # Enable Nginx site
+      log "Configuring Nginx..."
+      ln -sf /etc/nginx/sites-available/fitness /etc/nginx/sites-enabled/fitness
+      rm -f /etc/nginx/sites-enabled/default
+
+      nginx -t && systemctl restart nginx
+
+      # Enable Redis
+      systemctl enable --now redis-server
+
+      # Enable backend service
+      systemctl daemon-reload
+      systemctl enable --now fitness-backend.service
+
+      # Firewall rules (OPEN 80/443 *before* Certbot)
+      log "Configuring UFW firewall..."
+      ufw allow OpenSSH
+      ufw allow 80
+      ufw allow 443
+      ufw --force enable
+
+      log "Provisioning complete. Nginx + backend are running. Certbot timer will handle SSL."
+
+runcmd:
+  - [ sh, -c, "/usr/local/bin/fitness-setup.sh" ]
+  - [ systemctl, daemon-reload ]
+  - [ systemctl, enable, "certbot-reliable.service" ]
+  - [ systemctl, enable, "--now", "certbot-reliable.timer" ]
