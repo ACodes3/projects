@@ -7,6 +7,11 @@ import {
   deleteNutritionEntry,
 } from '../controllers/nutritionController.js';
 
+import {
+  getNutritionGoals,
+  saveNutritionGoals,
+} from '../controllers/nutritionGoalController.js';
+
 import { devUser } from '../middleware/devUser.js';
 
 
@@ -21,7 +26,23 @@ router.use(devUser);
 
 
 // ============================================================
-// NUTRITION ROUTES
+// NUTRITION GOALS
+//
+// IMPORTANT:
+// These must come before /:id,
+// otherwise "goals" could be treated as an entry ID.
+// ============================================================
+
+// GET /api/nutrition/goals
+router.get('/goals', getNutritionGoals);
+
+
+// PUT /api/nutrition/goals
+router.put('/goals', saveNutritionGoals);
+
+
+// ============================================================
+// NUTRITION ENTRIES
 // ============================================================
 
 // GET /api/nutrition
