@@ -3,6 +3,7 @@ import cors from 'cors';
 
 import exerciseRoutes from './routes/exerciseRoutes.js';
 import workoutRoutes from './routes/workoutRoutes.js';
+import nutritionRoutes from './routes/nutritionRoutes.js';
 
 const app = express();
 
@@ -40,6 +41,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/exercises', exerciseRoutes);
 
 app.use('/api/workouts', workoutRoutes);
+
+app.use('/api/nutrition', nutritionRoutes);
 
 
 // ============================================================
