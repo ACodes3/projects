@@ -83,18 +83,14 @@ function validateWorkoutPayload(body) {
       typeof exercise.name !== 'string'
       || exercise.name.trim().length === 0
     ) {
-      return `Exercise ${
-        exerciseIndex + 1
-      } requires a name.`;
+      return `Exercise ${exerciseIndex + 1} requires a name.`;
     }
 
     if (
       exercise.trackingMode !== 'reps'
       && exercise.trackingMode !== 'time'
     ) {
-      return `Exercise ${
-        exerciseIndex + 1
-      } has an invalid tracking mode.`;
+      return `Exercise ${exerciseIndex + 1} has an invalid tracking mode.`;
     }
 
     if (
@@ -109,9 +105,7 @@ function validateWorkoutPayload(body) {
         !Number.isInteger(exerciseId)
         || exerciseId <= 0
       ) {
-        return `Exercise ${
-          exerciseIndex + 1
-        } has an invalid exercise ID.`;
+        return `Exercise ${exerciseIndex + 1} has an invalid exercise ID.`;
       }
     }
 
@@ -119,9 +113,7 @@ function validateWorkoutPayload(body) {
       !Array.isArray(exercise.sets)
       || exercise.sets.length === 0
     ) {
-      return `Exercise ${
-        exerciseIndex + 1
-      } must contain at least one set.`;
+      return `Exercise ${exerciseIndex + 1} must contain at least one set.`;
     }
 
     for (
@@ -139,17 +131,8 @@ function validateWorkoutPayload(body) {
         !Number.isFinite(weight)
         || weight < 0
       ) {
-        return `Exercise ${
-          exerciseIndex + 1
-        }, set ${
-          setIndex + 1
-        } has an invalid weight.`;
+        return `Exercise ${exerciseIndex + 1}, set ${setIndex + 1} has an invalid weight.`;
       }
-
-
-      // ------------------------------------------------------
-      // REPS MODE
-      // ------------------------------------------------------
 
       if (
         exercise.trackingMode === 'reps'
@@ -160,18 +143,9 @@ function validateWorkoutPayload(body) {
           !Number.isInteger(reps)
           || reps <= 0
         ) {
-          return `Exercise ${
-            exerciseIndex + 1
-          }, set ${
-            setIndex + 1
-          } requires valid reps.`;
+          return `Exercise ${exerciseIndex + 1}, set ${setIndex + 1} requires valid reps.`;
         }
       }
-
-
-      // ------------------------------------------------------
-      // TIME MODE
-      // ------------------------------------------------------
 
       if (
         exercise.trackingMode === 'time'
@@ -184,11 +158,7 @@ function validateWorkoutPayload(body) {
           !Number.isInteger(durationSeconds)
           || durationSeconds <= 0
         ) {
-          return `Exercise ${
-            exerciseIndex + 1
-          }, set ${
-            setIndex + 1
-          } requires a valid duration.`;
+          return `Exercise ${exerciseIndex + 1}, set ${setIndex + 1} requires a valid duration.`;
         }
       }
     }
@@ -206,11 +176,6 @@ function validateWorkoutPayload(body) {
 export async function getWorkouts(req, res) {
   try {
     const userId = req.user.id;
-
-
-    // --------------------------------------------------------
-    // WORKOUTS
-    // --------------------------------------------------------
 
     const workoutResult = await pool.query(
       `
@@ -271,7 +236,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // SETS / INTERVALS
+    // SETS
     // --------------------------------------------------------
 
     const workoutExerciseIds =
@@ -308,7 +273,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // GROUP SETS BY EXERCISE
+    // GROUP SETS
     // --------------------------------------------------------
 
     const setsByExercise = new Map();
@@ -332,7 +297,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // GROUP EXERCISES BY WORKOUT
+    // GROUP EXERCISES
     // --------------------------------------------------------
 
     const exercisesByWorkout = new Map();
@@ -415,11 +380,6 @@ export async function getWorkoutById(
     const workoutId = Number(
       req.params.id,
     );
-
-
-    // --------------------------------------------------------
-    // VALIDATE ID
-    // --------------------------------------------------------
 
     if (
       !Number.isInteger(workoutId)
@@ -626,7 +586,7 @@ export async function createWorkout(
 
 
     // --------------------------------------------------------
-    // CREATE WORKOUT
+    // WORKOUT
     // --------------------------------------------------------
 
     const workoutResult =
@@ -677,7 +637,7 @@ export async function createWorkout(
 
 
     // --------------------------------------------------------
-    // CREATE EXERCISES
+    // EXERCISES
     // --------------------------------------------------------
 
     for (
@@ -693,8 +653,6 @@ export async function createWorkout(
 
       // ------------------------------------------------------
       // VERIFY LIBRARY EXERCISE
-      //
-      // Custom exercises simply use NULL.
       // ------------------------------------------------------
 
       if (
@@ -721,9 +679,7 @@ export async function createWorkout(
           libraryResult.rows.length === 0
         ) {
           const error = new Error(
-            `Exercise "${
-              exercise.name
-            }" does not exist in the exercise library.`,
+            `Exercise "${exercise.name}" does not exist in the exercise library.`,
           );
 
           error.statusCode = 400;
@@ -779,7 +735,7 @@ export async function createWorkout(
 
 
       // ------------------------------------------------------
-      // CREATE SETS / INTERVALS
+      // SETS
       // ------------------------------------------------------
 
       for (
@@ -854,10 +810,6 @@ export async function createWorkout(
     }
 
 
-    // --------------------------------------------------------
-    // COMMIT
-    // --------------------------------------------------------
-
     await client.query('COMMIT');
 
 
@@ -879,7 +831,6 @@ export async function createWorkout(
       error,
     );
 
-
     if (error.statusCode) {
       return res
         .status(error.statusCode)
@@ -896,5 +847,99 @@ export async function createWorkout(
     });
   } finally {
     client.release();
+  }
+}
+
+
+// ============================================================
+// DELETE WORKOUT
+// DELETE /api/workouts/:id
+// ============================================================
+
+export async function deleteWorkout(
+  req,
+  res,
+) {
+  try {
+    const userId = req.user.id;
+
+    const workoutId = Number(
+      req.params.id,
+    );
+
+
+    // --------------------------------------------------------
+    // VALIDATE ID
+    // --------------------------------------------------------
+
+    if (
+      !Number.isInteger(workoutId)
+      || workoutId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid workout ID.',
+      });
+    }
+
+
+    // --------------------------------------------------------
+    // DELETE
+    //
+    // Only deletes the workout if it belongs to this user.
+    //
+    // workout_exercises and workout_sets are automatically
+    // deleted because their foreign keys use ON DELETE CASCADE.
+    // --------------------------------------------------------
+
+    const result = await pool.query(
+      `
+        DELETE FROM public.workouts
+        WHERE id = $1
+          AND user_id = $2
+        RETURNING
+          id,
+          name,
+          workout_date
+      `,
+      [
+        workoutId,
+        userId,
+      ],
+    );
+
+
+    // --------------------------------------------------------
+    // NOT FOUND / NOT OWNED BY USER
+    // --------------------------------------------------------
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout not found.',
+      });
+    }
+
+
+    // --------------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------------
+
+    res.status(200).json({
+      success: true,
+      message:
+        'Workout deleted successfully.',
+      workout: result.rows[0],
+    });
+  } catch (error) {
+    console.error(
+      'Failed to delete workout:',
+      error,
+    );
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete workout.',
+    });
   }
 }
