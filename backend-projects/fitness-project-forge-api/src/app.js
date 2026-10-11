@@ -5,6 +5,7 @@ import exerciseRoutes from './routes/exerciseRoutes.js';
 import workoutRoutes from './routes/workoutRoutes.js';
 import nutritionRoutes from './routes/nutritionRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
+import restDayRoutes from './routes/restDayRoutes.js';
 
 const app = express();
 
@@ -46,6 +47,8 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 
 app.use('/api/progress', progressRoutes);
+
+app.use('/api/rest-days', restDayRoutes);
 
 
 // ============================================================
