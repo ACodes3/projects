@@ -2,21 +2,30 @@ import pool from '../config/db.js';
 
 
 // ============================================================
-// DEVELOPMENT USER MIDDLEWARE
+// SINGLE-USER CONTEXT
 //
-// Temporary replacement for authentication.
+// This version of FORGE intentionally has no authentication.
 //
-// Later, real authentication will set:
+// The application uses one seeded database user as the owner
+// of all user-specific data.
+//
+// Every protected route receives:
 //
 // req.user = {
 //   id,
 //   email,
 // }
 //
-// For now we load the seeded demo user.
+// This keeps the controllers structured in a way that could
+// support authentication in a larger future version without
+// changing all database queries.
 // ============================================================
 
-export async function devUser(req, res, next) {
+export async function devUser(
+  req,
+  res,
+  next,
+) {
   try {
     const result = await pool.query(
       `
@@ -30,26 +39,34 @@ export async function devUser(req, res, next) {
       ['demo@forge.local'],
     );
 
+
     if (result.rows.length === 0) {
       return res.status(500).json({
         success: false,
         message:
-          'Development user not found. Run the FORGE seed data first.',
+          'FORGE user not found. Run the database seed first.',
       });
     }
+
 
     req.user = {
       id: result.rows[0].id,
       email: result.rows[0].email,
     };
 
+
     next();
   } catch (error) {
-    console.error('Failed to load development user:', error);
+    console.error(
+      'Failed to load FORGE user:',
+      error,
+    );
+
 
     res.status(500).json({
       success: false,
-      message: 'Failed to load development user.',
+      message:
+        'Failed to load FORGE user.',
     });
   }
 }
