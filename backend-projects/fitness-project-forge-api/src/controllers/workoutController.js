@@ -169,6 +169,195 @@ function validateWorkoutPayload(body) {
 
 
 // ============================================================
+// CREATE WORKOUT EXERCISES + SETS
+//
+// Shared by POST and PUT.
+// ============================================================
+
+async function createWorkoutExercises(
+  client,
+  workoutId,
+  exercises,
+) {
+  const createdExercises = [];
+
+  for (
+    let exerciseIndex = 0;
+    exerciseIndex < exercises.length;
+    exerciseIndex += 1
+  ) {
+    const exercise = exercises[exerciseIndex];
+
+    let libraryExerciseId = null;
+    let exerciseName = exercise.name.trim();
+
+
+    // --------------------------------------------------------
+    // VERIFY LIBRARY EXERCISE
+    // --------------------------------------------------------
+
+    if (
+      exercise.exerciseId !== undefined
+      && exercise.exerciseId !== null
+    ) {
+      const exerciseId = Number(
+        exercise.exerciseId,
+      );
+
+      const libraryResult = await client.query(
+        `
+          SELECT
+            id,
+            name
+          FROM public.exercises
+          WHERE id = $1
+            AND is_active = TRUE
+          LIMIT 1
+        `,
+        [exerciseId],
+      );
+
+      if (libraryResult.rows.length === 0) {
+        const error = new Error(
+          `Exercise "${exercise.name}" does not exist in the exercise library.`,
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+      }
+
+      libraryExerciseId =
+        libraryResult.rows[0].id;
+
+      exerciseName =
+        libraryResult.rows[0].name;
+    }
+
+
+    // --------------------------------------------------------
+    // CREATE WORKOUT EXERCISE
+    // --------------------------------------------------------
+
+    const exerciseResult = await client.query(
+      `
+        INSERT INTO public.workout_exercises (
+          workout_id,
+          exercise_id,
+          exercise_name,
+          tracking_mode,
+          position
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5
+        )
+        RETURNING
+          id,
+          workout_id,
+          exercise_id,
+          exercise_name,
+          tracking_mode,
+          position,
+          created_at,
+          updated_at
+      `,
+      [
+        workoutId,
+        libraryExerciseId,
+        exerciseName,
+        exercise.trackingMode,
+        exerciseIndex + 1,
+      ],
+    );
+
+    const createdExercise =
+      exerciseResult.rows[0];
+
+    const createdSets = [];
+
+
+    // --------------------------------------------------------
+    // CREATE SETS / INTERVALS
+    // --------------------------------------------------------
+
+    for (
+      let setIndex = 0;
+      setIndex < exercise.sets.length;
+      setIndex += 1
+    ) {
+      const set = exercise.sets[setIndex];
+
+      const weight = Number(
+        set.weight ?? 0,
+      );
+
+      const reps =
+        exercise.trackingMode === 'reps'
+          ? Number(set.reps)
+          : null;
+
+      const durationSeconds =
+        exercise.trackingMode === 'time'
+          ? Number(set.durationSeconds)
+          : null;
+
+
+      const setResult = await client.query(
+        `
+          INSERT INTO public.workout_sets (
+            workout_exercise_id,
+            set_number,
+            weight_kg,
+            reps,
+            duration_seconds
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5
+          )
+          RETURNING
+            id,
+            workout_exercise_id,
+            set_number,
+            weight_kg,
+            reps,
+            duration_seconds,
+            created_at,
+            updated_at
+        `,
+        [
+          createdExercise.id,
+          setIndex + 1,
+          weight,
+          reps,
+          durationSeconds,
+        ],
+      );
+
+      createdSets.push(
+        setResult.rows[0],
+      );
+    }
+
+
+    createdExercises.push({
+      ...createdExercise,
+      sets: createdSets,
+    });
+  }
+
+  return createdExercises;
+}
+
+
+// ============================================================
 // GET ALL WORKOUTS
 // GET /api/workouts
 // ============================================================
@@ -176,6 +365,11 @@ function validateWorkoutPayload(body) {
 export async function getWorkouts(req, res) {
   try {
     const userId = req.user.id;
+
+
+    // --------------------------------------------------------
+    // WORKOUTS
+    // --------------------------------------------------------
 
     const workoutResult = await pool.query(
       `
@@ -189,7 +383,9 @@ export async function getWorkouts(req, res) {
           updated_at
         FROM public.workouts
         WHERE user_id = $1
-        ORDER BY workout_date DESC, created_at DESC
+        ORDER BY
+          workout_date DESC,
+          created_at DESC
       `,
       [userId],
     );
@@ -226,7 +422,9 @@ export async function getWorkouts(req, res) {
           updated_at
         FROM public.workout_exercises
         WHERE workout_id = ANY($1::bigint[])
-        ORDER BY workout_id, position
+        ORDER BY
+          workout_id,
+          position
       `,
       [workoutIds],
     );
@@ -236,7 +434,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // SETS
+    // SETS / INTERVALS
     // --------------------------------------------------------
 
     const workoutExerciseIds =
@@ -273,7 +471,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // GROUP SETS
+    // GROUP SETS BY EXERCISE
     // --------------------------------------------------------
 
     const setsByExercise = new Map();
@@ -297,7 +495,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // GROUP EXERCISES
+    // GROUP EXERCISES BY WORKOUT
     // --------------------------------------------------------
 
     const exercisesByWorkout = new Map();
@@ -332,7 +530,7 @@ export async function getWorkouts(req, res) {
 
 
     // --------------------------------------------------------
-    // BUILD RESPONSE
+    // RESPONSE
     // --------------------------------------------------------
 
     const populatedWorkouts =
@@ -380,6 +578,11 @@ export async function getWorkoutById(
     const workoutId = Number(
       req.params.id,
     );
+
+
+    // --------------------------------------------------------
+    // VALIDATE ID
+    // --------------------------------------------------------
 
     if (
       !Number.isInteger(workoutId)
@@ -457,7 +660,7 @@ export async function getWorkoutById(
 
 
     // --------------------------------------------------------
-    // SETS
+    // SETS / INTERVALS
     // --------------------------------------------------------
 
     const exerciseIds =
@@ -586,7 +789,7 @@ export async function createWorkout(
 
 
     // --------------------------------------------------------
-    // WORKOUT
+    // CREATE WORKOUT
     // --------------------------------------------------------
 
     const workoutResult =
@@ -633,181 +836,17 @@ export async function createWorkout(
     const workout =
       workoutResult.rows[0];
 
-    const createdExercises = [];
-
 
     // --------------------------------------------------------
-    // EXERCISES
+    // CREATE EXERCISES + SETS
     // --------------------------------------------------------
 
-    for (
-      let exerciseIndex = 0;
-      exerciseIndex < exercises.length;
-      exerciseIndex += 1
-    ) {
-      const exercise =
-        exercises[exerciseIndex];
-
-      let libraryExerciseId = null;
-
-
-      // ------------------------------------------------------
-      // VERIFY LIBRARY EXERCISE
-      // ------------------------------------------------------
-
-      if (
-        exercise.exerciseId !== undefined
-        && exercise.exerciseId !== null
-      ) {
-        const exerciseId = Number(
-          exercise.exerciseId,
-        );
-
-        const libraryResult =
-          await client.query(
-            `
-              SELECT id
-              FROM public.exercises
-              WHERE id = $1
-                AND is_active = TRUE
-              LIMIT 1
-            `,
-            [exerciseId],
-          );
-
-        if (
-          libraryResult.rows.length === 0
-        ) {
-          const error = new Error(
-            `Exercise "${exercise.name}" does not exist in the exercise library.`,
-          );
-
-          error.statusCode = 400;
-
-          throw error;
-        }
-
-        libraryExerciseId =
-          libraryResult.rows[0].id;
-      }
-
-
-      const exerciseResult =
-        await client.query(
-          `
-            INSERT INTO public.workout_exercises (
-              workout_id,
-              exercise_id,
-              exercise_name,
-              tracking_mode,
-              position
-            )
-            VALUES (
-              $1,
-              $2,
-              $3,
-              $4,
-              $5
-            )
-            RETURNING
-              id,
-              workout_id,
-              exercise_id,
-              exercise_name,
-              tracking_mode,
-              position,
-              created_at,
-              updated_at
-          `,
-          [
-            workout.id,
-            libraryExerciseId,
-            exercise.name.trim(),
-            exercise.trackingMode,
-            exerciseIndex + 1,
-          ],
-        );
-
-      const createdExercise =
-        exerciseResult.rows[0];
-
-      const createdSets = [];
-
-
-      // ------------------------------------------------------
-      // SETS
-      // ------------------------------------------------------
-
-      for (
-        let setIndex = 0;
-        setIndex < exercise.sets.length;
-        setIndex += 1
-      ) {
-        const set =
-          exercise.sets[setIndex];
-
-        const weight = Number(
-          set.weight ?? 0,
-        );
-
-        const reps =
-          exercise.trackingMode === 'reps'
-            ? Number(set.reps)
-            : null;
-
-        const durationSeconds =
-          exercise.trackingMode === 'time'
-            ? Number(set.durationSeconds)
-            : null;
-
-
-        const setResult =
-          await client.query(
-            `
-              INSERT INTO public.workout_sets (
-                workout_exercise_id,
-                set_number,
-                weight_kg,
-                reps,
-                duration_seconds
-              )
-              VALUES (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5
-              )
-              RETURNING
-                id,
-                workout_exercise_id,
-                set_number,
-                weight_kg,
-                reps,
-                duration_seconds,
-                created_at,
-                updated_at
-            `,
-            [
-              createdExercise.id,
-              setIndex + 1,
-              weight,
-              reps,
-              durationSeconds,
-            ],
-          );
-
-        createdSets.push(
-          setResult.rows[0],
-        );
-      }
-
-
-      createdExercises.push({
-        ...createdExercise,
-        sets: createdSets,
-      });
-    }
+    const createdExercises =
+      await createWorkoutExercises(
+        client,
+        workout.id,
+        exercises,
+      );
 
 
     await client.query('COMMIT');
@@ -852,6 +891,218 @@ export async function createWorkout(
 
 
 // ============================================================
+// UPDATE WORKOUT
+// PUT /api/workouts/:id
+//
+// PUT replaces the complete workout contents:
+// - workout information
+// - exercises
+// - sets / timed intervals
+// ============================================================
+
+export async function updateWorkout(
+  req,
+  res,
+) {
+  const workoutId = Number(
+    req.params.id,
+  );
+
+  if (
+    !Number.isInteger(workoutId)
+    || workoutId <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid workout ID.',
+    });
+  }
+
+
+  const validationError =
+    validateWorkoutPayload(req.body);
+
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: validationError,
+    });
+  }
+
+
+  const userId = req.user.id;
+
+  const {
+    name,
+    date,
+    youtubeUrl = null,
+    notes = null,
+    exercises,
+  } = req.body;
+
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+
+    // --------------------------------------------------------
+    // VERIFY OWNERSHIP
+    //
+    // FOR UPDATE locks this workout row while the transaction
+    // is modifying it.
+    // --------------------------------------------------------
+
+    const existingWorkoutResult =
+      await client.query(
+        `
+          SELECT id
+          FROM public.workouts
+          WHERE id = $1
+            AND user_id = $2
+          FOR UPDATE
+        `,
+        [
+          workoutId,
+          userId,
+        ],
+      );
+
+
+    if (
+      existingWorkoutResult.rows.length === 0
+    ) {
+      const error = new Error(
+        'Workout not found.',
+      );
+
+      error.statusCode = 404;
+
+      throw error;
+    }
+
+
+    // --------------------------------------------------------
+    // UPDATE WORKOUT
+    // --------------------------------------------------------
+
+    const workoutResult =
+      await client.query(
+        `
+          UPDATE public.workouts
+          SET
+            name = $1,
+            workout_date = $2,
+            youtube_url = $3,
+            notes = $4
+          WHERE id = $5
+            AND user_id = $6
+          RETURNING
+            id,
+            name,
+            workout_date,
+            youtube_url,
+            notes,
+            created_at,
+            updated_at
+        `,
+        [
+          name.trim(),
+          date,
+
+          youtubeUrl?.trim()
+            ? youtubeUrl.trim()
+            : null,
+
+          notes?.trim()
+            ? notes.trim()
+            : null,
+
+          workoutId,
+          userId,
+        ],
+      );
+
+    const workout =
+      workoutResult.rows[0];
+
+
+    // --------------------------------------------------------
+    // REMOVE OLD EXERCISES
+    //
+    // workout_sets are automatically removed because
+    // workout_exercises -> workout_sets uses ON DELETE CASCADE.
+    // --------------------------------------------------------
+
+    await client.query(
+      `
+        DELETE FROM public.workout_exercises
+        WHERE workout_id = $1
+      `,
+      [workoutId],
+    );
+
+
+    // --------------------------------------------------------
+    // CREATE NEW EXERCISES + SETS
+    // --------------------------------------------------------
+
+    const createdExercises =
+      await createWorkoutExercises(
+        client,
+        workoutId,
+        exercises,
+      );
+
+
+    // --------------------------------------------------------
+    // COMMIT
+    // --------------------------------------------------------
+
+    await client.query('COMMIT');
+
+
+    res.status(200).json({
+      success: true,
+      message:
+        'Workout updated successfully.',
+
+      workout: {
+        ...workout,
+        exercises: createdExercises,
+      },
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+
+    console.error(
+      'Failed to update workout:',
+      error,
+    );
+
+
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .json({
+          success: false,
+          message: error.message,
+        });
+    }
+
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update workout.',
+    });
+  } finally {
+    client.release();
+  }
+}
+
+
+// ============================================================
 // DELETE WORKOUT
 // DELETE /api/workouts/:id
 // ============================================================
@@ -868,10 +1119,6 @@ export async function deleteWorkout(
     );
 
 
-    // --------------------------------------------------------
-    // VALIDATE ID
-    // --------------------------------------------------------
-
     if (
       !Number.isInteger(workoutId)
       || workoutId <= 0
@@ -882,15 +1129,6 @@ export async function deleteWorkout(
       });
     }
 
-
-    // --------------------------------------------------------
-    // DELETE
-    //
-    // Only deletes the workout if it belongs to this user.
-    //
-    // workout_exercises and workout_sets are automatically
-    // deleted because their foreign keys use ON DELETE CASCADE.
-    // --------------------------------------------------------
 
     const result = await pool.query(
       `
@@ -909,10 +1147,6 @@ export async function deleteWorkout(
     );
 
 
-    // --------------------------------------------------------
-    // NOT FOUND / NOT OWNED BY USER
-    // --------------------------------------------------------
-
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
@@ -920,10 +1154,6 @@ export async function deleteWorkout(
       });
     }
 
-
-    // --------------------------------------------------------
-    // RESPONSE
-    // --------------------------------------------------------
 
     res.status(200).json({
       success: true,
