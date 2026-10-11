@@ -4,6 +4,7 @@ import {
   getWorkouts,
   getWorkoutById,
   createWorkout,
+  updateWorkout,
   deleteWorkout,
 } from '../controllers/workoutController.js';
 
@@ -34,6 +35,10 @@ router.post('/', createWorkout);
 
 // GET /api/workouts/:id
 router.get('/:id', getWorkoutById);
+
+
+// PUT /api/workouts/:id
+router.put('/:id', updateWorkout);
 
 
 // DELETE /api/workouts/:id
