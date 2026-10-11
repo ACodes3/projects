@@ -7,6 +7,7 @@ import nutritionRoutes from './routes/nutritionRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import restDayRoutes from './routes/restDayRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 const app = express();
 
@@ -52,6 +53,8 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/rest-days', restDayRoutes);
 
 app.use('/api/profile', profileRoutes);
+
+app.use('/api/dashboard', dashboardRoutes);
 
 
 // ============================================================
