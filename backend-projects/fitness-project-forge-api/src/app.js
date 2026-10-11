@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 
+import exerciseRoutes from './routes/exerciseRoutes.js';
+
 const app = express();
 
 
@@ -28,6 +30,13 @@ app.get('/api/health', (req, res) => {
     message: 'FORGE API is running.',
   });
 });
+
+
+// ============================================================
+// API ROUTES
+// ============================================================
+
+app.use('/api/exercises', exerciseRoutes);
 
 
 // ============================================================
