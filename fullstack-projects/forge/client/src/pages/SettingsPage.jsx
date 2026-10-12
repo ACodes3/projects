@@ -1,15 +1,12 @@
 import {
-  Download,
   RotateCcw,
   Save,
   Target,
   Trash2,
-  Upload,
 } from 'lucide-react';
 
 import {
   useEffect,
-  useRef,
   useState,
 } from 'react';
 
@@ -22,27 +19,17 @@ import './SettingsPage.css';
 
 
 /* =========================================
-   REMAINING LOCAL DATA
+   LOCAL DATA
 
-   Database-backed:
-   - workouts
-   - nutrition
-   - nutrition goals
-   - progress
-   - profile
+   All permanent FORGE data is now stored
+   in PostgreSQL.
 
-   Still local:
-   - workout draft
-   - rest days
+   Only the unfinished workout draft stays
+   in localStorage intentionally.
 ========================================= */
 
-const STORAGE_KEYS = {
-  workoutDraft:
-    'forge:workoutDraft',
-
-  restDays:
-    'forge:restDays',
-};
+const WORKOUT_DRAFT_KEY =
+  'forge:workoutDraft';
 
 
 /* =========================================
@@ -72,76 +59,34 @@ function normalizeGoals(
       raw.calories === null
       || raw.calories === undefined
         ? ''
-        : String(raw.calories),
+        : String(
+            raw.calories,
+          ),
 
     protein:
       raw.protein === null
       || raw.protein === undefined
         ? ''
-        : String(raw.protein),
+        : String(
+            raw.protein,
+          ),
 
     carbs:
       raw.carbs === null
       || raw.carbs === undefined
         ? ''
-        : String(raw.carbs),
+        : String(
+            raw.carbs,
+          ),
 
     fat:
       raw.fat === null
       || raw.fat === undefined
         ? ''
-        : String(raw.fat),
+        : String(
+            raw.fat,
+          ),
   };
-}
-
-
-/* =========================================
-   STORAGE HELPERS
-========================================= */
-
-function readStorageValue(
-  key,
-) {
-  const stored =
-    localStorage.getItem(
-      key,
-    );
-
-  if (stored === null) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(
-      stored,
-    );
-  } catch {
-    return stored;
-  }
-}
-
-
-function restoreValue(
-  key,
-  value,
-) {
-  if (
-    value === undefined
-    || value === null
-  ) {
-    localStorage.removeItem(
-      key,
-    );
-
-    return;
-  }
-
-  localStorage.setItem(
-    key,
-    JSON.stringify(
-      value,
-    ),
-  );
 }
 
 
@@ -150,9 +95,6 @@ function restoreValue(
 ========================================= */
 
 export default function SettingsPage() {
-  const fileInputRef =
-    useRef(null);
-
   const [
     goals,
     setGoals,
@@ -176,48 +118,45 @@ export default function SettingsPage() {
   ] = useState(false);
 
 
-  useEffect(() => {
-    let cancelled = false;
+  /* =========================================
+     LOAD GOALS
+  ========================================= */
 
-    getNutritionGoals()
-      .then(
-        (response) => {
-          if (cancelled) {
-            return;
-          }
+  async function loadGoals() {
+    try {
+      const response =
+        await getNutritionGoals();
 
-          setGoals(
-            normalizeGoals(
-              response,
-            ),
-          );
-        },
-      )
-      .catch(
-        (error) => {
-          console.error(
-            'Failed to load nutrition targets:',
-            error,
-          );
-
-          if (!cancelled) {
-            setMessage(
-              error.message
-              || 'Failed to load nutrition targets.',
-            );
-          }
-        },
-      )
-      .finally(
-        () => {
-          if (!cancelled) {
-            setLoadingGoals(false);
-          }
-        },
+      setGoals(
+        normalizeGoals(
+          response,
+        ),
+      );
+    } catch (error) {
+      console.error(
+        'Failed to load nutrition targets:',
+        error,
       );
 
+      setMessage(
+        error.message
+        || 'Failed to load nutrition targets.',
+      );
+    } finally {
+      setLoadingGoals(
+        false,
+      );
+    }
+  }
+
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadGoals();
+    }, 0);
+
     return () => {
-      cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -240,7 +179,9 @@ export default function SettingsPage() {
     setGoals(
       (current) => ({
         ...current,
-        [field]: value,
+
+        [field]:
+          value,
       }),
     );
 
@@ -323,7 +264,10 @@ export default function SettingsPage() {
       const payload =
         buildGoalsPayload();
 
-      setSavingGoals(true);
+      setSavingGoals(
+        true,
+      );
+
       setMessage('');
 
       const response =
@@ -351,7 +295,9 @@ export default function SettingsPage() {
         || 'Failed to save nutrition targets.',
       );
     } finally {
-      setSavingGoals(false);
+      setSavingGoals(
+        false,
+      );
     }
   }
 
@@ -371,7 +317,10 @@ export default function SettingsPage() {
     }
 
     try {
-      setSavingGoals(true);
+      setSavingGoals(
+        true,
+      );
+
       setMessage('');
 
       await saveNutritionGoals({
@@ -399,195 +348,34 @@ export default function SettingsPage() {
         || 'Failed to clear nutrition targets.',
       );
     } finally {
-      setSavingGoals(false);
+      setSavingGoals(
+        false,
+      );
     }
   }
 
 
   /* =========================================
-     EXPORT LOCAL DATA
+     CLEAR WORKOUT DRAFT
   ========================================= */
 
-  function exportBackup() {
-    const backup = {
-      version: 2,
-
-      exportedAt:
-        new Date()
-          .toISOString(),
-
-      scope:
-        'local-data-only',
-
-      data: {
-        workoutDraft:
-          readStorageValue(
-            STORAGE_KEYS
-              .workoutDraft,
-          ),
-
-        restDays:
-          readStorageValue(
-            STORAGE_KEYS
-              .restDays,
-          ),
-      },
-    };
-
-    const blob =
-      new Blob(
-        [
-          JSON.stringify(
-            backup,
-            null,
-            2,
-          ),
-        ],
-        {
-          type:
-            'application/json',
-        },
+  function clearWorkoutDraft() {
+    const draft =
+      localStorage.getItem(
+        WORKOUT_DRAFT_KEY,
       );
 
-    const url =
-      URL.createObjectURL(
-        blob,
+    if (!draft) {
+      setMessage(
+        'There is no workout draft to clear.',
       );
 
-    const link =
-      document.createElement(
-        'a',
-      );
-
-    const date =
-      new Date()
-        .toISOString()
-        .slice(
-          0,
-          10,
-        );
-
-    link.href =
-      url;
-
-    link.download =
-      `forge-local-backup-${date}.json`;
-
-    document.body
-      .appendChild(
-        link,
-      );
-
-    link.click();
-
-    link.remove();
-
-    URL.revokeObjectURL(
-      url,
-    );
-
-    setMessage(
-      'Local data backup exported.',
-    );
-  }
-
-
-  /* =========================================
-     IMPORT LOCAL DATA
-  ========================================= */
-
-  function openImport() {
-    fileInputRef.current
-      ?.click();
-  }
-
-
-  function importBackup(
-    event,
-  ) {
-    const file =
-      event.target
-        .files?.[0];
-
-    event.target.value =
-      '';
-
-    if (!file) {
       return;
     }
 
-    const reader =
-      new FileReader();
-
-    reader.onload =
-      () => {
-        try {
-          const backup =
-            JSON.parse(
-              reader.result,
-            );
-
-          const data =
-            backup?.data;
-
-          if (
-            !data
-            || typeof data
-              !== 'object'
-          ) {
-            throw new Error(
-              'Invalid backup.',
-            );
-          }
-
-          const confirmed =
-            window.confirm(
-              'Restore this local FORGE backup? Existing workout draft and rest-day data may be replaced.',
-            );
-
-          if (!confirmed) {
-            return;
-          }
-
-          restoreValue(
-            STORAGE_KEYS
-              .workoutDraft,
-            data.workoutDraft,
-          );
-
-          restoreValue(
-            STORAGE_KEYS
-              .restDays,
-            data.restDays,
-          );
-
-          setMessage(
-            'Local backup restored.',
-          );
-        } catch {
-          setMessage(
-            'That file is not a valid FORGE local backup.',
-          );
-        }
-      };
-
-    reader.readAsText(
-      file,
-    );
-  }
-
-
-  /* =========================================
-     CLEAR LOCAL SECTION
-  ========================================= */
-
-  function clearSection(
-    key,
-    label,
-  ) {
     const confirmed =
       window.confirm(
-        `Clear all ${label}? This cannot be undone.`,
+        'Clear the unfinished workout draft? This cannot be undone.',
       );
 
     if (!confirmed) {
@@ -595,41 +383,11 @@ export default function SettingsPage() {
     }
 
     localStorage.removeItem(
-      key,
+      WORKOUT_DRAFT_KEY,
     );
 
     setMessage(
-      `${label} cleared.`,
-    );
-  }
-
-
-  /* =========================================
-     CLEAR ALL LOCAL DATA
-  ========================================= */
-
-  function clearAllLocalData() {
-    const confirmed =
-      window.confirm(
-        'Clear all remaining local FORGE data? This removes the workout draft and local rest days. Database data will not be affected.',
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    Object.values(
-      STORAGE_KEYS,
-    ).forEach(
-      (key) => {
-        localStorage.removeItem(
-          key,
-        );
-      },
-    );
-
-    setMessage(
-      'Local FORGE data cleared.',
+      'Workout draft cleared.',
     );
   }
 
@@ -658,16 +416,19 @@ export default function SettingsPage() {
           </h1>
 
           <p className="page__description">
-            Set your nutrition
-            targets and manage
-            remaining local
-            FORGE data.
+            Configure your nutrition
+            targets and manage your
+            unfinished workout draft.
           </p>
 
         </div>
 
       </header>
 
+
+      {/* =====================================
+          MESSAGE
+      ===================================== */}
 
       {message && (
 
@@ -693,6 +454,7 @@ export default function SettingsPage() {
             />
 
           </div>
+
 
           <div>
 
@@ -725,6 +487,8 @@ export default function SettingsPage() {
 
         <div className="settings-page__goals">
 
+          {/* CALORIES */}
+
           <label>
 
             <span>
@@ -750,7 +514,8 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'calories',
-                    event.target.value,
+                    event.target
+                      .value,
                   )
                 }
               />
@@ -763,6 +528,8 @@ export default function SettingsPage() {
 
           </label>
 
+
+          {/* PROTEIN */}
 
           <label>
 
@@ -789,7 +556,8 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'protein',
-                    event.target.value,
+                    event.target
+                      .value,
                   )
                 }
               />
@@ -802,6 +570,8 @@ export default function SettingsPage() {
 
           </label>
 
+
+          {/* CARBS */}
 
           <label>
 
@@ -828,7 +598,8 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'carbs',
-                    event.target.value,
+                    event.target
+                      .value,
                   )
                 }
               />
@@ -841,6 +612,8 @@ export default function SettingsPage() {
 
           </label>
 
+
+          {/* FAT */}
 
           <label>
 
@@ -867,7 +640,8 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'fat',
-                    event.target.value,
+                    event.target
+                      .value,
                   )
                 }
               />
@@ -903,6 +677,7 @@ export default function SettingsPage() {
             Clear Targets
           </button>
 
+
           <button
             type="button"
             className="button button--primary"
@@ -931,95 +706,7 @@ export default function SettingsPage() {
 
 
       {/* =====================================
-          LOCAL BACKUP
-      ===================================== */}
-
-      <section className="panel settings-page__section">
-
-        <div className="settings-page__section-heading">
-
-          <div className="settings-page__section-icon">
-
-            <Download
-              size={18}
-            />
-
-          </div>
-
-          <div>
-
-            <h2>
-              Local Backup & Restore
-            </h2>
-
-            <p>
-              Export or restore
-              the remaining
-              browser-only data.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div className="settings-page__goal-note">
-          Database workouts,
-          nutrition, progress,
-          profile and targets are
-          not included here.
-        </div>
-
-
-        <div className="settings-page__backup-actions">
-
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={
-              exportBackup
-            }
-          >
-            <Download
-              size={15}
-            />
-
-            Export Local Backup
-          </button>
-
-          <button
-            type="button"
-            className="button"
-            onClick={
-              openImport
-            }
-          >
-            <Upload
-              size={15}
-            />
-
-            Restore Local Backup
-          </button>
-
-          <input
-            ref={
-              fileInputRef
-            }
-            type="file"
-            accept=".json,application/json"
-            hidden
-            onChange={
-              importBackup
-            }
-          />
-
-        </div>
-
-      </section>
-
-
-      {/* =====================================
-          LOCAL DATA MANAGEMENT
+          WORKOUT DRAFT
       ===================================== */}
 
       <section className="panel settings-page__section">
@@ -1034,16 +721,17 @@ export default function SettingsPage() {
 
           </div>
 
+
           <div>
 
             <h2>
-              Local Data Management
+              Workout Draft
             </h2>
 
             <p>
-              Remove data that is
-              still stored only in
-              this browser.
+              Manage the unfinished
+              workout session stored
+              in this browser.
             </p>
 
           </div>
@@ -1058,55 +746,20 @@ export default function SettingsPage() {
             <div>
 
               <strong>
-                Workout Draft
+                Unfinished Workout
               </strong>
 
               <span>
-                Current unfinished
-                workout session
+                Automatically saved
+                while logging a workout
               </span>
 
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                clearSection(
-                  STORAGE_KEYS
-                    .workoutDraft,
-                  'workout draft',
-                )
-              }
-            >
-              Clear
-            </button>
-
-          </div>
-
-
-          <div>
-
-            <div>
-
-              <strong>
-                Rest Days
-              </strong>
-
-              <span>
-                Calendar recovery
-                day history
-              </span>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                clearSection(
-                  STORAGE_KEYS
-                    .restDays,
-                  'rest days',
-                )
+              onClick={
+                clearWorkoutDraft
               }
             >
               Clear
@@ -1120,7 +773,7 @@ export default function SettingsPage() {
 
 
       {/* =====================================
-          LOCAL DANGER ZONE
+          STORAGE INFO
       ===================================== */}
 
       <section className="panel settings-page__section settings-page__danger">
@@ -1128,31 +781,18 @@ export default function SettingsPage() {
         <div>
 
           <strong>
-            Clear local FORGE data
+            Persistent data is server-backed
           </strong>
 
           <span>
-            Removes the unfinished
-            workout draft and local
-            rest days. PostgreSQL
-            data is not affected.
+            Workouts, nutrition,
+            progress, profile,
+            rest days and nutrition
+            targets are stored in
+            PostgreSQL.
           </span>
 
         </div>
-
-        <button
-          type="button"
-          className="settings-page__danger-button"
-          onClick={
-            clearAllLocalData
-          }
-        >
-          <Trash2
-            size={14}
-          />
-
-          Clear Local Data
-        </button>
 
       </section>
 
