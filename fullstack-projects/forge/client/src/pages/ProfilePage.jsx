@@ -10,138 +10,374 @@ import {
 } from 'lucide-react';
 
 import {
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 
+import {
+  getNutritionEntries,
+  getProfile,
+  getProgressEntries,
+  getWorkouts,
+  saveProfile as saveProfileRequest,
+} from '../api/forgeApi.js';
+
 import './ProfilePage.css';
 
-const PROFILE_KEY =
-  'forge:profile';
-
-const WORKOUTS_KEY =
-  'forge:workoutHistory';
-
-const NUTRITION_KEY =
-  'forge:nutritionLogs';
-
-const PROGRESS_KEY =
-  'forge:progressEntries';
 
 /* =========================================
-   STORAGE HELPERS
+   EMPTY PROFILE
 ========================================= */
 
-function readArray(key) {
-  try {
-    const stored =
-      localStorage.getItem(key);
+const EMPTY_PROFILE = {
+  name: '',
+  trainingFocus: '',
+  height: '',
+  bio: '',
+};
 
-    if (!stored) {
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function readObject(key) {
-  try {
-    const stored =
-      localStorage.getItem(key);
-
-    if (!stored) {
-      return {};
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    return (
-      parsed &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed)
-        ? parsed
-        : {}
-    );
-  } catch {
-    return {};
-  }
-}
 
 /* =========================================
-   PROFILE
+   API NORMALIZATION
 ========================================= */
 
-function loadProfile() {
-  const stored =
-    readObject(PROFILE_KEY);
+function normalizeProfile(
+  response,
+) {
+  const raw =
+    response?.profile
+    ?? response?.data?.profile
+    ?? response
+    ?? {};
 
   return {
     name:
-      stored.name ?? '',
+      raw.name
+      ?? '',
 
     trainingFocus:
-      stored.trainingFocus ?? '',
+      raw.trainingFocus
+      ?? raw.training_focus
+      ?? '',
 
     height:
-      stored.height ?? '',
+      raw.height
+      ?? raw.height_cm
+      ?? '',
 
     bio:
-      stored.bio ?? '',
+      raw.bio
+      ?? '',
   };
 }
+
+
+function extractProgressEntries(
+  response,
+) {
+  if (
+    Array.isArray(response)
+  ) {
+    return response;
+  }
+
+  if (
+    Array.isArray(
+      response?.entries,
+    )
+  ) {
+    return response.entries;
+  }
+
+  if (
+    Array.isArray(
+      response?.progressEntries,
+    )
+  ) {
+    return response.progressEntries;
+  }
+
+  if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    return response.data;
+  }
+
+  return [];
+}
+
+
+function normalizeProgressEntry(
+  entry,
+) {
+  return {
+    id:
+      entry.id,
+
+    date:
+      normalizeDate(
+        entry.entry_date
+        ?? entry.date,
+      ),
+
+    weight:
+      normalizeNumber(
+        entry.weight_kg
+        ?? entry.weight,
+      ),
+  };
+}
+
+
+function extractNutritionEntries(
+  response,
+) {
+  if (
+    Array.isArray(response)
+  ) {
+    return response;
+  }
+
+  if (
+    Array.isArray(
+      response?.entries,
+    )
+  ) {
+    return response.entries;
+  }
+
+  if (
+    Array.isArray(
+      response?.nutritionEntries,
+    )
+  ) {
+    return response.nutritionEntries;
+  }
+
+  if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    return response.data;
+  }
+
+  return [];
+}
+
+
+function normalizeNutritionEntry(
+  entry,
+) {
+  return {
+    id:
+      entry.id,
+
+    date:
+      normalizeDate(
+        entry.entry_date
+        ?? entry.date,
+      ),
+  };
+}
+
+
+function normalizeDate(
+  value,
+) {
+  if (!value) {
+    return '';
+  }
+
+  if (
+    typeof value === 'string'
+  ) {
+    return value.slice(
+      0,
+      10,
+    );
+  }
+
+  try {
+    return new Date(value)
+      .toISOString()
+      .slice(
+        0,
+        10,
+      );
+  } catch {
+    return '';
+  }
+}
+
+
+function normalizeNumber(
+  value,
+) {
+  if (
+    value === null
+    || value === undefined
+    || value === ''
+  ) {
+    return null;
+  }
+
+  const number =
+    Number(value);
+
+  return Number.isFinite(
+    number,
+  )
+    ? number
+    : null;
+}
+
 
 /* =========================================
    PROFILE PAGE
 ========================================= */
 
 function ProfilePage() {
-  const [profile, setProfile] =
-    useState(loadProfile);
+  const [
+    profile,
+    setProfile,
+  ] = useState(
+    EMPTY_PROFILE,
+  );
 
-  const [draft, setDraft] =
-    useState(profile);
+  const [
+    draft,
+    setDraft,
+  ] = useState(
+    EMPTY_PROFILE,
+  );
 
-  const [editing, setEditing] =
-    useState(false);
+  const [
+    workouts,
+    setWorkouts,
+  ] = useState([]);
 
-  const [message, setMessage] =
-    useState('');
+  const [
+    nutrition,
+    setNutrition,
+  ] = useState([]);
 
-  const workouts =
-    useMemo(
-      () =>
-        readArray(
-          WORKOUTS_KEY,
-        ),
-      [],
-    );
+  const [
+    progress,
+    setProgress,
+  ] = useState([]);
 
-  const nutrition =
-    useMemo(
-      () =>
-        readObject(
-          NUTRITION_KEY,
-        ),
-      [],
-    );
+  const [
+    editing,
+    setEditing,
+  ] = useState(false);
 
-  const progress =
-    useMemo(
-      () =>
-        readArray(
-          PROGRESS_KEY,
-        ),
-      [],
-    );
+  const [
+    message,
+    setMessage,
+  ] = useState('');
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    saving,
+    setSaving,
+  ] = useState(false);
+
+
+  /* =========================================
+     LOAD PROFILE + TRACKING DATA
+  ========================================= */
+
+  async function loadProfilePage() {
+    try {
+      const [
+        profileResponse,
+        workoutsResponse,
+        nutritionResponse,
+        progressResponse,
+      ] = await Promise.all([
+        getProfile(),
+        getWorkouts(),
+        getNutritionEntries(),
+        getProgressEntries(),
+      ]);
+
+      const normalizedProfile =
+        normalizeProfile(
+          profileResponse,
+        );
+
+      const normalizedProgress =
+        extractProgressEntries(
+          progressResponse,
+        ).map(
+          normalizeProgressEntry,
+        );
+
+      const normalizedNutrition =
+        extractNutritionEntries(
+          nutritionResponse,
+        ).map(
+          normalizeNutritionEntry,
+        );
+
+      setProfile(
+        normalizedProfile,
+      );
+
+      setDraft(
+        normalizedProfile,
+      );
+
+      setWorkouts(
+        Array.isArray(
+          workoutsResponse,
+        )
+          ? workoutsResponse
+          : [],
+      );
+
+      setNutrition(
+        normalizedNutrition,
+      );
+
+      setProgress(
+        normalizedProgress,
+      );
+    } catch (error) {
+      console.error(
+        'Failed to load profile:',
+        error,
+      );
+
+      setMessage(
+        error.message
+        || 'Failed to load profile.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    const timeoutId =
+      setTimeout(() => {
+        loadProfilePage();
+      }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
 
   /* =========================================
      STATS
@@ -149,20 +385,30 @@ function ProfilePage() {
 
   const stats =
     useMemo(() => {
-      const sortedProgress =
-        [...progress].sort(
-          (a, b) =>
-            new Date(
-              b.date ?? 0,
-            ) -
-            new Date(
-              a.date ?? 0,
-            ),
+      const sortedProgress = [
+        ...progress,
+      ].sort(
+        (a, b) =>
+          new Date(
+            `${b.date || '1970-01-01'}T12:00:00`,
+          )
+          - new Date(
+            `${a.date || '1970-01-01'}T12:00:00`,
+          ),
+      );
+
+      const latestWeightEntry =
+        sortedProgress.find(
+          (entry) =>
+            entry.weight !== null
+            && entry.weight !==
+              undefined,
         );
 
       const latestWeight =
-        sortedProgress[0]
-          ?.weight ?? null;
+        latestWeightEntry
+          ?.weight
+        ?? null;
 
       const totalVolume =
         workouts.reduce(
@@ -171,8 +417,8 @@ function ProfilePage() {
             workout,
           ) => {
             return (
-              workoutTotal +
-              getWorkoutVolume(
+              workoutTotal
+              + getWorkoutVolume(
                 workout,
               )
             );
@@ -193,13 +439,14 @@ function ProfilePage() {
         },
       );
 
-      Object.keys(
-        nutrition,
-      ).forEach(
-        (date) =>
-          trackedDates.add(
-            date,
-          ),
+      nutrition.forEach(
+        (entry) => {
+          if (entry.date) {
+            trackedDates.add(
+              entry.date,
+            );
+          }
+        },
       );
 
       progress.forEach(
@@ -230,54 +477,127 @@ function ProfilePage() {
       progress,
     ]);
 
+
   /* =========================================
      SAVE PROFILE
   ========================================= */
 
-  function saveProfile() {
+  async function handleSaveProfile() {
+    if (saving) {
+      return;
+    }
+
+    const trimmedName =
+      draft.name.trim();
+
+    const trimmedFocus =
+      draft.trainingFocus.trim();
+
+    const trimmedBio =
+      draft.bio.trim();
+
+    let height =
+      null;
+
+    if (
+      draft.height !== ''
+      && draft.height !== null
+      && draft.height !==
+        undefined
+    ) {
+      height =
+        Number(
+          draft.height,
+        );
+
+      if (
+        !Number.isFinite(
+          height,
+        )
+        || height <= 0
+      ) {
+        setMessage(
+          'Height must be a positive number.',
+        );
+
+        return;
+      }
+    }
+
     const updated = {
       name:
-        draft.name.trim(),
+        trimmedName,
 
       trainingFocus:
-        draft.trainingFocus.trim(),
+        trimmedFocus,
 
-      height:
-        draft.height === ''
-          ? ''
-          : Number(
-              draft.height,
-            ),
+      height,
 
       bio:
-        draft.bio.trim(),
+        trimmedBio,
     };
 
-    localStorage.setItem(
-      PROFILE_KEY,
-      JSON.stringify(
-        updated,
-      ),
-    );
+    try {
+      setSaving(true);
+      setMessage('');
 
-    setProfile(updated);
-    setDraft(updated);
-    setEditing(false);
+      const response =
+        await saveProfileRequest(
+          updated,
+        );
 
-    setMessage(
-      'Profile updated.',
-    );
+      const savedProfile =
+        normalizeProfile(
+          response,
+        );
+
+      setProfile(
+        savedProfile,
+      );
+
+      setDraft(
+        savedProfile,
+      );
+
+      setEditing(
+        false,
+      );
+
+      setMessage(
+        'Profile updated.',
+      );
+    } catch (error) {
+      console.error(
+        'Failed to save profile:',
+        error,
+      );
+
+      setMessage(
+        error.message
+        || 'Failed to save profile.',
+      );
+    } finally {
+      setSaving(false);
+    }
   }
+
 
   /* =========================================
      CANCEL EDITING
   ========================================= */
 
   function cancelEditing() {
-    setDraft(profile);
-    setEditing(false);
+    setDraft(
+      profile,
+    );
+
+    setEditing(
+      false,
+    );
+
     setMessage('');
   }
+
 
   /* =========================================
      INITIALS
@@ -287,6 +607,11 @@ function ProfilePage() {
     getInitials(
       profile.name,
     );
+
+
+  /* =========================================
+     RENDER
+  ========================================= */
 
   return (
     <main className="profile-page">
@@ -314,48 +639,82 @@ function ProfilePage() {
 
         </div>
 
+
         {!editing ? (
+
           <button
             type="button"
             className="button"
+            disabled={
+              loading
+            }
             onClick={() => {
-              setDraft(profile);
-              setEditing(true);
+              setDraft(
+                profile,
+              );
+
+              setEditing(
+                true,
+              );
+
               setMessage('');
             }}
           >
-            <Pencil size={15} />
+            <Pencil
+              size={15}
+            />
+
             Edit Profile
           </button>
+
         ) : (
+
           <div className="profile-page__header-actions">
 
             <button
               type="button"
               className="button"
+              disabled={
+                saving
+              }
               onClick={
                 cancelEditing
               }
             >
-              <X size={15} />
+              <X
+                size={15}
+              />
+
               Cancel
             </button>
 
             <button
               type="button"
               className="button button--primary"
+              disabled={
+                saving
+              }
               onClick={
-                saveProfile
+                handleSaveProfile
               }
             >
-              <Save size={15} />
-              Save Profile
+              <Save
+                size={15}
+              />
+
+              {
+                saving
+                  ? 'Saving...'
+                  : 'Save Profile'
+              }
             </button>
 
           </div>
+
         )}
 
       </div>
+
 
       {/* =====================================
           PROFILE HERO
@@ -366,16 +725,21 @@ function ProfilePage() {
         <div className="profile-page__avatar">
 
           {profile.name ? (
+
             <span>
               {initials}
             </span>
+
           ) : (
+
             <UserRound
               size={34}
             />
+
           )}
 
         </div>
+
 
         <div className="profile-page__identity">
 
@@ -384,18 +748,24 @@ function ProfilePage() {
           </span>
 
           <h2>
-            {profile.name ||
-              'Your Profile'}
+            {
+              profile.name
+              || 'Your Profile'
+            }
           </h2>
 
           <p>
-            {profile.trainingFocus ||
-              'Add your training focus to personalize your profile.'}
+            {
+              profile.trainingFocus
+              || 'Add your training focus to personalize your profile.'
+            }
           </p>
 
         </div>
 
+
         {profile.height && (
+
           <div className="profile-page__height">
 
             <span>
@@ -410,9 +780,11 @@ function ProfilePage() {
             </strong>
 
           </div>
+
         )}
 
       </section>
+
 
       {/* =====================================
           TRACKING SUMMARY
@@ -433,10 +805,13 @@ function ProfilePage() {
           </span>
 
           <strong>
-            {stats.workouts}
+            {
+              stats.workouts
+            }
           </strong>
 
         </article>
+
 
         <article className="profile-page__stat">
 
@@ -451,15 +826,18 @@ function ProfilePage() {
           </span>
 
           <strong>
-            {stats.currentWeight !==
-            null
-              ? `${formatNumber(
-                  stats.currentWeight,
-                )} kg`
-              : '—'}
+            {
+              stats.currentWeight !==
+              null
+                ? `${formatNumber(
+                    stats.currentWeight,
+                  )} kg`
+                : '—'
+            }
           </strong>
 
         </article>
+
 
         <article className="profile-page__stat">
 
@@ -481,6 +859,7 @@ function ProfilePage() {
 
         </article>
 
+
         <article className="profile-page__stat">
 
           <div>
@@ -494,12 +873,15 @@ function ProfilePage() {
           </span>
 
           <strong>
-            {stats.trackedDays}
+            {
+              stats.trackedDays
+            }
           </strong>
 
         </article>
 
       </section>
+
 
       {/* =====================================
           PROFILE INFORMATION
@@ -515,16 +897,36 @@ function ProfilePage() {
 
           <p>
             Personal details stored
-            locally in FORGE.
+            in your FORGE database.
           </p>
 
         </div>
 
       </div>
 
+
       <section className="panel profile-page__details">
 
-        {editing ? (
+        {loading ? (
+
+          <div className="profile-page__info">
+
+            <div className="profile-page__info-row">
+
+              <span>
+                Profile
+              </span>
+
+              <strong>
+                Loading...
+              </strong>
+
+            </div>
+
+          </div>
+
+        ) : editing ? (
+
           <div className="profile-page__form">
 
             <div className="profile-page__field">
@@ -540,6 +942,9 @@ function ProfilePage() {
                 value={
                   draft.name
                 }
+                disabled={
+                  saving
+                }
                 onChange={(
                   event,
                 ) =>
@@ -548,6 +953,7 @@ function ProfilePage() {
                       current,
                     ) => ({
                       ...current,
+
                       name:
                         event
                           .target
@@ -558,6 +964,7 @@ function ProfilePage() {
               />
 
             </div>
+
 
             <div className="profile-page__field">
 
@@ -572,6 +979,9 @@ function ProfilePage() {
                 value={
                   draft.trainingFocus
                 }
+                disabled={
+                  saving
+                }
                 onChange={(
                   event,
                 ) =>
@@ -580,6 +990,7 @@ function ProfilePage() {
                       current,
                     ) => ({
                       ...current,
+
                       trainingFocus:
                         event
                           .target
@@ -591,6 +1002,7 @@ function ProfilePage() {
 
             </div>
 
+
             <div className="profile-page__field">
 
               <label htmlFor="profile-height">
@@ -600,11 +1012,15 @@ function ProfilePage() {
               <input
                 id="profile-height"
                 type="number"
-                min="0"
+                min="0.1"
                 step="0.1"
                 placeholder="Optional"
                 value={
                   draft.height
+                  ?? ''
+                }
+                disabled={
+                  saving
                 }
                 onChange={(
                   event,
@@ -614,6 +1030,7 @@ function ProfilePage() {
                       current,
                     ) => ({
                       ...current,
+
                       height:
                         event
                           .target
@@ -624,6 +1041,7 @@ function ProfilePage() {
               />
 
             </div>
+
 
             <div className="profile-page__field profile-page__field--full">
 
@@ -638,6 +1056,9 @@ function ProfilePage() {
                 value={
                   draft.bio
                 }
+                disabled={
+                  saving
+                }
                 onChange={(
                   event,
                 ) =>
@@ -646,6 +1067,7 @@ function ProfilePage() {
                       current,
                     ) => ({
                       ...current,
+
                       bio:
                         event
                           .target
@@ -658,7 +1080,9 @@ function ProfilePage() {
             </div>
 
           </div>
+
         ) : (
+
           <div className="profile-page__info">
 
             <div className="profile-page__info-row">
@@ -668,11 +1092,14 @@ function ProfilePage() {
               </span>
 
               <strong>
-                {profile.name ||
-                  'Not set'}
+                {
+                  profile.name
+                  || 'Not set'
+                }
               </strong>
 
             </div>
+
 
             <div className="profile-page__info-row">
 
@@ -681,11 +1108,14 @@ function ProfilePage() {
               </span>
 
               <strong>
-                {profile.trainingFocus ||
-                  'Not set'}
+                {
+                  profile.trainingFocus
+                  || 'Not set'
+                }
               </strong>
 
             </div>
+
 
             <div className="profile-page__info-row">
 
@@ -694,14 +1124,17 @@ function ProfilePage() {
               </span>
 
               <strong>
-                {profile.height
-                  ? `${formatNumber(
-                      profile.height,
-                    )} cm`
-                  : 'Not set'}
+                {
+                  profile.height
+                    ? `${formatNumber(
+                        profile.height,
+                      )} cm`
+                    : 'Not set'
+                }
               </strong>
 
             </div>
+
 
             <div className="profile-page__bio">
 
@@ -710,40 +1143,56 @@ function ProfilePage() {
               </span>
 
               <p>
-                {profile.bio ||
-                  'No notes added.'}
+                {
+                  profile.bio
+                  || 'No notes added.'
+                }
               </p>
 
             </div>
 
           </div>
+
         )}
 
       </section>
 
+
       {message && (
+
         <div className="profile-page__message">
           {message}
         </div>
+
       )}
 
     </main>
   );
 }
 
+
 /* =========================================
    HELPERS
 ========================================= */
 
-function getInitials(name) {
-  if (!name?.trim()) {
+function getInitials(
+  name,
+) {
+  if (
+    !name?.trim()
+  ) {
     return '';
   }
 
   return name
     .trim()
-    .split(/\s+/)
-    .slice(0, 2)
+    .split(
+      /\s+/,
+    )
+    .slice(
+      0,
+      2,
+    )
     .map(
       (part) =>
         part[0]
@@ -751,6 +1200,7 @@ function getInitials(name) {
     )
     .join('');
 }
+
 
 function getWorkoutVolume(
   workout,
@@ -761,34 +1211,47 @@ function getWorkoutVolume(
         total,
         exercise,
       ) => {
+        if (
+          exercise.trackingMode
+          === 'time'
+        ) {
+          return total;
+        }
+
         const volume =
           exercise.sets?.reduce(
             (
               setTotal,
               set,
             ) =>
-              setTotal +
-              (
+              setTotal
+              + (
                 Number(
                   set.weight,
                 ) || 0
-              ) *
-                (
-                  Number(
-                    set.reps,
-                  ) || 0
-                ),
+              )
+              * (
+                Number(
+                  set.reps,
+                ) || 0
+              ),
             0,
           ) ?? 0;
 
-        return total + volume;
+        return (
+          total
+          + volume
+        );
       },
       0,
     ) ?? 0
   );
 }
 
-function formatNumber(value) {
+
+function formatNumber(
+  value,
+) {
   const number =
     Number(value);
 
@@ -807,25 +1270,41 @@ function formatNumber(value) {
     : number.toFixed(1);
 }
 
-function formatVolume(value) {
+
+function formatVolume(
+  value,
+) {
   const number =
-    Number(value || 0);
+    Number(
+      value || 0,
+    );
 
-  if (number >= 1000000) {
-    return `${(
-      number / 1000000
-    ).toFixed(1)}m kg`;
+  if (
+    number >= 1000000
+  ) {
+    return `${
+      (
+        number / 1000000
+      ).toFixed(1)
+    }m kg`;
   }
 
-  if (number >= 1000) {
-    return `${(
-      number / 1000
-    ).toFixed(1)}k kg`;
+  if (
+    number >= 1000
+  ) {
+    return `${
+      (
+        number / 1000
+      ).toFixed(1)
+    }k kg`;
   }
 
-  return `${Math.round(
-    number,
-  ).toLocaleString()} kg`;
+  return `${
+    Math.round(
+      number,
+    ).toLocaleString()
+  } kg`;
 }
+
 
 export default ProfilePage;
