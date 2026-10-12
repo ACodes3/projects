@@ -22,16 +22,19 @@ import {
 } from 'react-router-dom';
 
 import {
+  createWorkout,
+} from '../api/forgeApi.js';
+
+import {
   exercises,
 } from '../data/exercises';
 
 import './WorkoutSessionPage.css';
 
-const HISTORY_KEY =
-  'forge:workoutHistory';
 
 const DRAFT_KEY =
   'forge:workoutDraft';
+
 
 /* =========================================
    HELPERS
@@ -39,27 +42,38 @@ const DRAFT_KEY =
 
 function createId() {
   return (
-    crypto.randomUUID?.() ||
-    `${Date.now()}-${Math.random()}`
+    crypto.randomUUID?.()
+    || `${Date.now()}-${Math.random()}`
   );
 }
 
+
 function getToday() {
-  const date = new Date();
+  const date =
+    new Date();
 
   const year =
     date.getFullYear();
 
-  const month = String(
-    date.getMonth() + 1,
-  ).padStart(2, '0');
+  const month =
+    String(
+      date.getMonth() + 1,
+    ).padStart(
+      2,
+      '0',
+    );
 
-  const day = String(
-    date.getDate(),
-  ).padStart(2, '0');
+  const day =
+    String(
+      date.getDate(),
+    ).padStart(
+      2,
+      '0',
+    );
 
   return `${year}-${month}-${day}`;
 }
+
 
 function createEmptySet() {
   return {
@@ -70,48 +84,49 @@ function createEmptySet() {
   };
 }
 
+
 function normalizeExercise(
   exercise,
 ) {
   return {
     id:
-      exercise.id ||
-      createId(),
+      exercise.id
+      || createId(),
 
     exerciseId:
-      exercise.exerciseId ||
-      null,
+      exercise.exerciseId
+      || null,
 
     name:
-      exercise.name ||
-      'Exercise',
+      exercise.name
+      || 'Exercise',
 
     trackingMode:
-      exercise.trackingMode ||
-      'reps',
+      exercise.trackingMode
+      || 'reps',
 
     sets:
       Array.isArray(
         exercise.sets,
-      ) &&
-      exercise.sets.length > 0
+      )
+      && exercise.sets.length > 0
         ? exercise.sets.map(
             (set) => ({
               id:
-                set.id ||
-                createId(),
+                set.id
+                || createId(),
 
               weight:
-                set.weight ??
-                '',
+                set.weight
+                ?? '',
 
               reps:
-                set.reps ??
-                '',
+                set.reps
+                ?? '',
 
               durationSeconds:
-                set.durationSeconds ??
-                '',
+                set.durationSeconds
+                ?? '',
             }),
           )
         : [
@@ -119,6 +134,7 @@ function normalizeExercise(
           ],
   };
 }
+
 
 function loadDraft() {
   try {
@@ -135,24 +151,25 @@ function loadDraft() {
       JSON.parse(stored);
 
     if (
-      !parsed ||
-      typeof parsed !==
-        'object'
+      !parsed
+      || typeof parsed
+        !== 'object'
     ) {
       return null;
     }
 
     return {
       name:
-        parsed.name || '',
+        parsed.name
+        || '',
 
       date:
-        parsed.date ||
-        getToday(),
+        parsed.date
+        || getToday(),
 
       youtubeUrl:
-        parsed.youtubeUrl ||
-        '',
+        parsed.youtubeUrl
+        || '',
 
       exercises:
         Array.isArray(
@@ -168,24 +185,6 @@ function loadDraft() {
   }
 }
 
-function readHistory() {
-  try {
-    const stored =
-      JSON.parse(
-        localStorage.getItem(
-          HISTORY_KEY,
-        ) || '[]',
-      );
-
-    return Array.isArray(
-      stored,
-    )
-      ? stored
-      : [];
-  } catch {
-    return [];
-  }
-}
 
 function formatDuration(
   seconds,
@@ -207,8 +206,12 @@ function formatDuration(
 
   return `${minutes}:${String(
     remaining,
-  ).padStart(2, '0')}`;
+  ).padStart(
+    2,
+    '0',
+  )}`;
 }
+
 
 /* =========================================
    PAGE
@@ -228,31 +231,32 @@ export default function WorkoutSessionPage() {
     workoutName,
     setWorkoutName,
   ] = useState(
-    storedDraft?.name || '',
+    storedDraft?.name
+    || '',
   );
 
   const [
     workoutDate,
     setWorkoutDate,
   ] = useState(
-    storedDraft?.date ||
-      getToday(),
+    storedDraft?.date
+    || getToday(),
   );
 
   const [
     youtubeUrl,
     setYoutubeUrl,
   ] = useState(
-    storedDraft?.youtubeUrl ||
-      '',
+    storedDraft?.youtubeUrl
+    || '',
   );
 
   const [
     workoutExercises,
     setWorkoutExercises,
   ] = useState(
-    storedDraft?.exercises ||
-      [],
+    storedDraft?.exercises
+    || [],
   );
 
   const [
@@ -274,6 +278,12 @@ export default function WorkoutSessionPage() {
     error,
     setError,
   ] = useState('');
+
+  const [
+    saving,
+    setSaving,
+  ] = useState(false);
+
 
   /* =========================================
      AUTO-SAVE DRAFT
@@ -306,6 +316,7 @@ export default function WorkoutSessionPage() {
     workoutExercises,
   ]);
 
+
   /* =========================================
      FILTER EXERCISES
   ========================================= */
@@ -325,17 +336,18 @@ export default function WorkoutSessionPage() {
         (exercise) =>
           exercise.name
             .toLowerCase()
-            .includes(query) ||
-          exercise.muscle
+            .includes(query)
+          || exercise.muscle
             ?.toLowerCase()
-            .includes(query) ||
-          exercise.equipment
+            .includes(query)
+          || exercise.equipment
             ?.toLowerCase()
             .includes(query),
       );
     }, [
       exerciseSearch,
     ]);
+
 
   /* =========================================
      WORKOUT TOTALS
@@ -350,8 +362,8 @@ export default function WorkoutSessionPage() {
       workoutExercises.forEach(
         (exercise) => {
           const mode =
-            exercise.trackingMode ||
-            'reps';
+            exercise.trackingMode
+            || 'reps';
 
           if (
             mode === 'time'
@@ -365,10 +377,10 @@ export default function WorkoutSessionPage() {
                   total,
                   set,
                 ) =>
-                  total +
-                  Number(
-                    set.durationSeconds ||
-                      0,
+                  total
+                  + Number(
+                    set.durationSeconds
+                    || 0,
                   ),
                 0,
               );
@@ -393,6 +405,7 @@ export default function WorkoutSessionPage() {
       workoutExercises,
     ]);
 
+
   /* =========================================
      ADD EXERCISE
   ========================================= */
@@ -401,10 +414,19 @@ export default function WorkoutSessionPage() {
     exercise,
   ) {
     const next = {
-      id: createId(),
+      id:
+        createId(),
 
+      /*
+       * The current picker still uses the
+       * client-side exercise library.
+       *
+       * Its IDs are not PostgreSQL IDs, so
+       * we deliberately keep exerciseId null
+       * until the library itself is migrated
+       * to the backend.
+       */
       exerciseId:
-        exercise.id ||
         null,
 
       name:
@@ -434,6 +456,7 @@ export default function WorkoutSessionPage() {
     setError('');
   }
 
+
   function addCustomExercise() {
     const name =
       customExerciseName.trim();
@@ -443,10 +466,10 @@ export default function WorkoutSessionPage() {
     }
 
     addExercise({
-      id: null,
       name,
     });
   }
+
 
   /* =========================================
      REMOVE EXERCISE
@@ -459,11 +482,12 @@ export default function WorkoutSessionPage() {
       (current) =>
         current.filter(
           (exercise) =>
-            exercise.id !==
-            exerciseId,
+            exercise.id
+            !== exerciseId,
         ),
     );
   }
+
 
   /* =========================================
      TRACKING MODE
@@ -477,8 +501,8 @@ export default function WorkoutSessionPage() {
       (current) =>
         current.map(
           (exercise) =>
-            exercise.id ===
-            exerciseId
+            exercise.id
+            === exerciseId
               ? {
                   ...exercise,
                   trackingMode:
@@ -488,6 +512,7 @@ export default function WorkoutSessionPage() {
         ),
     );
   }
+
 
   /* =========================================
      SET MANAGEMENT
@@ -500,8 +525,8 @@ export default function WorkoutSessionPage() {
       (current) =>
         current.map(
           (exercise) =>
-            exercise.id ===
-            exerciseId
+            exercise.id
+            === exerciseId
               ? {
                   ...exercise,
 
@@ -515,6 +540,7 @@ export default function WorkoutSessionPage() {
     );
   }
 
+
   function removeSet(
     exerciseId,
     setId,
@@ -524,8 +550,8 @@ export default function WorkoutSessionPage() {
         current.map(
           (exercise) => {
             if (
-              exercise.id !==
-              exerciseId
+              exercise.id
+              !== exerciseId
             ) {
               return exercise;
             }
@@ -533,16 +559,15 @@ export default function WorkoutSessionPage() {
             const remaining =
               exercise.sets.filter(
                 (set) =>
-                  set.id !==
-                  setId,
+                  set.id
+                  !== setId,
               );
 
             return {
               ...exercise,
 
               sets:
-                remaining.length >
-                0
+                remaining.length > 0
                   ? remaining
                   : [
                       createEmptySet(),
@@ -552,6 +577,7 @@ export default function WorkoutSessionPage() {
         ),
     );
   }
+
 
   function updateSet(
     exerciseId,
@@ -563,16 +589,16 @@ export default function WorkoutSessionPage() {
       (current) =>
         current.map(
           (exercise) =>
-            exercise.id ===
-            exerciseId
+            exercise.id
+            === exerciseId
               ? {
                   ...exercise,
 
                   sets:
                     exercise.sets.map(
                       (set) =>
-                        set.id ===
-                        setId
+                        set.id
+                        === setId
                           ? {
                               ...set,
                               [field]:
@@ -585,6 +611,7 @@ export default function WorkoutSessionPage() {
         ),
     );
   }
+
 
   /* =========================================
      VALIDATION
@@ -619,8 +646,8 @@ export default function WorkoutSessionPage() {
 
         if (
           url.protocol !==
-            'http:' &&
-          url.protocol !==
+            'http:'
+          && url.protocol !==
             'https:'
         ) {
           return 'Enter a valid YouTube URL.';
@@ -635,8 +662,8 @@ export default function WorkoutSessionPage() {
       workoutExercises
     ) {
       const mode =
-        exercise.trackingMode ||
-        'reps';
+        exercise.trackingMode
+        || 'reps';
 
       if (
         exercise.sets.length ===
@@ -663,8 +690,8 @@ export default function WorkoutSessionPage() {
         if (
           !Number.isFinite(
             weight,
-          ) ||
-          weight < 0
+          )
+          || weight < 0
         ) {
           return `Check the weight entered for ${exercise.name}.`;
         }
@@ -680,8 +707,8 @@ export default function WorkoutSessionPage() {
           if (
             !Number.isFinite(
               seconds,
-            ) ||
-            seconds <= 0
+            )
+            || seconds <= 0
           ) {
             return `Enter a valid time for every interval in ${exercise.name}.`;
           }
@@ -694,8 +721,8 @@ export default function WorkoutSessionPage() {
           if (
             !Number.isFinite(
               reps,
-            ) ||
-            reps <= 0
+            )
+            || reps <= 0
           ) {
             return `Enter valid reps for every set in ${exercise.name}.`;
           }
@@ -706,11 +733,16 @@ export default function WorkoutSessionPage() {
     return '';
   }
 
+
   /* =========================================
-     SAVE WORKOUT
+     SAVE WORKOUT TO API
   ========================================= */
 
-  function saveWorkout() {
+  async function saveWorkout() {
+    if (saving) {
+      return;
+    }
+
     const validationError =
       validateWorkout();
 
@@ -728,11 +760,20 @@ export default function WorkoutSessionPage() {
       workoutExercises.map(
         (exercise) => {
           const mode =
-            exercise.trackingMode ||
-            'reps';
+            exercise.trackingMode
+            || 'reps';
 
           return {
-            ...exercise,
+            /*
+             * Until the exercise library is
+             * backed by PostgreSQL, save the
+             * exercise as a name snapshot.
+             */
+            exerciseId:
+              null,
+
+            name:
+              exercise.name.trim(),
 
             trackingMode:
               mode,
@@ -740,28 +781,22 @@ export default function WorkoutSessionPage() {
             sets:
               exercise.sets.map(
                 (set) => ({
-                  id:
-                    set.id,
-
                   weight:
-                    set.weight ===
-                    ''
+                    set.weight === ''
                       ? 0
                       : Number(
                           set.weight,
                         ),
 
                   reps:
-                    mode ===
-                    'reps'
+                    mode === 'reps'
                       ? Number(
                           set.reps,
                         )
                       : null,
 
                   durationSeconds:
-                    mode ===
-                    'time'
+                    mode === 'time'
                       ? Number(
                           set.durationSeconds,
                         )
@@ -773,8 +808,6 @@ export default function WorkoutSessionPage() {
       );
 
     const workout = {
-      id: createId(),
-
       name:
         workoutName.trim(),
 
@@ -784,34 +817,43 @@ export default function WorkoutSessionPage() {
       youtubeUrl:
         youtubeUrl.trim(),
 
-      createdAt:
-        new Date().toISOString(),
+      notes:
+        '',
 
       exercises:
         cleanedExercises,
     };
 
-    const history =
-      readHistory();
+    try {
+      setSaving(true);
+      setError('');
 
-    const updated = [
-      workout,
-      ...history,
-    ];
+      await createWorkout(
+        workout,
+      );
 
-    localStorage.setItem(
-      HISTORY_KEY,
-      JSON.stringify(
-        updated,
-      ),
-    );
+      localStorage.removeItem(
+        DRAFT_KEY,
+      );
 
-    localStorage.removeItem(
-      DRAFT_KEY,
-    );
+      navigate(
+        '/workouts',
+      );
+    } catch (saveError) {
+      console.error(
+        'Failed to save workout:',
+        saveError,
+      );
 
-    navigate('/workouts');
+      setError(
+        saveError.message
+        || 'Failed to save workout.',
+      );
+    } finally {
+      setSaving(false);
+    }
   }
+
 
   /* =========================================
      DISCARD DRAFT
@@ -819,14 +861,14 @@ export default function WorkoutSessionPage() {
 
   function discardWorkout() {
     const hasContent =
-      workoutName.trim() ||
-      youtubeUrl.trim() ||
-      workoutExercises.length >
+      workoutName.trim()
+      || youtubeUrl.trim()
+      || workoutExercises.length >
         0;
 
     if (
-      hasContent &&
-      !window.confirm(
+      hasContent
+      && !window.confirm(
         'Discard this workout draft?',
       )
     ) {
@@ -837,8 +879,11 @@ export default function WorkoutSessionPage() {
       DRAFT_KEY,
     );
 
-    navigate('/workouts');
+    navigate(
+      '/workouts',
+    );
   }
+
 
   /* =========================================
      RENDER
@@ -854,6 +899,7 @@ export default function WorkoutSessionPage() {
       <header className="workout-session-page__header">
 
         <div>
+
           <Link
             to="/workouts"
             className="workout-session-page__back"
@@ -879,7 +925,9 @@ export default function WorkoutSessionPage() {
             intervals, or both in
             the same workout.
           </p>
+
         </div>
+
 
         <div className="workout-session-page__header-actions">
 
@@ -888,6 +936,9 @@ export default function WorkoutSessionPage() {
             className="button"
             onClick={
               discardWorkout
+            }
+            disabled={
+              saving
             }
           >
             Discard
@@ -899,17 +950,25 @@ export default function WorkoutSessionPage() {
             onClick={
               saveWorkout
             }
+            disabled={
+              saving
+            }
           >
             <Save
               size={15}
             />
 
-            Save Workout
+            {
+              saving
+                ? 'Saving...'
+                : 'Save Workout'
+            }
           </button>
 
         </div>
 
       </header>
+
 
       {/* =====================================
           ERROR
@@ -920,6 +979,7 @@ export default function WorkoutSessionPage() {
           {error}
         </div>
       )}
+
 
       {/* =====================================
           WORKOUT INFORMATION
@@ -941,6 +1001,7 @@ export default function WorkoutSessionPage() {
 
         </div>
 
+
         <div className="workout-session-page__info-grid">
 
           <label className="workout-session-page__field workout-session-page__field--name">
@@ -959,8 +1020,7 @@ export default function WorkoutSessionPage() {
                 event,
               ) => {
                 setWorkoutName(
-                  event.target
-                    .value,
+                  event.target.value,
                 );
 
                 setError('');
@@ -968,6 +1028,7 @@ export default function WorkoutSessionPage() {
             />
 
           </label>
+
 
           <label className="workout-session-page__field">
 
@@ -984,8 +1045,7 @@ export default function WorkoutSessionPage() {
                 event,
               ) => {
                 setWorkoutDate(
-                  event.target
-                    .value,
+                  event.target.value,
                 );
 
                 setError('');
@@ -993,6 +1053,7 @@ export default function WorkoutSessionPage() {
             />
 
           </label>
+
 
           <label className="workout-session-page__field workout-session-page__field--youtube">
 
@@ -1016,8 +1077,7 @@ export default function WorkoutSessionPage() {
                   event,
                 ) => {
                   setYoutubeUrl(
-                    event.target
-                      .value,
+                    event.target.value,
                   );
 
                   setError('');
@@ -1030,10 +1090,14 @@ export default function WorkoutSessionPage() {
 
         </div>
 
+
         {youtubeUrl && (
+
           <a
             className="workout-session-page__youtube-preview"
-            href={youtubeUrl}
+            href={
+              youtubeUrl
+            }
             target="_blank"
             rel="noreferrer"
           >
@@ -1043,9 +1107,11 @@ export default function WorkoutSessionPage() {
 
             Open workout video
           </a>
+
         )}
 
       </section>
+
 
       {/* =====================================
           SUMMARY
@@ -1065,6 +1131,7 @@ export default function WorkoutSessionPage() {
           </strong>
         </article>
 
+
         <article>
           <span>
             Rep Sets
@@ -1077,6 +1144,7 @@ export default function WorkoutSessionPage() {
           </strong>
         </article>
 
+
         <article>
           <span>
             Timed Intervals
@@ -1088,6 +1156,7 @@ export default function WorkoutSessionPage() {
             }
           </strong>
         </article>
+
 
         <article>
           <span>
@@ -1102,6 +1171,7 @@ export default function WorkoutSessionPage() {
         </article>
 
       </section>
+
 
       {/* =====================================
           EXERCISES HEADER
@@ -1131,10 +1201,12 @@ export default function WorkoutSessionPage() {
           }
         >
           <Plus size={15} />
+
           Add Exercise
         </button>
 
       </div>
+
 
       {/* =====================================
           EMPTY
@@ -1173,6 +1245,7 @@ export default function WorkoutSessionPage() {
             <Plus
               size={15}
             />
+
             Add Exercise
           </button>
 
@@ -1192,8 +1265,8 @@ export default function WorkoutSessionPage() {
               exerciseIndex,
             ) => {
               const mode =
-                exercise.trackingMode ||
-                'reps';
+                exercise.trackingMode
+                || 'reps';
 
               const totalTime =
                 exercise.sets.reduce(
@@ -1201,10 +1274,10 @@ export default function WorkoutSessionPage() {
                     total,
                     set,
                   ) =>
-                    total +
-                    Number(
-                      set.durationSeconds ||
-                        0,
+                    total
+                    + Number(
+                      set.durationSeconds
+                      || 0,
                     ),
                   0,
                 );
@@ -1225,8 +1298,8 @@ export default function WorkoutSessionPage() {
 
                     <div className="workout-session-page__exercise-number">
                       {
-                        exerciseIndex +
-                        1
+                        exerciseIndex
+                        + 1
                       }
                     </div>
 
@@ -1239,20 +1312,19 @@ export default function WorkoutSessionPage() {
                       </h3>
 
                       <span>
-                        {mode ===
-                        'time'
-                          ? `${exercise.sets.length} timed ${
-                              exercise.sets.length ===
-                              1
-                                ? 'interval'
-                                : 'intervals'
-                            }`
-                          : `${exercise.sets.length} ${
-                              exercise.sets.length ===
-                              1
-                                ? 'set'
-                                : 'sets'
-                            }`}
+                        {
+                          mode === 'time'
+                            ? `${exercise.sets.length} timed ${
+                                exercise.sets.length === 1
+                                  ? 'interval'
+                                  : 'intervals'
+                              }`
+                            : `${exercise.sets.length} ${
+                                exercise.sets.length === 1
+                                  ? 'set'
+                                  : 'sets'
+                              }`
+                        }
                       </span>
 
                     </div>
@@ -1274,6 +1346,7 @@ export default function WorkoutSessionPage() {
 
                   </div>
 
+
                   {/* =========================
                       TRACKING MODE
                   ========================= */}
@@ -1289,8 +1362,7 @@ export default function WorkoutSessionPage() {
                       <button
                         type="button"
                         className={
-                          mode ===
-                          'reps'
+                          mode === 'reps'
                             ? 'workout-session-page__mode-button workout-session-page__mode-button--active'
                             : 'workout-session-page__mode-button'
                         }
@@ -1311,8 +1383,7 @@ export default function WorkoutSessionPage() {
                       <button
                         type="button"
                         className={
-                          mode ===
-                          'time'
+                          mode === 'time'
                             ? 'workout-session-page__mode-button workout-session-page__mode-button--active'
                             : 'workout-session-page__mode-button'
                         }
@@ -1332,19 +1403,24 @@ export default function WorkoutSessionPage() {
 
                     </div>
 
+
                     {mode ===
                       'time' && (
+
                       <span className="workout-session-page__exercise-time">
                         TUT{' '}
+
                         <strong>
                           {formatDuration(
                             totalTime,
                           )}
                         </strong>
                       </span>
+
                     )}
 
                   </div>
+
 
                   {/* =========================
                       REP SETS
@@ -1352,6 +1428,7 @@ export default function WorkoutSessionPage() {
 
                   {mode ===
                     'reps' && (
+
                     <div className="workout-session-page__sets">
 
                       <div className="workout-session-page__set-heading workout-session-page__set-heading--reps">
@@ -1372,6 +1449,7 @@ export default function WorkoutSessionPage() {
 
                       </div>
 
+
                       {exercise.sets.map(
                         (
                           set,
@@ -1387,8 +1465,8 @@ export default function WorkoutSessionPage() {
 
                             <strong>
                               {
-                                setIndex +
-                                1
+                                setIndex
+                                + 1
                               }
                             </strong>
 
@@ -1457,7 +1535,9 @@ export default function WorkoutSessionPage() {
                       )}
 
                     </div>
+
                   )}
+
 
                   {/* =========================
                       TIMED INTERVALS
@@ -1465,6 +1545,7 @@ export default function WorkoutSessionPage() {
 
                   {mode ===
                     'time' && (
+
                     <div className="workout-session-page__sets">
 
                       <div className="workout-session-page__set-heading workout-session-page__set-heading--time">
@@ -1485,6 +1566,7 @@ export default function WorkoutSessionPage() {
 
                       </div>
 
+
                       {exercise.sets.map(
                         (
                           set,
@@ -1500,8 +1582,8 @@ export default function WorkoutSessionPage() {
 
                             <strong>
                               {
-                                setIndex +
-                                1
+                                setIndex
+                                + 1
                               }
                             </strong>
 
@@ -1578,7 +1660,9 @@ export default function WorkoutSessionPage() {
                       )}
 
                     </div>
+
                   )}
+
 
                   {/* =========================
                       ADD SET / INTERVAL
@@ -1597,10 +1681,11 @@ export default function WorkoutSessionPage() {
                       size={14}
                     />
 
-                    {mode ===
-                    'time'
-                      ? 'Add Interval'
-                      : 'Add Set'}
+                    {
+                      mode === 'time'
+                        ? 'Add Interval'
+                        : 'Add Set'
+                    }
                   </button>
 
                 </article>
@@ -1609,7 +1694,9 @@ export default function WorkoutSessionPage() {
           )}
 
         </section>
+
       )}
+
 
       {/* =====================================
           BOTTOM SAVE
@@ -1617,6 +1704,7 @@ export default function WorkoutSessionPage() {
 
       {workoutExercises.length >
         0 && (
+
         <div className="workout-session-page__bottom-actions">
 
           <button
@@ -1627,8 +1715,12 @@ export default function WorkoutSessionPage() {
                 true,
               )
             }
+            disabled={
+              saving
+            }
           >
             <Plus size={15} />
+
             Add Exercise
           </button>
 
@@ -1638,13 +1730,25 @@ export default function WorkoutSessionPage() {
             onClick={
               saveWorkout
             }
+            disabled={
+              saving
+            }
           >
-            <Save size={15} />
-            Save Workout
+            <Save
+              size={15}
+            />
+
+            {
+              saving
+                ? 'Saving...'
+                : 'Save Workout'
+            }
           </button>
 
         </div>
+
       )}
+
 
       {/* =====================================
           EXERCISE MODAL
@@ -1698,6 +1802,7 @@ export default function WorkoutSessionPage() {
 
             </div>
 
+
             {/* SEARCH */}
 
             <div className="workout-session-page__modal-search">
@@ -1714,13 +1819,13 @@ export default function WorkoutSessionPage() {
                   event,
                 ) =>
                   setExerciseSearch(
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
               />
 
             </div>
+
 
             {/* CUSTOM */}
 
@@ -1740,6 +1845,7 @@ export default function WorkoutSessionPage() {
 
               </div>
 
+
               <div className="workout-session-page__custom-form">
 
                 <input
@@ -1752,8 +1858,7 @@ export default function WorkoutSessionPage() {
                     event,
                   ) =>
                     setCustomExerciseName(
-                      event.target
-                        .value,
+                      event.target.value,
                     )
                   }
                   onKeyDown={(
@@ -1780,12 +1885,14 @@ export default function WorkoutSessionPage() {
                   <Plus
                     size={14}
                   />
+
                   Add
                 </button>
 
               </div>
 
             </div>
+
 
             {/* LIBRARY */}
 
@@ -1795,8 +1902,7 @@ export default function WorkoutSessionPage() {
               0 ? (
 
                 <div className="workout-session-page__library-empty">
-                  No exercises
-                  found.
+                  No exercises found.
                 </div>
 
               ) : (
@@ -1830,9 +1936,11 @@ export default function WorkoutSessionPage() {
                             exercise.muscle
                           }
 
-                          {exercise.equipment
-                            ? ` · ${exercise.equipment}`
-                            : ''}
+                          {
+                            exercise.equipment
+                              ? ` · ${exercise.equipment}`
+                              : ''
+                          }
                         </span>
 
                       </div>
@@ -1853,6 +1961,7 @@ export default function WorkoutSessionPage() {
           </div>
 
         </div>
+
       )}
 
     </main>
