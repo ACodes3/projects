@@ -10,14 +10,19 @@ import {
 } from 'lucide-react';
 
 import {
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 
+import {
+  createProgressEntry,
+  deleteProgressEntry,
+  getProgressEntries,
+} from '../api/forgeApi.js';
+
 import './ProgressPage.css';
 
-const STORAGE_KEY =
-  'forge:progressEntries';
 
 /* =========================================
    DATE
@@ -27,8 +32,8 @@ function getLocalDateString(
   date = new Date(),
 ) {
   const offset =
-    date.getTimezoneOffset() *
-    60000;
+    date.getTimezoneOffset()
+    * 60000;
 
   return new Date(
     date.getTime() - offset,
@@ -37,37 +42,191 @@ function getLocalDateString(
     .slice(0, 10);
 }
 
+
 /* =========================================
-   STORAGE
+   API NORMALIZATION
 ========================================= */
 
-function loadEntries() {
-  try {
-    const stored =
-      localStorage.getItem(
-        STORAGE_KEY,
-      );
+function normalizeDate(value) {
+  if (!value) {
+    return '';
+  }
 
-    if (!stored) {
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.sort(
-      (a, b) =>
-        new Date(b.date) -
-        new Date(a.date),
+  if (
+    typeof value === 'string'
+  ) {
+    return value.slice(
+      0,
+      10,
     );
+  }
+
+  try {
+    return new Date(value)
+      .toISOString()
+      .slice(
+        0,
+        10,
+      );
   } catch {
-    return [];
+    return '';
   }
 }
+
+
+function normalizeNumber(
+  value,
+) {
+  if (
+    value === null
+    || value === undefined
+    || value === ''
+  ) {
+    return null;
+  }
+
+  const number =
+    Number(value);
+
+  return Number.isFinite(
+    number,
+  )
+    ? number
+    : null;
+}
+
+
+function normalizeEntry(
+  entry,
+) {
+  return {
+    id:
+      entry.id,
+
+    date:
+      normalizeDate(
+        entry.entry_date
+        ?? entry.date,
+      ),
+
+    weight:
+      normalizeNumber(
+        entry.weight_kg
+        ?? entry.weight,
+      ),
+
+    bodyFat:
+      normalizeNumber(
+        entry.body_fat_percent
+        ?? entry.bodyFat,
+      ),
+
+    waist:
+      normalizeNumber(
+        entry.waist_cm
+        ?? entry.waist,
+      ),
+
+    chest:
+      normalizeNumber(
+        entry.chest_cm
+        ?? entry.chest,
+      ),
+
+    arms:
+      normalizeNumber(
+        entry.arms_cm
+        ?? entry.arms,
+      ),
+
+    thighs:
+      normalizeNumber(
+        entry.thighs_cm
+        ?? entry.thighs,
+      ),
+
+    notes:
+      entry.notes
+      ?? '',
+
+    createdAt:
+      entry.created_at
+      ?? entry.createdAt
+      ?? null,
+  };
+}
+
+
+function extractEntries(
+  response,
+) {
+  if (
+    Array.isArray(response)
+  ) {
+    return response;
+  }
+
+  if (
+    Array.isArray(
+      response?.entries,
+    )
+  ) {
+    return response.entries;
+  }
+
+  if (
+    Array.isArray(
+      response?.progressEntries,
+    )
+  ) {
+    return response.progressEntries;
+  }
+
+  if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    return response.data;
+  }
+
+  return [];
+}
+
+
+function sortEntries(
+  entries,
+) {
+  return [
+    ...entries,
+  ].sort(
+    (a, b) => {
+      const dateDifference =
+        new Date(
+          `${b.date}T12:00:00`,
+        )
+        - new Date(
+          `${a.date}T12:00:00`,
+        );
+
+      if (
+        dateDifference !== 0
+      ) {
+        return dateDifference;
+      }
+
+      return (
+        new Date(
+          b.createdAt || 0,
+        )
+        - new Date(
+          a.createdAt || 0,
+        )
+      );
+    },
+  );
+}
+
 
 /* =========================================
    EMPTY FORM
@@ -75,7 +234,9 @@ function loadEntries() {
 
 function createEmptyEntry() {
   return {
-    date: getLocalDateString(),
+    date:
+      getLocalDateString(),
+
     weight: '',
     bodyFat: '',
     waist: '',
@@ -86,6 +247,7 @@ function createEmptyEntry() {
   };
 }
 
+
 /* =========================================
    PAGE
 ========================================= */
@@ -94,7 +256,7 @@ function ProgressPage() {
   const [
     entries,
     setEntries,
-  ] = useState(loadEntries);
+  ] = useState([]);
 
   const [
     showModal,
@@ -112,6 +274,76 @@ function ProgressPage() {
     error,
     setError,
   ] = useState('');
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    saving,
+    setSaving,
+  ] = useState(false);
+
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState(null);
+
+
+  /* =========================================
+     LOAD PROGRESS
+  ========================================= */
+
+  async function loadProgress() {
+    await Promise.resolve();
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const response =
+        await getProgressEntries();
+
+      const normalized =
+        extractEntries(
+          response,
+        ).map(
+          normalizeEntry,
+        );
+
+      setEntries(
+        sortEntries(
+          normalized,
+        ),
+      );
+    } catch (loadError) {
+      console.error(
+        'Failed to load progress:',
+        loadError,
+      );
+
+      setError(
+        loadError.message
+        || 'Failed to load progress.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    const timeoutId =
+      setTimeout(() => {
+        loadProgress();
+      }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
 
   /* =========================================
      STATS
@@ -137,10 +369,10 @@ function ProgressPage() {
         entries.find(
           (entry) =>
             entry.id !==
-              latest.id &&
-            entry.weight !==
-              null &&
-            entry.weight !==
+              latest.id
+            && entry.weight !==
+              null
+            && entry.weight !==
               undefined,
         );
 
@@ -156,8 +388,8 @@ function ProgressPage() {
           : null;
 
       const previousWeight =
-        previous &&
-        Number.isFinite(
+        previous
+        && Number.isFinite(
           Number(
             previous.weight,
           ),
@@ -171,18 +403,16 @@ function ProgressPage() {
         latestWeight,
 
         weightChange:
-          latestWeight !== null &&
-          previousWeight !== null
-            ? latestWeight -
-              previousWeight
+          latestWeight !== null
+          && previousWeight !== null
+            ? latestWeight
+              - previousWeight
             : null,
 
         latestBodyFat:
-          latest.bodyFat !==
-            '' &&
-          latest.bodyFat !==
-            null &&
-          latest.bodyFat !==
+          latest.bodyFat !== ''
+          && latest.bodyFat !== null
+          && latest.bodyFat !==
             undefined
             ? Number(
                 latest.bodyFat,
@@ -192,29 +422,10 @@ function ProgressPage() {
         totalEntries:
           entries.length,
       };
-    }, [entries]);
+    }, [
+      entries,
+    ]);
 
-  /* =========================================
-     SAVE STORAGE
-  ========================================= */
-
-  function saveEntries(
-    nextEntries,
-  ) {
-    const sorted =
-      [...nextEntries].sort(
-        (a, b) =>
-          new Date(b.date) -
-          new Date(a.date),
-      );
-
-    setEntries(sorted);
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(sorted),
-    );
-  }
 
   /* =========================================
      OPEN MODAL
@@ -229,11 +440,16 @@ function ProgressPage() {
     setShowModal(true);
   }
 
+
   /* =========================================
      ADD ENTRY
   ========================================= */
 
-  function addEntry() {
+  async function addEntry() {
+    if (saving) {
+      return;
+    }
+
     if (!form.date) {
       setError(
         'Choose a date.',
@@ -253,13 +469,15 @@ function ProgressPage() {
     }
 
     const weight =
-      Number(form.weight);
+      Number(
+        form.weight,
+      );
 
     if (
       !Number.isFinite(
         weight,
-      ) ||
-      weight <= 0
+      )
+      || weight <= 0
     ) {
       setError(
         'Enter a valid weight.',
@@ -277,8 +495,8 @@ function ProgressPage() {
     ];
 
     for (
-      const field
-      of optionalFields
+      const field of
+      optionalFields
     ) {
       if (
         form[field] !== ''
@@ -291,8 +509,8 @@ function ProgressPage() {
         if (
           !Number.isFinite(
             value,
-          ) ||
-          value < 0
+          )
+          || value < 0
         ) {
           setError(
             'Measurements must contain valid positive numbers.',
@@ -304,9 +522,6 @@ function ProgressPage() {
     }
 
     const entry = {
-      id:
-        crypto.randomUUID(),
-
       date:
         form.date,
 
@@ -349,35 +564,103 @@ function ProgressPage() {
 
       notes:
         form.notes.trim(),
-
-      createdAt:
-        new Date().toISOString(),
     };
 
-    saveEntries([
-      ...entries,
-      entry,
-    ]);
+    try {
+      setSaving(true);
+      setError('');
 
-    setShowModal(false);
-    setError('');
+      await createProgressEntry(
+        entry,
+      );
+
+      const response =
+        await getProgressEntries();
+
+      const normalized =
+        extractEntries(
+          response,
+        ).map(
+          normalizeEntry,
+        );
+
+      setEntries(
+        sortEntries(
+          normalized,
+        ),
+      );
+
+      setShowModal(
+        false,
+      );
+
+      setForm(
+        createEmptyEntry(),
+      );
+    } catch (saveError) {
+      console.error(
+        'Failed to save progress entry:',
+        saveError,
+      );
+
+      setError(
+        saveError.message
+        || 'Failed to save measurement.',
+      );
+    } finally {
+      setSaving(false);
+    }
   }
+
 
   /* =========================================
      DELETE ENTRY
   ========================================= */
 
-  function deleteEntry(id) {
-    const nextEntries =
-      entries.filter(
-        (entry) =>
-          entry.id !== id,
+  async function deleteEntry(
+    id,
+  ) {
+    if (
+      deletingId !== null
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingId(
+        id,
       );
 
-    saveEntries(
-      nextEntries,
-    );
+      setError('');
+
+      await deleteProgressEntry(
+        id,
+      );
+
+      setEntries(
+        (current) =>
+          current.filter(
+            (entry) =>
+              entry.id !== id,
+          ),
+      );
+    } catch (deleteError) {
+      console.error(
+        'Failed to delete progress entry:',
+        deleteError,
+      );
+
+      setError(
+        deleteError.message
+        || 'Failed to delete measurement.',
+      );
+    } finally {
+      setDeletingId(
+        null,
+      );
+    }
   }
+
 
   /* =========================================
      RENDER
@@ -412,13 +695,33 @@ function ProgressPage() {
         <button
           type="button"
           className="button button--primary"
-          onClick={openModal}
+          onClick={
+            openModal
+          }
+          disabled={
+            loading
+          }
         >
           <Plus size={16} />
+
           Add Measurement
         </button>
 
       </div>
+
+
+      {/* =====================================
+          ERROR
+      ===================================== */}
+
+      {error && !showModal && (
+
+        <p className="progress-page__error">
+          {error}
+        </p>
+
+      )}
+
 
       {/* =====================================
           SUMMARY
@@ -437,38 +740,51 @@ function ProgressPage() {
           </span>
 
           <strong>
-            {stats.latestWeight !==
-            null
-              ? formatNumber(
-                  stats.latestWeight,
-                )
-              : '—'}
+            {
+              stats.latestWeight !==
+              null
+                ? formatNumber(
+                    stats.latestWeight,
+                  )
+                : '—'
+            }
           </strong>
 
           <small>
-            {stats.latestWeight !==
-            null
-              ? 'kg'
-              : ''}
+            {
+              stats.latestWeight !==
+              null
+                ? 'kg'
+                : ''
+            }
           </small>
 
         </article>
 
+
         <article className="progress-page__stat">
 
           <div>
-            {stats.weightChange !==
-              null &&
-            stats.weightChange >
-              0 ? (
-              <TrendingUp
-                size={18}
-              />
-            ) : (
-              <TrendingDown
-                size={18}
-              />
-            )}
+
+            {
+              stats.weightChange !==
+                null
+              && stats.weightChange >
+                0 ? (
+
+                <TrendingUp
+                  size={18}
+                />
+
+              ) : (
+
+                <TrendingDown
+                  size={18}
+                />
+
+              )
+            }
+
           </div>
 
           <span>
@@ -476,34 +792,41 @@ function ProgressPage() {
           </span>
 
           <strong>
-            {stats.weightChange !==
-            null
-              ? `${
-                  stats.weightChange >
-                  0
-                    ? '+'
-                    : ''
-                }${formatNumber(
-                  stats.weightChange,
-                )}`
-              : '—'}
+            {
+              stats.weightChange !==
+              null
+                ? `${
+                    stats.weightChange >
+                    0
+                      ? '+'
+                      : ''
+                  }${formatNumber(
+                    stats.weightChange,
+                  )}`
+                : '—'
+            }
           </strong>
 
           <small>
-            {stats.weightChange !==
-            null
-              ? 'kg'
-              : ''}
+            {
+              stats.weightChange !==
+              null
+                ? 'kg'
+                : ''
+            }
           </small>
 
         </article>
 
+
         <article className="progress-page__stat">
 
           <div>
+
             <Activity
               size={18}
             />
+
           </div>
 
           <span>
@@ -511,29 +834,36 @@ function ProgressPage() {
           </span>
 
           <strong>
-            {stats.latestBodyFat !==
-            null
-              ? formatNumber(
-                  stats.latestBodyFat,
-                )
-              : '—'}
+            {
+              stats.latestBodyFat !==
+              null
+                ? formatNumber(
+                    stats.latestBodyFat,
+                  )
+                : '—'
+            }
           </strong>
 
           <small>
-            {stats.latestBodyFat !==
-            null
-              ? '%'
-              : ''}
+            {
+              stats.latestBodyFat !==
+              null
+                ? '%'
+                : ''
+            }
           </small>
 
         </article>
 
+
         <article className="progress-page__stat">
 
           <div>
+
             <CalendarDays
               size={18}
             />
+
           </div>
 
           <span>
@@ -541,7 +871,9 @@ function ProgressPage() {
           </span>
 
           <strong>
-            {stats.totalEntries}
+            {
+              stats.totalEntries
+            }
           </strong>
 
           <small />
@@ -549,6 +881,7 @@ function ProgressPage() {
         </article>
 
       </section>
+
 
       {/* =====================================
           HISTORY HEADING
@@ -571,15 +904,52 @@ function ProgressPage() {
 
       </div>
 
+
+      {/* =====================================
+          LOADING
+      ===================================== */}
+
+      {loading && (
+
+        <section className="panel progress-page__empty">
+
+          <div>
+
+            <Scale
+              size={28}
+            />
+
+          </div>
+
+          <h3>
+            Loading measurements
+          </h3>
+
+          <p>
+            Loading your progress
+            history from FORGE.
+          </p>
+
+        </section>
+
+      )}
+
+
       {/* =====================================
           EMPTY STATE
       ===================================== */}
 
-      {entries.length === 0 && (
+      {!loading
+      && entries.length === 0 && (
+
         <section className="panel progress-page__empty">
 
           <div>
-            <Scale size={28} />
+
+            <Scale
+              size={28}
+            />
+
           </div>
 
           <h3>
@@ -595,20 +965,27 @@ function ProgressPage() {
           <button
             type="button"
             className="button button--primary"
-            onClick={openModal}
+            onClick={
+              openModal
+            }
           >
             <Plus size={16} />
+
             Add First Measurement
           </button>
 
         </section>
+
       )}
+
 
       {/* =====================================
           HISTORY
       ===================================== */}
 
-      {entries.length > 0 && (
+      {!loading
+      && entries.length > 0 && (
+
         <section className="panel progress-page__history">
 
           <div className="progress-page__table-heading">
@@ -641,10 +1018,12 @@ function ProgressPage() {
 
           </div>
 
+
           <div className="progress-page__entries">
 
             {entries.map(
               (entry) => (
+
                 <article
                   className="progress-page__entry"
                   key={
@@ -662,49 +1041,71 @@ function ProgressPage() {
 
                   </div>
 
-                  <span>
-                    {formatNumber(
-                      entry.weight,
-                    )}
-                    {' kg'}
-                  </span>
 
                   <span>
-                    {entry.bodyFat !==
-                    null
-                      ? `${formatNumber(
-                          entry.bodyFat,
-                        )}%`
-                      : '—'}
+                    {
+                      entry.weight !==
+                      null
+                        ? `${formatNumber(
+                            entry.weight,
+                          )} kg`
+                        : '—'
+                    }
                   </span>
 
-                  <span>
-                    {entry.waist !==
-                    null
-                      ? `${formatNumber(
-                          entry.waist,
-                        )} cm`
-                      : '—'}
-                  </span>
 
                   <span>
-                    {entry.chest !==
-                    null
-                      ? `${formatNumber(
-                          entry.chest,
-                        )} cm`
-                      : '—'}
+                    {
+                      entry.bodyFat !==
+                      null
+                        ? `${formatNumber(
+                            entry.bodyFat,
+                          )}%`
+                        : '—'
+                    }
                   </span>
+
+
+                  <span>
+                    {
+                      entry.waist !==
+                      null
+                        ? `${formatNumber(
+                            entry.waist,
+                          )} cm`
+                        : '—'
+                    }
+                  </span>
+
+
+                  <span>
+                    {
+                      entry.chest !==
+                      null
+                        ? `${formatNumber(
+                            entry.chest,
+                          )} cm`
+                        : '—'
+                    }
+                  </span>
+
 
                   <span className="progress-page__notes">
-                    {entry.notes ||
-                      '—'}
+                    {
+                      entry.notes
+                      || '—'
+                    }
                   </span>
+
 
                   <button
                     type="button"
                     className="progress-page__delete"
                     aria-label="Delete measurement"
+                    disabled={
+                      deletingId ===
+                      entry.id
+                    }
                     onClick={() =>
                       deleteEntry(
                         entry.id,
@@ -717,19 +1118,23 @@ function ProgressPage() {
                   </button>
 
                 </article>
+
               ),
             )}
 
           </div>
 
         </section>
+
       )}
+
 
       {/* =====================================
           ADD MEASUREMENT MODAL
       ===================================== */}
 
       {showModal && (
+
         <div
           className="progress-page__overlay"
           onMouseDown={(
@@ -738,6 +1143,7 @@ function ProgressPage() {
             if (
               event.target ===
               event.currentTarget
+              && !saving
             ) {
               setShowModal(
                 false,
@@ -770,6 +1176,9 @@ function ProgressPage() {
               <button
                 type="button"
                 aria-label="Close"
+                disabled={
+                  saving
+                }
                 onClick={() =>
                   setShowModal(
                     false,
@@ -780,6 +1189,7 @@ function ProgressPage() {
               </button>
 
             </div>
+
 
             <div className="progress-page__form">
 
@@ -795,6 +1205,9 @@ function ProgressPage() {
                   value={
                     form.date
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -803,6 +1216,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         date:
                           event
                             .target
@@ -813,6 +1227,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field">
 
@@ -830,6 +1245,9 @@ function ProgressPage() {
                   value={
                     form.weight
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -838,6 +1256,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         weight:
                           event
                             .target
@@ -849,6 +1268,7 @@ function ProgressPage() {
 
               </div>
 
+
               <div className="progress-page__field">
 
                 <label htmlFor="progress-bodyfat">
@@ -859,10 +1279,14 @@ function ProgressPage() {
                   id="progress-bodyfat"
                   type="number"
                   min="0"
+                  max="100"
                   step="0.1"
                   placeholder="Optional"
                   value={
                     form.bodyFat
+                  }
+                  disabled={
+                    saving
                   }
                   onChange={(
                     event,
@@ -872,6 +1296,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         bodyFat:
                           event
                             .target
@@ -882,6 +1307,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field">
 
@@ -898,6 +1324,9 @@ function ProgressPage() {
                   value={
                     form.waist
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -906,6 +1335,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         waist:
                           event
                             .target
@@ -916,6 +1346,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field">
 
@@ -932,6 +1363,9 @@ function ProgressPage() {
                   value={
                     form.chest
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -940,6 +1374,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         chest:
                           event
                             .target
@@ -950,6 +1385,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field">
 
@@ -966,6 +1402,9 @@ function ProgressPage() {
                   value={
                     form.arms
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -974,6 +1413,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         arms:
                           event
                             .target
@@ -984,6 +1424,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field">
 
@@ -1000,6 +1441,9 @@ function ProgressPage() {
                   value={
                     form.thighs
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -1008,6 +1452,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         thighs:
                           event
                             .target
@@ -1018,6 +1463,7 @@ function ProgressPage() {
                 />
 
               </div>
+
 
               <div className="progress-page__field progress-page__field--full">
 
@@ -1032,6 +1478,9 @@ function ProgressPage() {
                   value={
                     form.notes
                   }
+                  disabled={
+                    saving
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -1040,6 +1489,7 @@ function ProgressPage() {
                         current,
                       ) => ({
                         ...current,
+
                         notes:
                           event
                             .target
@@ -1053,17 +1503,24 @@ function ProgressPage() {
 
             </div>
 
+
             {error && (
+
               <p className="progress-page__error">
                 {error}
               </p>
+
             )}
+
 
             <div className="progress-page__modal-footer">
 
               <button
                 type="button"
                 className="button"
+                disabled={
+                  saving
+                }
                 onClick={() =>
                   setShowModal(
                     false,
@@ -1076,12 +1533,20 @@ function ProgressPage() {
               <button
                 type="button"
                 className="button button--primary"
+                disabled={
+                  saving
+                }
                 onClick={
                   addEntry
                 }
               >
                 <Plus size={16} />
-                Save Measurement
+
+                {
+                  saving
+                    ? 'Saving...'
+                    : 'Save Measurement'
+                }
               </button>
 
             </div>
@@ -1089,17 +1554,21 @@ function ProgressPage() {
           </section>
 
         </div>
+
       )}
 
     </main>
   );
 }
 
+
 /* =========================================
    FORMATTERS
 ========================================= */
 
-function formatNumber(value) {
+function formatNumber(
+  value,
+) {
   const number =
     Number(value);
 
@@ -1118,7 +1587,10 @@ function formatNumber(value) {
     : number.toFixed(1);
 }
 
-function formatDate(date) {
+
+function formatDate(
+  date,
+) {
   if (!date) {
     return 'Unknown';
   }
@@ -1136,5 +1608,6 @@ function formatDate(date) {
     ),
   );
 }
+
 
 export default ProgressPage;
