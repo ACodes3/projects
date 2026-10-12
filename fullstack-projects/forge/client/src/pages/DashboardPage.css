@@ -1,0 +1,1012 @@
+.dashboard-page {
+  width: 100%;
+  max-width: 1180px;
+
+  margin: 0 auto;
+}
+
+/* =========================================
+   TOP STATS
+========================================= */
+
+.dashboard-page__stats {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-bottom: 26px;
+}
+
+.dashboard-page__stat {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  min-height: 112px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+
+  background: #14171a;
+}
+
+.dashboard-page__stat-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid rgba(217, 255, 119, 0.11);
+  border-radius: 8px;
+
+  background: rgba(217, 255, 119, 0.055);
+
+  color: #d9ff77;
+}
+
+.dashboard-page__stat > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.dashboard-page__stat span {
+  color: #777f85;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.dashboard-page__stat strong {
+  margin-top: 7px;
+
+  color: #eef0f1;
+
+  font-size: 22px;
+  font-weight: 650;
+
+  letter-spacing: -0.025em;
+}
+
+.dashboard-page__stat small {
+  margin-top: 3px;
+
+  color: #697177;
+
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+/* =========================================
+   MAIN GRID
+========================================= */
+
+.dashboard-page__grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+/* =========================================
+   PANELS
+========================================= */
+
+.dashboard-page__today,
+.dashboard-page__last-workout,
+.dashboard-page__nutrition,
+.dashboard-page__activity {
+  min-width: 0;
+
+  padding: 18px;
+}
+
+/* =========================================
+   PANEL HEADING
+========================================= */
+
+.dashboard-page__panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 16px;
+}
+
+.dashboard-page__panel-heading > div {
+  min-width: 0;
+}
+
+.dashboard-page__panel-heading span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #6f777d;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.dashboard-page__panel-heading h2 {
+  margin: 0;
+
+  color: #e9ecee;
+
+  font-size: 17px;
+  font-weight: 620;
+
+  letter-spacing: -0.02em;
+}
+
+.dashboard-page__panel-heading > a {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  flex-shrink: 0;
+
+  color: #838b91;
+
+  font-size: 9px;
+  font-weight: 550;
+
+  text-decoration: none;
+}
+
+.dashboard-page__panel-heading > a:hover {
+  color: #d9ff77;
+}
+
+/* =========================================
+   TODAY SCORE
+========================================= */
+
+.dashboard-page__today-content {
+  display: flex;
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 14px 0;
+}
+
+.dashboard-page__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  flex-shrink: 0;
+
+  width: 96px;
+  height: 96px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+
+  background: #111416;
+}
+
+.dashboard-page__score strong {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.dashboard-page__score span {
+  margin-top: 3px;
+
+  color: #777f85;
+
+  font-size: 9px;
+}
+
+.dashboard-page__score--good {
+  border-color: rgba(111, 220, 140, 0.25);
+}
+
+.dashboard-page__score--good strong {
+  color: #6fdc8c;
+}
+
+.dashboard-page__score--moderate {
+  border-color: rgba(224, 168, 74, 0.26);
+}
+
+.dashboard-page__score--moderate strong {
+  color: #e0a84a;
+}
+
+.dashboard-page__score--poor {
+  border-color: rgba(227, 108, 108, 0.24);
+}
+
+.dashboard-page__score--poor strong {
+  color: #e36c6c;
+}
+
+/* =========================================
+   TODAY BREAKDOWN
+========================================= */
+
+.dashboard-page__today-breakdown {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  gap: 15px;
+
+  min-width: 0;
+}
+
+.dashboard-page__today-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 7px;
+}
+
+.dashboard-page__today-label span {
+  color: #848c92;
+
+  font-size: 10px;
+}
+
+.dashboard-page__today-label strong {
+  color: #ccd0d2;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.dashboard-page__progress-bar {
+  width: 100%;
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-page__progress-bar span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #d9ff77;
+}
+
+/* =========================================
+   TODAY STATUS
+========================================= */
+
+.dashboard-page__today-status {
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.dashboard-page__today-status > div {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 30px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: #111416;
+
+  color: #8b9399;
+
+  font-size: 9px;
+}
+
+.dashboard-page__today-status > div svg {
+  color: #d9ff77;
+}
+
+.dashboard-page__today-status .dashboard-page__today-rest {
+  border-color: rgba(142, 162, 255, 0.13);
+
+  background: rgba(142, 162, 255, 0.045);
+
+  color: #aebaff;
+}
+
+.dashboard-page__today-status .dashboard-page__today-rest svg {
+  color: #9dabff;
+}
+
+/* =========================================
+   SCORE SOURCE
+========================================= */
+
+.dashboard-page__score-source {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 7px;
+
+  margin-top: 12px;
+
+  padding: 9px 10px;
+
+  border: 1px solid rgba(217, 255, 119, 0.07);
+  border-radius: 6px;
+
+  background: rgba(217, 255, 119, 0.025);
+
+  color: #737b81;
+
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.dashboard-page__score-source svg {
+  flex-shrink: 0;
+
+  margin-top: 1px;
+
+  color: #d9ff77;
+}
+
+/* =========================================
+   LAST WORKOUT
+========================================= */
+
+.dashboard-page__workout-title {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-bottom: 14px;
+}
+
+.dashboard-page__workout-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid rgba(217, 255, 119, 0.1);
+  border-radius: 7px;
+
+  background: rgba(217, 255, 119, 0.045);
+
+  color: #d9ff77;
+}
+
+.dashboard-page__workout-title > div:last-child {
+  min-width: 0;
+}
+
+.dashboard-page__workout-title strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #e4e7e9;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__workout-title span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6f777d;
+
+  font-size: 9px;
+}
+
+/* =========================================
+   WORKOUT STATS
+========================================= */
+
+.dashboard-page__workout-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 7px;
+
+  margin-bottom: 12px;
+}
+
+.dashboard-page__workout-stats > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+
+  padding: 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: #111416;
+}
+
+.dashboard-page__workout-stats strong {
+  overflow: hidden;
+
+  color: #dde1e3;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__workout-stats span {
+  color: #687076;
+
+  font-size: 8px;
+
+  text-transform: lowercase;
+}
+
+/* =========================================
+   EXERCISE PREVIEW
+========================================= */
+
+.dashboard-page__exercise-preview {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.dashboard-page__exercise-preview > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 34px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.dashboard-page__exercise-preview span {
+  overflow: hidden;
+
+  color: #aeb4b8;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__exercise-preview small {
+  flex-shrink: 0;
+
+  color: #687076;
+
+  font-size: 8px;
+}
+
+/* =========================================
+   WORKOUT VIDEO
+========================================= */
+
+.dashboard-page__video-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  min-height: 32px;
+
+  margin-top: 12px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(217, 255, 119, 0.11);
+  border-radius: 6px;
+
+  background: rgba(217, 255, 119, 0.04);
+
+  color: #b8d568;
+
+  font-size: 9px;
+  font-weight: 550;
+
+  text-decoration: none;
+}
+
+.dashboard-page__video-link:hover {
+  border-color: rgba(217, 255, 119, 0.22);
+
+  color: #d9ff77;
+}
+
+/* =========================================
+   NUTRITION MACROS
+========================================= */
+
+.dashboard-page__macro-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 7px;
+
+  margin-bottom: 13px;
+}
+
+.dashboard-page__macro-grid > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+
+  padding: 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: #111416;
+}
+
+.dashboard-page__macro-grid strong {
+  overflow: hidden;
+
+  color: #dde1e3;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__macro-grid span {
+  overflow: hidden;
+
+  color: #687076;
+
+  font-size: 8px;
+  line-height: 1.4;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   MEALS
+========================================= */
+
+.dashboard-page__meals {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.dashboard-page__meal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 43px;
+
+  padding: 0 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 6px;
+
+  background: #111416;
+}
+
+.dashboard-page__meal > div {
+  min-width: 0;
+}
+
+.dashboard-page__meal > div > span {
+  display: block;
+
+  color: #a3abb0;
+
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.dashboard-page__meal small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #626a70;
+
+  font-size: 8px;
+}
+
+.dashboard-page__meal-status {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 23px;
+  height: 23px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #5f676c;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.dashboard-page__meal--logged {
+  border-color: rgba(217, 255, 119, 0.075);
+}
+
+.dashboard-page__meal--logged .dashboard-page__meal-status {
+  background: rgba(217, 255, 119, 0.065);
+
+  color: #d9ff77;
+}
+
+/* =========================================
+   RECENT ACTIVITY
+========================================= */
+
+.dashboard-page__activity-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.dashboard-page__activity-item {
+  display: grid;
+  grid-template-columns:
+    32px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-height: 49px;
+
+  padding: 7px 0;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.dashboard-page__activity-item:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-page__activity-icon {
+  display: grid;
+  place-items: center;
+
+  width: 30px;
+  height: 30px;
+
+  border-radius: 6px;
+
+  background: #111416;
+
+  color: #d9ff77;
+}
+
+.dashboard-page__activity-item > div:nth-child(2) {
+  min-width: 0;
+}
+
+.dashboard-page__activity-item strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #cfd3d5;
+
+  font-size: 9px;
+  font-weight: 580;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__activity-item span {
+  display: block;
+
+  overflow: hidden;
+
+  margin-top: 2px;
+
+  color: #687076;
+
+  font-size: 8px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__activity-item time {
+  color: #626a70;
+
+  font-size: 8px;
+}
+
+/* =========================================
+   EMPTY
+========================================= */
+
+.dashboard-page__empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  justify-content: center;
+
+  min-height: 180px;
+
+  text-align: center;
+}
+
+.dashboard-page__empty > svg {
+  margin-bottom: 10px;
+
+  color: #d9ff77;
+}
+
+.dashboard-page__empty strong {
+  color: #cfd3d5;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dashboard-page__empty span {
+  max-width: 260px;
+
+  margin-top: 5px;
+
+  color: #687076;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   QUICK ACTIONS
+========================================= */
+
+.dashboard-page__quick-actions {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.dashboard-page__quick-action {
+  display: grid;
+  grid-template-columns:
+    32px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-width: 0;
+  min-height: 64px;
+
+  padding: 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 8px;
+
+  background: #14171a;
+
+  color: #8f979d;
+
+  text-decoration: none;
+}
+
+.dashboard-page__quick-action:hover {
+  border-color: rgba(217, 255, 119, 0.12);
+
+  background: #16191c;
+}
+
+.dashboard-page__quick-action > svg:first-child {
+  color: #d9ff77;
+}
+
+.dashboard-page__quick-action > div {
+  min-width: 0;
+}
+
+.dashboard-page__quick-action strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #d7dbdd;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__quick-action span {
+  display: block;
+
+  overflow: hidden;
+
+  margin-top: 3px;
+
+  color: #687076;
+
+  font-size: 8px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-page__quick-action > svg:last-child {
+  color: #596166;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1050px) {
+  .dashboard-page__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-page__quick-actions {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .dashboard-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard-page__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page__stat {
+    min-height: 96px;
+  }
+
+  .dashboard-page__today-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-page__score {
+    width: 88px;
+    height: 88px;
+  }
+
+  .dashboard-page__today-breakdown {
+    width: 100%;
+  }
+
+  .dashboard-page__workout-stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-page__macro-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-page__quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-page__today,
+  .dashboard-page__last-workout,
+  .dashboard-page__nutrition,
+  .dashboard-page__activity {
+    padding: 15px;
+  }
+
+  .dashboard-page__panel-heading {
+    gap: 10px;
+  }
+
+  .dashboard-page__workout-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-page__activity-item {
+    grid-template-columns:
+      30px
+      minmax(0, 1fr);
+  }
+
+  .dashboard-page__activity-item time {
+    grid-column: 2;
+
+    margin-top: -4px;
+  }
+
+  .dashboard-page__score-source {
+    padding: 8px 9px;
+  }
+}
