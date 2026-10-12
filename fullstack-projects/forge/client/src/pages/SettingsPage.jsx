@@ -29,19 +29,16 @@ import './SettingsPage.css';
    - nutrition
    - nutrition goals
    - progress
+   - profile
 
    Still local:
    - workout draft
-   - profile
    - rest days
 ========================================= */
 
 const STORAGE_KEYS = {
   workoutDraft:
     'forge:workoutDraft',
-
-  profile:
-    'forge:profile',
 
   restDays:
     'forge:restDays',
@@ -75,33 +72,25 @@ function normalizeGoals(
       raw.calories === null
       || raw.calories === undefined
         ? ''
-        : String(
-            raw.calories,
-          ),
+        : String(raw.calories),
 
     protein:
       raw.protein === null
       || raw.protein === undefined
         ? ''
-        : String(
-            raw.protein,
-          ),
+        : String(raw.protein),
 
     carbs:
       raw.carbs === null
       || raw.carbs === undefined
         ? ''
-        : String(
-            raw.carbs,
-          ),
+        : String(raw.carbs),
 
     fat:
       raw.fat === null
       || raw.fat === undefined
         ? ''
-        : String(
-            raw.fat,
-          ),
+        : String(raw.fat),
   };
 }
 
@@ -187,45 +176,49 @@ export default function SettingsPage() {
   ] = useState(false);
 
 
-  /* =========================================
-     LOAD GOALS
-  ========================================= */
-
-  async function loadGoals() {
-    try {
-      setLoadingGoals(true);
-      setMessage('');
-
-      const response =
-        await getNutritionGoals();
-
-      setGoals(
-        normalizeGoals(
-          response,
-        ),
-      );
-    } catch (error) {
-      console.error(
-        'Failed to load nutrition targets:',
-        error,
-      );
-
-      setMessage(
-        error.message
-        || 'Failed to load nutrition targets.',
-      );
-    } finally {
-      setLoadingGoals(false);
-    }
-  }
-
-
   useEffect(() => {
-    async function initializeGoals() {
-      await loadGoals();
-    }
+    let cancelled = false;
 
-    initializeGoals();
+    getNutritionGoals()
+      .then(
+        (response) => {
+          if (cancelled) {
+            return;
+          }
+
+          setGoals(
+            normalizeGoals(
+              response,
+            ),
+          );
+        },
+      )
+      .catch(
+        (error) => {
+          console.error(
+            'Failed to load nutrition targets:',
+            error,
+          );
+
+          if (!cancelled) {
+            setMessage(
+              error.message
+              || 'Failed to load nutrition targets.',
+            );
+          }
+        },
+      )
+      .finally(
+        () => {
+          if (!cancelled) {
+            setLoadingGoals(false);
+          }
+        },
+      );
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
 
@@ -247,9 +240,7 @@ export default function SettingsPage() {
     setGoals(
       (current) => ({
         ...current,
-
-        [field]:
-          value,
+        [field]: value,
       }),
     );
 
@@ -435,12 +426,6 @@ export default function SettingsPage() {
               .workoutDraft,
           ),
 
-        profile:
-          readStorageValue(
-            STORAGE_KEYS
-              .profile,
-          ),
-
         restDays:
           readStorageValue(
             STORAGE_KEYS
@@ -557,7 +542,7 @@ export default function SettingsPage() {
 
           const confirmed =
             window.confirm(
-              'Restore this local FORGE backup? Existing workout draft, profile and rest-day data may be replaced.',
+              'Restore this local FORGE backup? Existing workout draft and rest-day data may be replaced.',
             );
 
           if (!confirmed) {
@@ -568,12 +553,6 @@ export default function SettingsPage() {
             STORAGE_KEYS
               .workoutDraft,
             data.workoutDraft,
-          );
-
-          restoreValue(
-            STORAGE_KEYS
-              .profile,
-            data.profile,
           );
 
           restoreValue(
@@ -632,7 +611,7 @@ export default function SettingsPage() {
   function clearAllLocalData() {
     const confirmed =
       window.confirm(
-        'Clear all remaining local FORGE data? This removes the workout draft, profile and rest-day data. Database workouts, nutrition, progress and nutrition targets will not be deleted.',
+        'Clear all remaining local FORGE data? This removes the workout draft and local rest days. Database data will not be affected.',
       );
 
     if (!confirmed) {
@@ -986,9 +965,9 @@ export default function SettingsPage() {
 
         <div className="settings-page__goal-note">
           Database workouts,
-          nutrition, progress
-          and nutrition targets
-          are not included here.
+          nutrition, progress,
+          profile and targets are
+          not included here.
         </div>
 
 
@@ -1074,8 +1053,6 @@ export default function SettingsPage() {
 
         <div className="settings-page__data-list">
 
-          {/* WORKOUT DRAFT */}
-
           <div>
 
             <div>
@@ -1107,8 +1084,6 @@ export default function SettingsPage() {
           </div>
 
 
-          {/* REST DAYS */}
-
           <div>
 
             <div>
@@ -1139,39 +1114,6 @@ export default function SettingsPage() {
 
           </div>
 
-
-          {/* PROFILE */}
-
-          <div>
-
-            <div>
-
-              <strong>
-                Profile
-              </strong>
-
-              <span>
-                Your local FORGE
-                profile information
-              </span>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                clearSection(
-                  STORAGE_KEYS
-                    .profile,
-                  'profile data',
-                )
-              }
-            >
-              Clear
-            </button>
-
-          </div>
-
         </div>
 
       </section>
@@ -1190,11 +1132,10 @@ export default function SettingsPage() {
           </strong>
 
           <span>
-            Removes the workout
-            draft, profile and rest
-            days from this browser.
-            Database data is not
-            affected.
+            Removes the unfinished
+            workout draft and local
+            rest days. PostgreSQL
+            data is not affected.
           </span>
 
         </div>
