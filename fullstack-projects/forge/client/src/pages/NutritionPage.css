@@ -1,0 +1,1280 @@
+.nutrition-page {
+  width: 100%;
+
+  margin: 0 auto;
+}
+
+/* =========================================
+   STATS
+========================================= */
+
+.nutrition-page__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.nutrition-page__stat {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 124px;
+
+  padding: 17px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+
+  background: #14171a;
+}
+
+.nutrition-page__stat > span {
+  margin-bottom: auto;
+
+  color: #7e868c;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nutrition-page__stat strong {
+  margin-top: 18px;
+
+  color: #f2f4f5;
+
+  font-size: 25px;
+  font-weight: 650;
+
+  letter-spacing: -0.03em;
+}
+
+.nutrition-page__stat small {
+  margin-top: 4px;
+
+  color: #777f85;
+
+  font-size: 10px;
+}
+
+/* =========================================
+   DAILY GOALS CARD
+========================================= */
+
+.nutrition-page__goals {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 17px;
+
+  margin-bottom: 30px;
+}
+
+.nutrition-page__goals-heading {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-width: 0;
+}
+
+.nutrition-page__goals-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid rgba(217, 255, 119, 0.12);
+  border-radius: 7px;
+
+  background: rgba(217, 255, 119, 0.05);
+
+  color: #d9ff77;
+}
+
+.nutrition-page__goals-heading h2 {
+  margin: 0;
+
+  color: #e7eaec;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nutrition-page__goals-heading p {
+  margin: 4px 0 0;
+
+  color: #70787e;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.nutrition-page__goal-values {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  justify-content: flex-end;
+}
+
+.nutrition-page__goal-values > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  min-width: 75px;
+
+  padding: 8px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: #111416;
+}
+
+.nutrition-page__goal-values strong {
+  color: #dfe2e4;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nutrition-page__goal-values span {
+  color: #697177;
+
+  font-size: 8px;
+}
+
+/* =========================================
+   NO GOALS
+========================================= */
+
+.nutrition-page__no-goals {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 42px;
+
+  margin-bottom: 30px;
+
+  padding: 0 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 7px;
+
+  background: #131619;
+
+  color: #737b81;
+
+  font-size: 9px;
+}
+
+.nutrition-page__no-goals svg {
+  color: #d9ff77;
+}
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+
+.nutrition-page__section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 22px;
+
+  margin-bottom: 15px;
+}
+
+.nutrition-page__section-header h2 {
+  margin: 0;
+
+  color: #eef0f1;
+
+  font-size: 21px;
+  font-weight: 620;
+
+  letter-spacing: -0.02em;
+}
+
+.nutrition-page__section-header p {
+  margin: 6px 0 0;
+
+  color: #777f85;
+
+  font-size: 12px;
+}
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.nutrition-page__search {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  width: 280px;
+  min-height: 40px;
+
+  padding: 0 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+
+  background: #14171a;
+
+  color: #6f777d;
+}
+
+.nutrition-page__search:focus-within {
+  border-color: rgba(217, 255, 119, 0.25);
+}
+
+.nutrition-page__search input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #e7e9ea;
+
+  font: inherit;
+  font-size: 12px;
+}
+
+.nutrition-page__search input::placeholder {
+  color: #626a70;
+}
+
+/* =========================================
+   DAY LIST
+========================================= */
+
+.nutrition-page__days {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+/* =========================================
+   DAY CARD
+========================================= */
+
+.nutrition-page__day {
+  overflow: hidden;
+}
+
+.nutrition-page__day-toggle {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  width: 100%;
+  min-height: 118px;
+
+  padding: 17px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: inherit;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.nutrition-page__day-toggle:hover {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.nutrition-page__day-toggle > svg {
+  flex-shrink: 0;
+
+  color: #687076;
+}
+
+.nutrition-page__day-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 43px;
+  height: 43px;
+
+  border: 1px solid rgba(217, 255, 119, 0.12);
+  border-radius: 8px;
+
+  background: rgba(217, 255, 119, 0.055);
+
+  color: #d9ff77;
+}
+
+.nutrition-page__day-main {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.nutrition-page__day-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.nutrition-page__day-heading h3 {
+  margin: 0;
+
+  color: #f0f2f3;
+
+  font-size: 16px;
+  font-weight: 620;
+
+  letter-spacing: -0.015em;
+}
+
+.nutrition-page__day-heading span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #747c82;
+
+  font-size: 10px;
+}
+
+/* =========================================
+   DAY MACROS
+========================================= */
+
+.nutrition-page__day-macros {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 13px;
+}
+
+.nutrition-page__day-macros > div {
+  display: flex;
+  align-items: baseline;
+
+  gap: 4px;
+
+  min-height: 28px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+
+  background: #171a1d;
+}
+
+.nutrition-page__day-macros strong {
+  color: #dfe2e4;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nutrition-page__day-macros span {
+  color: #767e84;
+
+  font-size: 9px;
+}
+
+.nutrition-page__day-meta {
+  margin-top: 9px;
+}
+
+.nutrition-page__day-meta span {
+  color: #777f85;
+
+  font-size: 10px;
+}
+
+/* =========================================
+   DAY DETAILS
+========================================= */
+
+.nutrition-page__day-details {
+  padding: 18px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  background: #121518;
+}
+
+/* =========================================
+   TARGET PROGRESS
+========================================= */
+
+.nutrition-page__target-progress {
+  padding: 14px;
+
+  margin-bottom: 18px;
+
+  border: 1px solid rgba(217, 255, 119, 0.08);
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(217, 255, 119, 0.03),
+      transparent 55%
+    ),
+    #111416;
+}
+
+.nutrition-page__target-progress-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 14px;
+}
+
+.nutrition-page__target-progress-heading > div > span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #6f777d;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nutrition-page__target-progress-heading h4 {
+  margin: 0;
+
+  color: #e3e6e8;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nutrition-page__target-progress-heading > svg {
+  color: #d9ff77;
+}
+
+/* =========================================
+   TARGET LIST
+========================================= */
+
+.nutrition-page__target-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 13px 18px;
+}
+
+.nutrition-page__target {
+  min-width: 0;
+}
+
+.nutrition-page__target-heading {
+  display: grid;
+
+  grid-template-columns:
+    minmax(70px, 0.7fr)
+    minmax(110px, 1.2fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 7px;
+}
+
+.nutrition-page__target-heading > span {
+  color: #8b9399;
+
+  font-size: 9px;
+  font-weight: 550;
+}
+
+.nutrition-page__target-heading strong {
+  color: #cfd3d5;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  text-align: right;
+}
+
+.nutrition-page__target-heading small {
+  min-width: 37px;
+
+  color: #d9ff77;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  text-align: right;
+}
+
+/* =========================================
+   TARGET BAR
+========================================= */
+
+.nutrition-page__target-bar {
+  width: 100%;
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.nutrition-page__target-bar span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #d9ff77;
+}
+
+/* =========================================
+   MEAL
+========================================= */
+
+.nutrition-page__meal {
+  padding: 18px 0;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.nutrition-page__meal:first-of-type {
+  border-top: 0;
+}
+
+.nutrition-page__meal:last-child {
+  padding-bottom: 0;
+}
+
+.nutrition-page__meal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 12px;
+}
+
+.nutrition-page__meal-title {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.nutrition-page__meal-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+
+  background: #171a1d;
+
+  color: #d9ff77;
+}
+
+.nutrition-page__meal-title h4 {
+  margin: 0;
+
+  color: #e1e4e6;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nutrition-page__meal-title span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6f777d;
+
+  font-size: 10px;
+}
+
+/* =========================================
+   ADD FOOD BUTTON
+========================================= */
+
+.nutrition-page__meal-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  border: 1px solid rgba(217, 255, 119, 0.11);
+  border-radius: 6px;
+
+  background: rgba(217, 255, 119, 0.04);
+
+  color: #c9e96f;
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.nutrition-page__meal-add:hover {
+  border-color: rgba(217, 255, 119, 0.22);
+
+  background: rgba(217, 255, 119, 0.07);
+
+  color: #d9ff77;
+}
+
+/* =========================================
+   MEAL TOTALS
+========================================= */
+
+.nutrition-page__meal-totals {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-bottom: 10px;
+}
+
+.nutrition-page__meal-totals span {
+  display: inline-flex;
+  align-items: baseline;
+
+  gap: 4px;
+
+  min-height: 26px;
+
+  padding: 0 8px;
+
+  border-radius: 5px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #70787e;
+
+  font-size: 9px;
+}
+
+.nutrition-page__meal-totals strong {
+  color: #bfc4c7;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* =========================================
+   FOOD TABLE
+========================================= */
+
+.nutrition-page__foods {
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 7px;
+
+  background: #14171a;
+}
+
+.nutrition-page__food-heading,
+.nutrition-page__food {
+  display: grid;
+
+  grid-template-columns:
+    minmax(180px, 2fr)
+    minmax(70px, 0.65fr)
+    minmax(70px, 0.65fr)
+    minmax(70px, 0.65fr)
+    minmax(70px, 0.65fr)
+    38px;
+
+  align-items: center;
+
+  gap: 8px;
+
+  min-height: 39px;
+
+  padding: 0 11px;
+}
+
+.nutrition-page__food-heading {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+
+  background: #16191c;
+
+  color: #656d73;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nutrition-page__food {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+
+  color: #858d93;
+
+  font-size: 11px;
+}
+
+.nutrition-page__food:last-child {
+  border-bottom: 0;
+}
+
+.nutrition-page__food > strong {
+  overflow: hidden;
+
+  color: #d8dcde;
+
+  font-size: 11px;
+  font-weight: 560;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nutrition-page__food > span {
+  color: #969ea3;
+
+  font-size: 10px;
+}
+
+.nutrition-page__food > button {
+  display: grid;
+  place-items: center;
+
+  width: 28px;
+  height: 28px;
+
+  border: 1px solid transparent;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: #626a70;
+
+  cursor: pointer;
+}
+
+.nutrition-page__food > button:hover {
+  border-color: rgba(255, 105, 105, 0.16);
+
+  background: rgba(255, 105, 105, 0.04);
+
+  color: #ff8585;
+}
+
+/* =========================================
+   EMPTY MEAL
+========================================= */
+
+.nutrition-page__meal-empty {
+  display: flex;
+  align-items: center;
+
+  min-height: 48px;
+
+  padding: 0 13px;
+
+  border: 1px dashed rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+
+  color: #646c72;
+
+  font-size: 10px;
+}
+
+/* =========================================
+   PAGE EMPTY
+========================================= */
+
+.nutrition-page__empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  padding: 54px 24px;
+
+  text-align: center;
+}
+
+.nutrition-page__empty > svg {
+  margin-bottom: 15px;
+
+  color: #d9ff77;
+}
+
+.nutrition-page__empty h3 {
+  margin: 0;
+
+  color: #e7e9ea;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nutrition-page__empty p {
+  max-width: 390px;
+
+  margin: 8px 0 18px;
+
+  color: #7e868c;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   MODAL BACKDROP
+========================================= */
+
+.nutrition-page__modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 200;
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  background: rgba(5, 7, 8, 0.78);
+
+  backdrop-filter: blur(5px);
+}
+
+/* =========================================
+   MODAL
+========================================= */
+
+.nutrition-page__modal {
+  width: 100%;
+  max-width: 590px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+
+  background: #14171a;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.38);
+}
+
+.nutrition-page__modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 20px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nutrition-page__modal-header span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #6f777d;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nutrition-page__modal-header h2 {
+  margin: 0;
+
+  color: #f0f2f3;
+
+  font-size: 20px;
+  font-weight: 620;
+
+  letter-spacing: -0.02em;
+}
+
+.nutrition-page__modal-header > button {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+
+  background: #181b1e;
+
+  color: #81898f;
+
+  cursor: pointer;
+}
+
+.nutrition-page__modal-header > button:hover {
+  color: #eef0f1;
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+.nutrition-page__modal form {
+  padding: 20px;
+}
+
+.nutrition-page__form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+.nutrition-page__field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.nutrition-page__field--full {
+  grid-column: 1 / -1;
+}
+
+.nutrition-page__field > span {
+  color: #8a9298;
+
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.nutrition-page__field input,
+.nutrition-page__field select {
+  width: 100%;
+  min-height: 42px;
+
+  padding: 0 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #101315;
+
+  color: #e6e9ea;
+
+  font: inherit;
+  font-size: 12px;
+}
+
+.nutrition-page__field input:focus,
+.nutrition-page__field select:focus {
+  border-color: rgba(217, 255, 119, 0.28);
+}
+
+.nutrition-page__field input::placeholder {
+  color: #5e666c;
+}
+
+.nutrition-page__field select {
+  cursor: pointer;
+}
+
+.nutrition-page__field select option {
+  background: #14171a;
+
+  color: #e6e9ea;
+}
+
+/* =========================================
+   MODAL ACTIONS
+========================================= */
+
+.nutrition-page__modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  margin-top: 22px;
+
+  padding-top: 17px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1000px) {
+  .nutrition-page__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .nutrition-page__target-list {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-page__food-heading,
+  .nutrition-page__food {
+    grid-template-columns:
+      minmax(150px, 1.8fr)
+      repeat(4, minmax(60px, 0.65fr))
+      34px;
+  }
+}
+
+@media (max-width: 760px) {
+  .nutrition-page__goals {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nutrition-page__goal-values {
+    justify-content: flex-start;
+  }
+
+  .nutrition-page__section-header {
+    align-items: stretch;
+    flex-direction: column;
+
+    gap: 14px;
+  }
+
+  .nutrition-page__search {
+    width: 100%;
+  }
+
+  .nutrition-page__day-toggle {
+    align-items: flex-start;
+  }
+
+  .nutrition-page__foods {
+    overflow-x: auto;
+  }
+
+  .nutrition-page__food-heading,
+  .nutrition-page__food {
+    min-width: 650px;
+  }
+}
+
+@media (max-width: 650px) {
+  .nutrition-page__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-page__stat {
+    min-height: 105px;
+  }
+
+  .nutrition-page__goal-values {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    width: 100%;
+  }
+
+  .nutrition-page__goal-values > div {
+    min-width: 0;
+  }
+
+  .nutrition-page__day-toggle {
+    gap: 11px;
+
+    padding: 14px;
+  }
+
+  .nutrition-page__day-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nutrition-page__day-heading h3 {
+    font-size: 14px;
+  }
+
+  .nutrition-page__day-details {
+    padding: 14px;
+  }
+
+  .nutrition-page__target-progress {
+    padding: 12px;
+  }
+
+  .nutrition-page__target-heading {
+    grid-template-columns:
+      minmax(60px, 0.8fr)
+      minmax(100px, 1.3fr)
+      auto;
+  }
+
+  .nutrition-page__meal-header {
+    align-items: flex-start;
+  }
+
+  .nutrition-page__modal-backdrop {
+    align-items: end;
+
+    padding: 0;
+  }
+
+  .nutrition-page__modal {
+    max-width: none;
+
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+
+    border-radius:
+      12px
+      12px
+      0
+      0;
+  }
+
+  .nutrition-page__form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-page__field--full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .nutrition-page__day-icon {
+    display: none;
+  }
+
+  .nutrition-page__day-macros {
+    gap: 5px;
+  }
+
+  .nutrition-page__day-macros > div {
+    padding: 0 7px;
+  }
+
+  .nutrition-page__goal-values {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nutrition-page__target-heading {
+    grid-template-columns: 1fr auto;
+  }
+
+  .nutrition-page__target-heading strong {
+    grid-column: 1 / -1;
+
+    grid-row: 2;
+
+    text-align: left;
+  }
+
+  .nutrition-page__target-heading small {
+    grid-column: 2;
+
+    grid-row: 1;
+  }
+
+  .nutrition-page__meal-header {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .nutrition-page__meal-add {
+    width: 100%;
+  }
+
+  .nutrition-page__modal-header,
+  .nutrition-page__modal form {
+    padding: 16px;
+  }
+
+  .nutrition-page__modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .nutrition-page__modal-actions .button {
+    width: 100%;
+  }
+}
