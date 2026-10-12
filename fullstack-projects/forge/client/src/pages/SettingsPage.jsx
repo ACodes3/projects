@@ -8,21 +8,44 @@ import {
 } from 'lucide-react';
 
 import {
+  useEffect,
   useRef,
   useState,
 } from 'react';
 
+import {
+  getNutritionGoals,
+  saveNutritionGoals,
+} from '../api/forgeApi.js';
+
 import './SettingsPage.css';
 
+
+/* =========================================
+   REMAINING LOCAL DATA
+
+   Workouts and nutrition are now stored
+   in PostgreSQL.
+
+   The workout draft deliberately remains
+   local, and the other domains will be
+   migrated in later steps.
+========================================= */
+
 const STORAGE_KEYS = {
-  workouts: 'forge:workoutHistory',
-  workoutDraft: 'forge:workoutDraft',
-  nutrition: 'forge:nutritionLogs',
-  progress: 'forge:progressEntries',
-  profile: 'forge:profile',
-  restDays: 'forge:restDays',
-  nutritionGoals: 'forge:nutritionGoals',
+  workoutDraft:
+    'forge:workoutDraft',
+
+  progress:
+    'forge:progressEntries',
+
+  profile:
+    'forge:profile',
+
+  restDays:
+    'forge:restDays',
 };
+
 
 /* =========================================
    GOALS
@@ -35,50 +58,102 @@ const EMPTY_GOALS = {
   fat: '',
 };
 
-function loadNutritionGoals() {
-  try {
-    const stored = JSON.parse(
-      localStorage.getItem(
-        STORAGE_KEYS.nutritionGoals,
-      ) || '{}',
-    );
 
-    return {
-      calories:
-        stored.calories ?? '',
+function normalizeGoals(
+  response,
+) {
+  const raw =
+    response?.goals
+    ?? response?.nutritionGoals
+    ?? response?.data?.goals
+    ?? response
+    ?? {};
 
-      protein:
-        stored.protein ?? '',
+  return {
+    calories:
+      raw.calories === null
+      || raw.calories === undefined
+        ? ''
+        : String(
+            raw.calories,
+          ),
 
-      carbs:
-        stored.carbs ?? '',
+    protein:
+      raw.protein === null
+      || raw.protein === undefined
+        ? ''
+        : String(
+            raw.protein,
+          ),
 
-      fat:
-        stored.fat ?? '',
-    };
-  } catch {
-    return EMPTY_GOALS;
-  }
+    carbs:
+      raw.carbs === null
+      || raw.carbs === undefined
+        ? ''
+        : String(
+            raw.carbs,
+          ),
+
+    fat:
+      raw.fat === null
+      || raw.fat === undefined
+        ? ''
+        : String(
+            raw.fat,
+          ),
+  };
 }
+
 
 /* =========================================
    STORAGE HELPERS
 ========================================= */
 
-function readStorageValue(key) {
+function readStorageValue(
+  key,
+) {
   const stored =
-    localStorage.getItem(key);
+    localStorage.getItem(
+      key,
+    );
 
   if (stored === null) {
     return null;
   }
 
   try {
-    return JSON.parse(stored);
+    return JSON.parse(
+      stored,
+    );
   } catch {
     return stored;
   }
 }
+
+
+function restoreValue(
+  key,
+  value,
+) {
+  if (
+    value === undefined
+    || value === null
+  ) {
+    localStorage.removeItem(
+      key,
+    );
+
+    return;
+  }
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(
+      value,
+    ),
+  );
+}
+
 
 /* =========================================
    SETTINGS
@@ -92,7 +167,7 @@ export default function SettingsPage() {
     goals,
     setGoals,
   ] = useState(
-    loadNutritionGoals,
+    EMPTY_GOALS,
   );
 
   const [
@@ -100,8 +175,63 @@ export default function SettingsPage() {
     setMessage,
   ] = useState('');
 
+  const [
+    loadingGoals,
+    setLoadingGoals,
+  ] = useState(true);
+
+  const [
+    savingGoals,
+    setSavingGoals,
+  ] = useState(false);
+
+
   /* =========================================
-     GOALS
+     LOAD GOALS
+  ========================================= */
+
+  async function loadGoals() {
+    try {
+      setLoadingGoals(true);
+      setMessage('');
+
+      const response =
+        await getNutritionGoals();
+
+      setGoals(
+        normalizeGoals(
+          response,
+        ),
+      );
+    } catch (error) {
+      console.error(
+        'Failed to load nutrition targets:',
+        error,
+      );
+
+      setMessage(
+        error.message
+        || 'Failed to load nutrition targets.',
+      );
+    } finally {
+      setLoadingGoals(false);
+    }
+  }
+
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadGoals();
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+
+  /* =========================================
+     UPDATE GOAL FIELD
   ========================================= */
 
   function updateGoal(
@@ -109,8 +239,8 @@ export default function SettingsPage() {
     value,
   ) {
     if (
-      value !== '' &&
-      Number(value) < 0
+      value !== ''
+      && Number(value) < 0
     ) {
       return;
     }
@@ -118,50 +248,129 @@ export default function SettingsPage() {
     setGoals(
       (current) => ({
         ...current,
-        [field]: value,
+
+        [field]:
+          value,
       }),
     );
 
     setMessage('');
   }
 
-  function saveGoals() {
-    const cleaned = {};
 
-    Object.entries(
-      goals,
-    ).forEach(
-      ([key, value]) => {
-        if (
-          value === ''
-        ) {
-          return;
-        }
+  /* =========================================
+     BUILD GOAL PAYLOAD
+  ========================================= */
 
-        const number =
-          Number(value);
+  function buildGoalsPayload() {
+    const payload = {
+      calories: null,
+      protein: null,
+      carbs: null,
+      fat: null,
+    };
 
-        if (
-          Number.isFinite(number) &&
-          number >= 0
-        ) {
-          cleaned[key] =
-            number;
-        }
-      },
-    );
+    for (
+      const [
+        key,
+        value,
+      ] of Object.entries(
+        goals,
+      )
+    ) {
+      if (
+        value === ''
+      ) {
+        payload[key] =
+          null;
 
-    localStorage.setItem(
-      STORAGE_KEYS.nutritionGoals,
-      JSON.stringify(cleaned),
-    );
+        continue;
+      }
 
-    setMessage(
-      'Nutrition targets saved.',
-    );
+      const number =
+        Number(value);
+
+      if (
+        !Number.isFinite(
+          number,
+        )
+        || number <= 0
+      ) {
+        throw new Error(
+          'Nutrition targets must be positive numbers or left blank.',
+        );
+      }
+
+      if (
+        key === 'calories'
+        && !Number.isInteger(
+          number,
+        )
+      ) {
+        throw new Error(
+          'Calories must be a whole number.',
+        );
+      }
+
+      payload[key] =
+        number;
+    }
+
+    return payload;
   }
 
-  function clearGoals() {
+
+  /* =========================================
+     SAVE GOALS TO API
+  ========================================= */
+
+  async function saveGoals() {
+    if (savingGoals) {
+      return;
+    }
+
+    try {
+      const payload =
+        buildGoalsPayload();
+
+      setSavingGoals(true);
+      setMessage('');
+
+      const response =
+        await saveNutritionGoals(
+          payload,
+        );
+
+      setGoals(
+        normalizeGoals(
+          response,
+        ),
+      );
+
+      setMessage(
+        'Nutrition targets saved.',
+      );
+    } catch (error) {
+      console.error(
+        'Failed to save nutrition targets:',
+        error,
+      );
+
+      setMessage(
+        error.message
+        || 'Failed to save nutrition targets.',
+      );
+    } finally {
+      setSavingGoals(false);
+    }
+  }
+
+
+  /* =========================================
+     CLEAR GOALS
+  ========================================= */
+
+  async function clearGoals() {
     const confirmed =
       window.confirm(
         'Clear all nutrition targets?',
@@ -171,44 +380,60 @@ export default function SettingsPage() {
       return;
     }
 
-    localStorage.removeItem(
-      STORAGE_KEYS.nutritionGoals,
-    );
+    try {
+      setSavingGoals(true);
+      setMessage('');
 
-    setGoals(
-      EMPTY_GOALS,
-    );
+      await saveNutritionGoals({
+        calories: null,
+        protein: null,
+        carbs: null,
+        fat: null,
+      });
 
-    setMessage(
-      'Nutrition targets cleared.',
-    );
+      setGoals({
+        ...EMPTY_GOALS,
+      });
+
+      setMessage(
+        'Nutrition targets cleared.',
+      );
+    } catch (error) {
+      console.error(
+        'Failed to clear nutrition targets:',
+        error,
+      );
+
+      setMessage(
+        error.message
+        || 'Failed to clear nutrition targets.',
+      );
+    } finally {
+      setSavingGoals(false);
+    }
   }
 
+
   /* =========================================
-     EXPORT
+     EXPORT LOCAL DATA
   ========================================= */
 
   function exportBackup() {
     const backup = {
-      version: 1,
+      version: 2,
 
       exportedAt:
-        new Date().toISOString(),
+        new Date()
+          .toISOString(),
+
+      scope:
+        'local-data-only',
 
       data: {
-        workouts:
-          readStorageValue(
-            STORAGE_KEYS.workouts,
-          ),
-
         workoutDraft:
           readStorageValue(
-            STORAGE_KEYS.workoutDraft,
-          ),
-
-        nutrition:
-          readStorageValue(
-            STORAGE_KEYS.nutrition,
+            STORAGE_KEYS
+              .workoutDraft,
           ),
 
         progress:
@@ -225,11 +450,6 @@ export default function SettingsPage() {
           readStorageValue(
             STORAGE_KEYS.restDays,
           ),
-
-        nutritionGoals:
-          readStorageValue(
-            STORAGE_KEYS.nutritionGoals,
-          ),
       },
     };
 
@@ -243,7 +463,8 @@ export default function SettingsPage() {
           ),
         ],
         {
-          type: 'application/json',
+          type:
+            'application/json',
         },
       );
 
@@ -260,16 +481,21 @@ export default function SettingsPage() {
     const date =
       new Date()
         .toISOString()
-        .slice(0, 10);
+        .slice(
+          0,
+          10,
+        );
 
-    link.href = url;
+    link.href =
+      url;
 
     link.download =
-      `forge-backup-${date}.json`;
+      `forge-local-backup-${date}.json`;
 
-    document.body.appendChild(
-      link,
-    );
+    document.body
+      .appendChild(
+        link,
+      );
 
     link.click();
 
@@ -280,23 +506,30 @@ export default function SettingsPage() {
     );
 
     setMessage(
-      'Backup exported.',
+      'Local data backup exported.',
     );
   }
 
+
   /* =========================================
-     IMPORT
+     IMPORT LOCAL DATA
   ========================================= */
 
   function openImport() {
-    fileInputRef.current?.click();
+    fileInputRef.current
+      ?.click();
   }
 
-  function importBackup(event) {
-    const file =
-      event.target.files?.[0];
 
-    event.target.value = '';
+  function importBackup(
+    event,
+  ) {
+    const file =
+      event.target
+        .files?.[0];
+
+    event.target.value =
+      '';
 
     if (!file) {
       return;
@@ -305,112 +538,78 @@ export default function SettingsPage() {
     const reader =
       new FileReader();
 
-    reader.onload = () => {
-      try {
-        const backup =
-          JSON.parse(
-            reader.result,
+    reader.onload =
+      () => {
+        try {
+          const backup =
+            JSON.parse(
+              reader.result,
+            );
+
+          const data =
+            backup?.data;
+
+          if (
+            !data
+            || typeof data
+              !== 'object'
+          ) {
+            throw new Error(
+              'Invalid backup.',
+            );
+          }
+
+          const confirmed =
+            window.confirm(
+              'Restore this local FORGE backup? Existing local draft, progress, profile and rest-day data may be replaced.',
+            );
+
+          if (!confirmed) {
+            return;
+          }
+
+          restoreValue(
+            STORAGE_KEYS
+              .workoutDraft,
+            data.workoutDraft,
           );
 
-        const data =
-          backup?.data;
+          restoreValue(
+            STORAGE_KEYS
+              .progress,
+            data.progress,
+          );
 
-        if (
-          !data ||
-          typeof data !==
-            'object'
-        ) {
-          throw new Error(
-            'Invalid backup.',
+          restoreValue(
+            STORAGE_KEYS
+              .profile,
+            data.profile,
+          );
+
+          restoreValue(
+            STORAGE_KEYS
+              .restDays,
+            data.restDays,
+          );
+
+          setMessage(
+            'Local backup restored.',
+          );
+        } catch {
+          setMessage(
+            'That file is not a valid FORGE local backup.',
           );
         }
-
-        const confirmed =
-          window.confirm(
-            'Restore this FORGE backup? Existing tracker data may be replaced.',
-          );
-
-        if (!confirmed) {
-          return;
-        }
-
-        restoreValue(
-          STORAGE_KEYS.workouts,
-          data.workouts,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.workoutDraft,
-          data.workoutDraft,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.nutrition,
-          data.nutrition,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.progress,
-          data.progress,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.profile,
-          data.profile,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.restDays,
-          data.restDays,
-        );
-
-        restoreValue(
-          STORAGE_KEYS.nutritionGoals,
-          data.nutritionGoals,
-        );
-
-        setGoals(
-          loadNutritionGoals(),
-        );
-
-        setMessage(
-          'Backup restored.',
-        );
-      } catch {
-        setMessage(
-          'That file is not a valid FORGE backup.',
-        );
-      }
-    };
+      };
 
     reader.readAsText(
       file,
     );
   }
 
-  function restoreValue(
-    key,
-    value,
-  ) {
-    if (
-      value === undefined ||
-      value === null
-    ) {
-      localStorage.removeItem(
-        key,
-      );
-
-      return;
-    }
-
-    localStorage.setItem(
-      key,
-      JSON.stringify(value),
-    );
-  }
 
   /* =========================================
-     CLEAR SECTION
+     CLEAR LOCAL SECTION
   ========================================= */
 
   function clearSection(
@@ -435,14 +634,15 @@ export default function SettingsPage() {
     );
   }
 
+
   /* =========================================
-     CLEAR EVERYTHING
+     CLEAR LOCAL DATA
   ========================================= */
 
-  function clearAllData() {
+  function clearAllLocalData() {
     const confirmed =
       window.confirm(
-        'Clear all FORGE tracker data? Workouts, nutrition, progress, profile, rest days and goals will be deleted.',
+        'Clear all remaining local FORGE data? This removes the workout draft, local progress, profile and rest-day data. Database workouts, nutrition and nutrition targets will not be deleted.',
       );
 
     if (!confirmed) {
@@ -459,14 +659,15 @@ export default function SettingsPage() {
       },
     );
 
-    setGoals(
-      EMPTY_GOALS,
-    );
-
     setMessage(
-      'All FORGE data cleared.',
+      'Local FORGE data cleared.',
     );
   }
+
+
+  /* =========================================
+     RENDER
+  ========================================= */
 
   return (
     <main className="settings-page">
@@ -490,18 +691,23 @@ export default function SettingsPage() {
           <p className="page__description">
             Set your nutrition
             targets and manage
-            your local FORGE data.
+            remaining local
+            FORGE data.
           </p>
 
         </div>
 
       </header>
 
+
       {message && (
+
         <div className="settings-page__message">
           {message}
         </div>
+
       )}
+
 
       {/* =====================================
           NUTRITION GOALS
@@ -512,10 +718,13 @@ export default function SettingsPage() {
         <div className="settings-page__section-heading">
 
           <div className="settings-page__section-icon">
+
             <Target
               size={18}
             />
+
           </div>
+
 
           <div>
 
@@ -534,11 +743,15 @@ export default function SettingsPage() {
 
         </div>
 
+
         <div className="settings-page__goal-note">
-          Leave any target blank
-          if you do not want FORGE
-          to score that macro.
+
+          {loadingGoals
+            ? 'Loading your nutrition targets...'
+            : 'Leave any target blank if you do not want FORGE to score that macro.'}
+
         </div>
+
 
         <div className="settings-page__goals">
 
@@ -549,13 +762,18 @@ export default function SettingsPage() {
             </span>
 
             <div>
+
               <input
                 type="number"
-                min="0"
+                min="1"
                 step="1"
                 placeholder="Not set"
                 value={
                   goals.calories
+                }
+                disabled={
+                  loadingGoals
+                  || savingGoals
                 }
                 onChange={(
                   event,
@@ -571,9 +789,11 @@ export default function SettingsPage() {
               <small>
                 kcal
               </small>
+
             </div>
 
           </label>
+
 
           <label>
 
@@ -582,13 +802,18 @@ export default function SettingsPage() {
             </span>
 
             <div>
+
               <input
                 type="number"
-                min="0"
-                step="1"
+                min="0.1"
+                step="0.1"
                 placeholder="Not set"
                 value={
                   goals.protein
+                }
+                disabled={
+                  loadingGoals
+                  || savingGoals
                 }
                 onChange={(
                   event,
@@ -604,9 +829,11 @@ export default function SettingsPage() {
               <small>
                 g
               </small>
+
             </div>
 
           </label>
+
 
           <label>
 
@@ -615,13 +842,18 @@ export default function SettingsPage() {
             </span>
 
             <div>
+
               <input
                 type="number"
-                min="0"
-                step="1"
+                min="0.1"
+                step="0.1"
                 placeholder="Not set"
                 value={
                   goals.carbs
+                }
+                disabled={
+                  loadingGoals
+                  || savingGoals
                 }
                 onChange={(
                   event,
@@ -637,9 +869,11 @@ export default function SettingsPage() {
               <small>
                 g
               </small>
+
             </div>
 
           </label>
+
 
           <label>
 
@@ -648,13 +882,18 @@ export default function SettingsPage() {
             </span>
 
             <div>
+
               <input
                 type="number"
-                min="0"
-                step="1"
+                min="0.1"
+                step="0.1"
                 placeholder="Not set"
                 value={
                   goals.fat
+                }
+                disabled={
+                  loadingGoals
+                  || savingGoals
                 }
                 onChange={(
                   event,
@@ -670,11 +909,13 @@ export default function SettingsPage() {
               <small>
                 g
               </small>
+
             </div>
 
           </label>
 
         </div>
+
 
         <div className="settings-page__section-actions">
 
@@ -684,6 +925,10 @@ export default function SettingsPage() {
             onClick={
               clearGoals
             }
+            disabled={
+              loadingGoals
+              || savingGoals
+            }
           >
             <RotateCcw
               size={14}
@@ -692,24 +937,36 @@ export default function SettingsPage() {
             Clear Targets
           </button>
 
+
           <button
             type="button"
             className="button button--primary"
             onClick={
               saveGoals
             }
+            disabled={
+              loadingGoals
+              || savingGoals
+            }
           >
-            <Save size={14} />
+            <Save
+              size={14}
+            />
 
-            Save Targets
+            {
+              savingGoals
+                ? 'Saving...'
+                : 'Save Targets'
+            }
           </button>
 
         </div>
 
       </section>
 
+
       {/* =====================================
-          BACKUP
+          LOCAL BACKUP
       ===================================== */}
 
       <section className="panel settings-page__section">
@@ -717,27 +974,39 @@ export default function SettingsPage() {
         <div className="settings-page__section-heading">
 
           <div className="settings-page__section-icon">
+
             <Download
               size={18}
             />
+
           </div>
+
 
           <div>
 
             <h2>
-              Backup & Restore
+              Local Backup & Restore
             </h2>
 
             <p>
-              Export all FORGE
-              data to a JSON file
-              or restore a
-              previous backup.
+              Export or restore
+              data that has not
+              yet been migrated
+              to PostgreSQL.
             </p>
 
           </div>
 
         </div>
+
+
+        <div className="settings-page__goal-note">
+          Database workouts,
+          nutrition entries and
+          nutrition targets are
+          not included here.
+        </div>
+
 
         <div className="settings-page__backup-actions">
 
@@ -752,8 +1021,9 @@ export default function SettingsPage() {
               size={15}
             />
 
-            Export Backup
+            Export Local Backup
           </button>
+
 
           <button
             type="button"
@@ -766,8 +1036,9 @@ export default function SettingsPage() {
               size={15}
             />
 
-            Restore Backup
+            Restore Local Backup
           </button>
+
 
           <input
             ref={
@@ -785,8 +1056,9 @@ export default function SettingsPage() {
 
       </section>
 
+
       {/* =====================================
-          CLEAR DATA
+          LOCAL DATA MANAGEMENT
       ===================================== */}
 
       <section className="panel settings-page__section">
@@ -794,91 +1066,58 @@ export default function SettingsPage() {
         <div className="settings-page__section-heading">
 
           <div className="settings-page__section-icon settings-page__section-icon--danger">
+
             <Trash2
               size={18}
             />
+
           </div>
+
 
           <div>
 
             <h2>
-              Data Management
+              Local Data Management
             </h2>
 
             <p>
               Remove individual
-              parts of your
-              tracker history.
+              pieces of data that
+              are still stored in
+              this browser.
             </p>
 
           </div>
 
         </div>
 
+
         <div className="settings-page__data-list">
 
-          <div>
-
-            <div>
-              <strong>
-                Workouts
-              </strong>
-
-              <span>
-                Completed workouts
-                and workout draft
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const confirmed =
-                  window.confirm(
-                    'Clear all workouts and the current workout draft?',
-                  );
-
-                if (!confirmed) {
-                  return;
-                }
-
-                localStorage.removeItem(
-                  STORAGE_KEYS.workouts,
-                );
-
-                localStorage.removeItem(
-                  STORAGE_KEYS.workoutDraft,
-                );
-
-                setMessage(
-                  'Workout data cleared.',
-                );
-              }}
-            >
-              Clear
-            </button>
-
-          </div>
+          {/* WORKOUT DRAFT */}
 
           <div>
 
             <div>
+
               <strong>
-                Nutrition
+                Workout Draft
               </strong>
 
               <span>
-                All food and meal
-                history
+                Current unfinished
+                workout session
               </span>
+
             </div>
 
             <button
               type="button"
               onClick={() =>
                 clearSection(
-                  STORAGE_KEYS.nutrition,
-                  'nutrition history',
+                  STORAGE_KEYS
+                    .workoutDraft,
+                  'workout draft',
                 )
               }
             >
@@ -887,9 +1126,13 @@ export default function SettingsPage() {
 
           </div>
 
+
+          {/* PROGRESS */}
+
           <div>
 
             <div>
+
               <strong>
                 Progress
               </strong>
@@ -898,13 +1141,15 @@ export default function SettingsPage() {
                 Weight and body
                 measurements
               </span>
+
             </div>
 
             <button
               type="button"
               onClick={() =>
                 clearSection(
-                  STORAGE_KEYS.progress,
+                  STORAGE_KEYS
+                    .progress,
                   'progress history',
                 )
               }
@@ -914,9 +1159,13 @@ export default function SettingsPage() {
 
           </div>
 
+
+          {/* REST DAYS */}
+
           <div>
 
             <div>
+
               <strong>
                 Rest Days
               </strong>
@@ -925,13 +1174,15 @@ export default function SettingsPage() {
                 Calendar recovery
                 day history
               </span>
+
             </div>
 
             <button
               type="button"
               onClick={() =>
                 clearSection(
-                  STORAGE_KEYS.restDays,
+                  STORAGE_KEYS
+                    .restDays,
                   'rest days',
                 )
               }
@@ -941,24 +1192,30 @@ export default function SettingsPage() {
 
           </div>
 
+
+          {/* PROFILE */}
+
           <div>
 
             <div>
+
               <strong>
                 Profile
               </strong>
 
               <span>
-                Your FORGE profile
-                information
+                Your local FORGE
+                profile information
               </span>
+
             </div>
 
             <button
               type="button"
               onClick={() =>
                 clearSection(
-                  STORAGE_KEYS.profile,
+                  STORAGE_KEYS
+                    .profile,
                   'profile data',
                 )
               }
@@ -972,8 +1229,9 @@ export default function SettingsPage() {
 
       </section>
 
+
       {/* =====================================
-          DANGER ZONE
+          LOCAL DANGER ZONE
       ===================================== */}
 
       <section className="panel settings-page__section settings-page__danger">
@@ -981,14 +1239,14 @@ export default function SettingsPage() {
         <div>
 
           <strong>
-            Clear all FORGE data
+            Clear local FORGE data
           </strong>
 
           <span>
-            Permanently removes
-            workouts, nutrition,
-            progress, profile,
-            rest days and targets.
+            Removes remaining
+            browser-only data.
+            PostgreSQL data is
+            not affected.
           </span>
 
         </div>
@@ -997,14 +1255,14 @@ export default function SettingsPage() {
           type="button"
           className="settings-page__danger-button"
           onClick={
-            clearAllData
+            clearAllLocalData
           }
         >
           <Trash2
             size={14}
           />
 
-          Clear Everything
+          Clear Local Data
         </button>
 
       </section>
