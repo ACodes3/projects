@@ -34,15 +34,161 @@ async function request(
 
 
   if (!response.ok) {
-    const message =
+    throw new Error(
       data?.message
-      || `Request failed with status ${response.status}.`;
-
-    throw new Error(message);
+      || `Request failed with status ${response.status}.`,
+    );
   }
 
 
   return data;
+}
+
+
+// ============================================================
+// WORKOUT MAPPERS
+// ============================================================
+
+function mapWorkoutSet(set) {
+  return {
+    id: set.id,
+
+    weight: Number(
+      set.weight_kg ?? set.weight ?? 0,
+    ),
+
+    reps:
+      set.reps === null
+      || set.reps === undefined
+        ? null
+        : Number(set.reps),
+
+    durationSeconds:
+      set.duration_seconds === null
+      || set.duration_seconds === undefined
+        ? null
+        : Number(set.duration_seconds),
+  };
+}
+
+
+function mapWorkoutExercise(exercise) {
+  return {
+    id: exercise.id,
+
+    exerciseId:
+      exercise.exercise_id
+      ?? exercise.exerciseId
+      ?? null,
+
+    name:
+      exercise.exercise_name
+      ?? exercise.name,
+
+    trackingMode:
+      exercise.tracking_mode
+      ?? exercise.trackingMode
+      ?? 'reps',
+
+    position:
+      exercise.position ?? null,
+
+    sets: Array.isArray(exercise.sets)
+      ? exercise.sets.map(mapWorkoutSet)
+      : [],
+  };
+}
+
+
+function mapWorkout(workout) {
+  return {
+    id: workout.id,
+
+    name: workout.name,
+
+    date:
+      workout.workout_date
+      ?? workout.date,
+
+    youtubeUrl:
+      workout.youtube_url
+      ?? workout.youtubeUrl
+      ?? '',
+
+    notes:
+      workout.notes ?? '',
+
+    createdAt:
+      workout.created_at
+      ?? workout.createdAt
+      ?? null,
+
+    updatedAt:
+      workout.updated_at
+      ?? workout.updatedAt
+      ?? null,
+
+    exercises:
+      Array.isArray(workout.exercises)
+        ? workout.exercises.map(
+            mapWorkoutExercise,
+          )
+        : [],
+  };
+}
+
+
+// ============================================================
+// WORKOUT REQUEST BODY
+//
+// Converts the frontend workout shape into the body expected
+// by the Express API.
+// ============================================================
+
+function toWorkoutPayload(workout) {
+  return {
+    name: workout.name.trim(),
+
+    date: workout.date,
+
+    youtubeUrl:
+      workout.youtubeUrl?.trim() || '',
+
+    notes:
+      workout.notes?.trim() || '',
+
+    exercises: workout.exercises.map(
+      (exercise) => ({
+        exerciseId:
+          exercise.exerciseId ?? null,
+
+        name: exercise.name.trim(),
+
+        trackingMode:
+          exercise.trackingMode || 'reps',
+
+        sets: exercise.sets.map(
+          (set) => ({
+            weight: Number(
+              set.weight ?? 0,
+            ),
+
+            reps:
+              exercise.trackingMode === 'reps'
+                ? Number(set.reps)
+                : null,
+
+            durationSeconds:
+              exercise.trackingMode === 'time'
+                ? Number(
+                    set.durationSeconds,
+                  )
+                : null,
+          }),
+        ),
+      }),
+    ),
+  };
 }
 
 
@@ -59,13 +205,19 @@ export function getHealth() {
 // EXERCISES
 // ============================================================
 
-export function getExercises() {
-  return request('/exercises');
+export async function getExercises() {
+  const data = await request('/exercises');
+
+  return data.exercises;
 }
 
 
-export function getExerciseById(id) {
-  return request(`/exercises/${id}`);
+export async function getExerciseById(id) {
+  const data = await request(
+    `/exercises/${id}`,
+  );
+
+  return data.exercise;
 }
 
 
@@ -73,39 +225,66 @@ export function getExerciseById(id) {
 // WORKOUTS
 // ============================================================
 
-export function getWorkouts() {
-  return request('/workouts');
+export async function getWorkouts() {
+  const data = await request('/workouts');
+
+  return data.workouts.map(mapWorkout);
 }
 
 
-export function getWorkoutById(id) {
-  return request(`/workouts/${id}`);
+export async function getWorkoutById(id) {
+  const data = await request(
+    `/workouts/${id}`,
+  );
+
+  return mapWorkout(data.workout);
 }
 
 
-export function createWorkout(workout) {
-  return request('/workouts', {
-    method: 'POST',
-    body: JSON.stringify(workout),
-  });
+export async function createWorkout(
+  workout,
+) {
+  const data = await request(
+    '/workouts',
+    {
+      method: 'POST',
+
+      body: JSON.stringify(
+        toWorkoutPayload(workout),
+      ),
+    },
+  );
+
+  return mapWorkout(data.workout);
 }
 
 
-export function updateWorkout(
+export async function updateWorkout(
   id,
   workout,
 ) {
-  return request(`/workouts/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(workout),
-  });
+  const data = await request(
+    `/workouts/${id}`,
+    {
+      method: 'PUT',
+
+      body: JSON.stringify(
+        toWorkoutPayload(workout),
+      ),
+    },
+  );
+
+  return mapWorkout(data.workout);
 }
 
 
-export function deleteWorkout(id) {
-  return request(`/workouts/${id}`, {
-    method: 'DELETE',
-  });
+export async function deleteWorkout(id) {
+  return request(
+    `/workouts/${id}`,
+    {
+      method: 'DELETE',
+    },
+  );
 }
 
 
@@ -120,17 +299,22 @@ export function getNutritionEntries(
     ? `?date=${encodeURIComponent(date)}`
     : '';
 
-  return request(`/nutrition${query}`);
+  return request(
+    `/nutrition${query}`,
+  );
 }
 
 
 export function createNutritionEntry(
   entry,
 ) {
-  return request('/nutrition', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  });
+  return request(
+    '/nutrition',
+    {
+      method: 'POST',
+      body: JSON.stringify(entry),
+    },
+  );
 }
 
 
@@ -138,17 +322,23 @@ export function updateNutritionEntry(
   id,
   entry,
 ) {
-  return request(`/nutrition/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(entry),
-  });
+  return request(
+    `/nutrition/${id}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(entry),
+    },
+  );
 }
 
 
 export function deleteNutritionEntry(id) {
-  return request(`/nutrition/${id}`, {
-    method: 'DELETE',
-  });
+  return request(
+    `/nutrition/${id}`,
+    {
+      method: 'DELETE',
+    },
+  );
 }
 
 
@@ -161,11 +351,16 @@ export function getNutritionGoals() {
 }
 
 
-export function saveNutritionGoals(goals) {
-  return request('/nutrition/goals', {
-    method: 'PUT',
-    body: JSON.stringify(goals),
-  });
+export function saveNutritionGoals(
+  goals,
+) {
+  return request(
+    '/nutrition/goals',
+    {
+      method: 'PUT',
+      body: JSON.stringify(goals),
+    },
+  );
 }
 
 
@@ -180,17 +375,22 @@ export function getProgressEntries(
     ? `?date=${encodeURIComponent(date)}`
     : '';
 
-  return request(`/progress${query}`);
+  return request(
+    `/progress${query}`,
+  );
 }
 
 
 export function createProgressEntry(
   entry,
 ) {
-  return request('/progress', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  });
+  return request(
+    '/progress',
+    {
+      method: 'POST',
+      body: JSON.stringify(entry),
+    },
+  );
 }
 
 
@@ -198,17 +398,23 @@ export function updateProgressEntry(
   id,
   entry,
 ) {
-  return request(`/progress/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(entry),
-  });
+  return request(
+    `/progress/${id}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(entry),
+    },
+  );
 }
 
 
 export function deleteProgressEntry(id) {
-  return request(`/progress/${id}`, {
-    method: 'DELETE',
-  });
+  return request(
+    `/progress/${id}`,
+    {
+      method: 'DELETE',
+    },
+  );
 }
 
 
@@ -223,15 +429,22 @@ export function getRestDays(
     ? `?date=${encodeURIComponent(date)}`
     : '';
 
-  return request(`/rest-days${query}`);
+  return request(
+    `/rest-days${query}`,
+  );
 }
 
 
-export function createRestDay(restDay) {
-  return request('/rest-days', {
-    method: 'POST',
-    body: JSON.stringify(restDay),
-  });
+export function createRestDay(
+  restDay,
+) {
+  return request(
+    '/rest-days',
+    {
+      method: 'POST',
+      body: JSON.stringify(restDay),
+    },
+  );
 }
 
 
@@ -255,10 +468,13 @@ export function getProfile() {
 
 
 export function saveProfile(profile) {
-  return request('/profile', {
-    method: 'PUT',
-    body: JSON.stringify(profile),
-  });
+  return request(
+    '/profile',
+    {
+      method: 'PUT',
+      body: JSON.stringify(profile),
+    },
+  );
 }
 
 
@@ -273,5 +489,7 @@ export function getDashboard(
     ? `?date=${encodeURIComponent(date)}`
     : '';
 
-  return request(`/dashboard${query}`);
+  return request(
+    `/dashboard${query}`,
+  );
 }
