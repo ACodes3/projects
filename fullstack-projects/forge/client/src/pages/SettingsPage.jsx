@@ -24,20 +24,21 @@ import './SettingsPage.css';
 /* =========================================
    REMAINING LOCAL DATA
 
-   Workouts and nutrition are now stored
-   in PostgreSQL.
+   Database-backed:
+   - workouts
+   - nutrition
+   - nutrition goals
+   - progress
 
-   The workout draft deliberately remains
-   local, and the other domains will be
-   migrated in later steps.
+   Still local:
+   - workout draft
+   - profile
+   - rest days
 ========================================= */
 
 const STORAGE_KEYS = {
   workoutDraft:
     'forge:workoutDraft',
-
-  progress:
-    'forge:progressEntries',
 
   profile:
     'forge:profile',
@@ -220,18 +221,16 @@ export default function SettingsPage() {
 
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadGoals();
-    }, 0);
+    async function initializeGoals() {
+      await loadGoals();
+    }
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    initializeGoals();
   }, []);
 
 
   /* =========================================
-     UPDATE GOAL FIELD
+     UPDATE GOAL
   ========================================= */
 
   function updateGoal(
@@ -321,7 +320,7 @@ export default function SettingsPage() {
 
 
   /* =========================================
-     SAVE GOALS TO API
+     SAVE GOALS
   ========================================= */
 
   async function saveGoals() {
@@ -436,19 +435,16 @@ export default function SettingsPage() {
               .workoutDraft,
           ),
 
-        progress:
-          readStorageValue(
-            STORAGE_KEYS.progress,
-          ),
-
         profile:
           readStorageValue(
-            STORAGE_KEYS.profile,
+            STORAGE_KEYS
+              .profile,
           ),
 
         restDays:
           readStorageValue(
-            STORAGE_KEYS.restDays,
+            STORAGE_KEYS
+              .restDays,
           ),
       },
     };
@@ -561,7 +557,7 @@ export default function SettingsPage() {
 
           const confirmed =
             window.confirm(
-              'Restore this local FORGE backup? Existing local draft, progress, profile and rest-day data may be replaced.',
+              'Restore this local FORGE backup? Existing workout draft, profile and rest-day data may be replaced.',
             );
 
           if (!confirmed) {
@@ -572,12 +568,6 @@ export default function SettingsPage() {
             STORAGE_KEYS
               .workoutDraft,
             data.workoutDraft,
-          );
-
-          restoreValue(
-            STORAGE_KEYS
-              .progress,
-            data.progress,
           );
 
           restoreValue(
@@ -636,13 +626,13 @@ export default function SettingsPage() {
 
 
   /* =========================================
-     CLEAR LOCAL DATA
+     CLEAR ALL LOCAL DATA
   ========================================= */
 
   function clearAllLocalData() {
     const confirmed =
       window.confirm(
-        'Clear all remaining local FORGE data? This removes the workout draft, local progress, profile and rest-day data. Database workouts, nutrition and nutrition targets will not be deleted.',
+        'Clear all remaining local FORGE data? This removes the workout draft, profile and rest-day data. Database workouts, nutrition, progress and nutrition targets will not be deleted.',
       );
 
     if (!confirmed) {
@@ -725,7 +715,6 @@ export default function SettingsPage() {
 
           </div>
 
-
           <div>
 
             <h2>
@@ -746,9 +735,11 @@ export default function SettingsPage() {
 
         <div className="settings-page__goal-note">
 
-          {loadingGoals
-            ? 'Loading your nutrition targets...'
-            : 'Leave any target blank if you do not want FORGE to score that macro.'}
+          {
+            loadingGoals
+              ? 'Loading your nutrition targets...'
+              : 'Leave any target blank if you do not want FORGE to score that macro.'
+          }
 
         </div>
 
@@ -780,8 +771,7 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'calories',
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
               />
@@ -820,8 +810,7 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'protein',
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
               />
@@ -860,8 +849,7 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'carbs',
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
               />
@@ -900,8 +888,7 @@ export default function SettingsPage() {
                 ) =>
                   updateGoal(
                     'fat',
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
               />
@@ -936,7 +923,6 @@ export default function SettingsPage() {
 
             Clear Targets
           </button>
-
 
           <button
             type="button"
@@ -981,7 +967,6 @@ export default function SettingsPage() {
 
           </div>
 
-
           <div>
 
             <h2>
@@ -990,9 +975,8 @@ export default function SettingsPage() {
 
             <p>
               Export or restore
-              data that has not
-              yet been migrated
-              to PostgreSQL.
+              the remaining
+              browser-only data.
             </p>
 
           </div>
@@ -1002,9 +986,9 @@ export default function SettingsPage() {
 
         <div className="settings-page__goal-note">
           Database workouts,
-          nutrition entries and
-          nutrition targets are
-          not included here.
+          nutrition, progress
+          and nutrition targets
+          are not included here.
         </div>
 
 
@@ -1024,7 +1008,6 @@ export default function SettingsPage() {
             Export Local Backup
           </button>
 
-
           <button
             type="button"
             className="button"
@@ -1038,7 +1021,6 @@ export default function SettingsPage() {
 
             Restore Local Backup
           </button>
-
 
           <input
             ref={
@@ -1073,7 +1055,6 @@ export default function SettingsPage() {
 
           </div>
 
-
           <div>
 
             <h2>
@@ -1081,9 +1062,8 @@ export default function SettingsPage() {
             </h2>
 
             <p>
-              Remove individual
-              pieces of data that
-              are still stored in
+              Remove data that is
+              still stored only in
               this browser.
             </p>
 
@@ -1118,39 +1098,6 @@ export default function SettingsPage() {
                   STORAGE_KEYS
                     .workoutDraft,
                   'workout draft',
-                )
-              }
-            >
-              Clear
-            </button>
-
-          </div>
-
-
-          {/* PROGRESS */}
-
-          <div>
-
-            <div>
-
-              <strong>
-                Progress
-              </strong>
-
-              <span>
-                Weight and body
-                measurements
-              </span>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                clearSection(
-                  STORAGE_KEYS
-                    .progress,
-                  'progress history',
                 )
               }
             >
@@ -1243,10 +1190,11 @@ export default function SettingsPage() {
           </strong>
 
           <span>
-            Removes remaining
-            browser-only data.
-            PostgreSQL data is
-            not affected.
+            Removes the workout
+            draft, profile and rest
+            days from this browser.
+            Database data is not
+            affected.
           </span>
 
         </div>
