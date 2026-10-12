@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import {
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -19,31 +20,13 @@ import {
   Link,
 } from 'react-router-dom';
 
+import {
+  deleteWorkout as deleteWorkoutRequest,
+  getWorkouts,
+} from '../api/forgeApi.js';
+
 import './WorkoutsPage.css';
 
-const STORAGE_KEY =
-  'forge:workoutHistory';
-
-/* =========================================
-   STORAGE
-========================================= */
-
-function loadWorkouts() {
-  try {
-    const data =
-      JSON.parse(
-        localStorage.getItem(
-          STORAGE_KEY,
-        ) || '[]',
-      );
-
-    return Array.isArray(data)
-      ? data
-      : [];
-  } catch {
-    return [];
-  }
-}
 
 /* =========================================
    DATE HELPERS
@@ -54,17 +37,15 @@ function parseDate(date) {
     return 0;
   }
 
-  const timestamp =
-    new Date(
-      `${date}T12:00:00`,
-    ).getTime();
+  const timestamp = new Date(
+    `${date}T12:00:00`,
+  ).getTime();
 
-  return Number.isFinite(
-    timestamp,
-  )
+  return Number.isFinite(timestamp)
     ? timestamp
     : 0;
 }
+
 
 function formatDate(date) {
   if (!date) {
@@ -83,16 +64,15 @@ function formatDate(date) {
   );
 }
 
-function getWeekRange() {
-  const start =
-    new Date();
 
-  const day =
-    start.getDay();
+function getWeekRange() {
+  const start = new Date();
+
+  const day = start.getDay();
 
   start.setDate(
-    start.getDate() -
-      ((day + 6) % 7),
+    start.getDate()
+    - ((day + 6) % 7),
   );
 
   start.setHours(
@@ -102,21 +82,18 @@ function getWeekRange() {
     0,
   );
 
-  const end =
-    new Date(start);
+  const end = new Date(start);
 
   end.setDate(
     end.getDate() + 7,
   );
 
   return {
-    start:
-      start.getTime(),
-
-    end:
-      end.getTime(),
+    start: start.getTime(),
+    end: end.getTime(),
   };
 }
+
 
 /* =========================================
    WORKOUT HELPERS
@@ -126,10 +103,11 @@ function getTrackingMode(
   exercise,
 ) {
   return (
-    exercise.trackingMode ||
-    'reps'
+    exercise.trackingMode
+    || 'reps'
   );
 }
+
 
 function getRepSetCount(
   workout,
@@ -150,8 +128,8 @@ function getRepSetCount(
       }
 
       return (
-        total +
-        (
+        total
+        + (
           exercise.sets || []
         ).length
       );
@@ -159,6 +137,7 @@ function getRepSetCount(
     0,
   );
 }
+
 
 function getTimedIntervalCount(
   workout,
@@ -179,8 +158,8 @@ function getTimedIntervalCount(
       }
 
       return (
-        total +
-        (
+        total
+        + (
           exercise.sets || []
         ).length
       );
@@ -188,6 +167,7 @@ function getTimedIntervalCount(
     0,
   );
 }
+
 
 function getWorkoutTUT(
   workout,
@@ -208,18 +188,18 @@ function getWorkoutTUT(
       }
 
       return (
-        total +
-        (
+        total
+        + (
           exercise.sets || []
         ).reduce(
           (
             exerciseTotal,
             set,
           ) =>
-            exerciseTotal +
-            Number(
-              set.durationSeconds ||
-                0,
+            exerciseTotal
+            + Number(
+              set.durationSeconds
+              || 0,
             ),
           0,
         )
@@ -228,6 +208,7 @@ function getWorkoutTUT(
     0,
   );
 }
+
 
 function getWorkoutVolume(
   workout,
@@ -248,21 +229,21 @@ function getWorkoutVolume(
       }
 
       return (
-        total +
-        (
+        total
+        + (
           exercise.sets || []
         ).reduce(
           (
             setTotal,
             set,
           ) =>
-            setTotal +
-            Number(
+            setTotal
+            + Number(
               set.weight || 0,
-            ) *
-              Number(
-                set.reps || 0,
-              ),
+            )
+            * Number(
+              set.reps || 0,
+            ),
           0,
         )
       );
@@ -271,78 +252,86 @@ function getWorkoutVolume(
   );
 }
 
+
 function formatVolume(
   volume,
 ) {
-  if (
-    volume >= 1000
-  ) {
-    return `${(
-      volume / 1000
-    ).toFixed(1)}k kg`;
+  if (volume >= 1000) {
+    return `${
+      (
+        volume / 1000
+      ).toFixed(1)
+    }k kg`;
   }
 
-  return `${Math.round(
-    volume,
-  )} kg`;
+  return `${
+    Math.round(volume)
+  } kg`;
 }
+
 
 function formatDuration(
   seconds,
 ) {
-  const total =
-    Math.max(
-      0,
-      Math.round(
-        Number(seconds) || 0,
-      ),
-    );
+  const total = Math.max(
+    0,
+    Math.round(
+      Number(seconds) || 0,
+    ),
+  );
 
-  const hours =
-    Math.floor(
-      total / 3600,
-    );
+  const hours = Math.floor(
+    total / 3600,
+  );
 
-  const minutes =
-    Math.floor(
-      (total % 3600) /
-        60,
-    );
+  const minutes = Math.floor(
+    (total % 3600) / 60,
+  );
 
   const remainingSeconds =
     total % 60;
 
   if (hours > 0) {
-    return `${hours}:${String(
-      minutes,
-    ).padStart(
-      2,
-      '0',
-    )}:${String(
-      remainingSeconds,
-    ).padStart(
-      2,
-      '0',
-    )}`;
+    return `${
+      hours
+    }:${
+      String(minutes).padStart(
+        2,
+        '0',
+      )
+    }:${
+      String(
+        remainingSeconds,
+      ).padStart(
+        2,
+        '0',
+      )
+    }`;
   }
 
   if (minutes > 0) {
-    return `${minutes}:${String(
-      remainingSeconds,
-    ).padStart(
-      2,
-      '0',
-    )}`;
+    return `${
+      minutes
+    }:${
+      String(
+        remainingSeconds,
+      ).padStart(
+        2,
+        '0',
+      )
+    }`;
   }
 
   return `${remainingSeconds}s`;
 }
 
+
 function formatWeight(
   weight,
 ) {
-  const value =
-    Number(weight || 0);
+  const value = Number(
+    weight || 0,
+  );
 
   if (value <= 0) {
     return '—';
@@ -350,6 +339,7 @@ function formatWeight(
 
   return `${value} kg`;
 }
+
 
 /* =========================================
    PAGE
@@ -359,9 +349,7 @@ export default function WorkoutsPage() {
   const [
     workouts,
     setWorkouts,
-  ] = useState(
-    loadWorkouts,
-  );
+  ] = useState([]);
 
   const [
     search,
@@ -373,16 +361,75 @@ export default function WorkoutsPage() {
     setExpandedId,
   ] = useState(null);
 
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState('');
+
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState(null);
+
+
+  /* =========================================
+     LOAD WORKOUTS FROM API
+  ========================================= */
+
+  async function loadWorkoutHistory() {
+    try {
+      setLoading(true);
+      setError('');
+
+      const data =
+        await getWorkouts();
+
+      setWorkouts(
+        Array.isArray(data)
+          ? data
+          : [],
+      );
+    } catch (loadError) {
+      console.error(
+        'Failed to load workouts:',
+        loadError,
+      );
+
+      setError(
+        loadError.message
+        || 'Failed to load workouts.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    const loadTimeout = setTimeout(() => {
+      loadWorkoutHistory();
+    }, 0);
+
+    return () => {
+      clearTimeout(loadTimeout);
+    };
+  }, []);
+
+
   /* =========================================
      SORT + FILTER
   ========================================= */
 
   const sortedWorkouts =
     useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+      const query = search
+        .trim()
+        .toLowerCase();
 
       return [
         ...workouts,
@@ -392,26 +439,23 @@ export default function WorkoutsPage() {
             const dateDifference =
               parseDate(
                 b.date,
-              ) -
-              parseDate(
+              )
+              - parseDate(
                 a.date,
               );
 
             if (
-              dateDifference !==
-              0
+              dateDifference !== 0
             ) {
               return dateDifference;
             }
 
             return (
               new Date(
-                b.createdAt ||
-                  0,
-              ) -
-              new Date(
-                a.createdAt ||
-                  0,
+                b.createdAt || 0,
+              )
+              - new Date(
+                a.createdAt || 0,
               )
             );
           },
@@ -422,35 +466,30 @@ export default function WorkoutsPage() {
               return true;
             }
 
-            const nameMatch =
-              (
-                workout.name ||
-                ''
-              )
-                .toLowerCase()
-                .includes(
-                  query,
-                );
-
-            const exerciseMatch =
-              (
-                workout.exercises ||
-                []
-              ).some(
-                (exercise) =>
-                  (
-                    exercise.name ||
-                    ''
-                  )
-                    .toLowerCase()
-                    .includes(
-                      query,
-                    ),
+            const nameMatch = (
+              workout.name || ''
+            )
+              .toLowerCase()
+              .includes(
+                query,
               );
 
+            const exerciseMatch = (
+              workout.exercises || []
+            ).some(
+              (exercise) =>
+                (
+                  exercise.name || ''
+                )
+                  .toLowerCase()
+                  .includes(
+                    query,
+                  ),
+            );
+
             return (
-              nameMatch ||
-              exerciseMatch
+              nameMatch
+              || exerciseMatch
             );
           },
         );
@@ -458,6 +497,7 @@ export default function WorkoutsPage() {
       workouts,
       search,
     ]);
+
 
   /* =========================================
      STATS
@@ -478,10 +518,8 @@ export default function WorkoutsPage() {
                 );
 
               return (
-                date >=
-                  week.start &&
-                date <
-                  week.end
+                date >= week.start
+                && date < week.end
               );
             },
           ).length,
@@ -495,8 +533,8 @@ export default function WorkoutsPage() {
               total,
               workout,
             ) =>
-              total +
-              getWorkoutVolume(
+              total
+              + getWorkoutVolume(
                 workout,
               ),
             0,
@@ -508,8 +546,8 @@ export default function WorkoutsPage() {
               total,
               workout,
             ) =>
-              total +
-              getWorkoutTUT(
+              total
+              + getWorkoutTUT(
                 workout,
               ),
             0,
@@ -519,11 +557,12 @@ export default function WorkoutsPage() {
       workouts,
     ]);
 
+
   /* =========================================
      DELETE
   ========================================= */
 
-  function deleteWorkout(
+  async function handleDeleteWorkout(
     id,
   ) {
     const workout =
@@ -535,8 +574,8 @@ export default function WorkoutsPage() {
     const confirmed =
       window.confirm(
         `Delete "${
-          workout?.name ||
-          'Workout'
+          workout?.name
+          || 'Workout'
         }"? This cannot be undone.`,
       );
 
@@ -544,31 +583,44 @@ export default function WorkoutsPage() {
       return;
     }
 
-    const updated =
-      workouts.filter(
-        (item) =>
-          item.id !== id,
+    try {
+      setDeletingId(id);
+      setError('');
+
+      await deleteWorkoutRequest(
+        id,
       );
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(
-        updated,
-      ),
-    );
-
-    setWorkouts(
-      updated,
-    );
-
-    if (
-      expandedId === id
-    ) {
-      setExpandedId(
-        null,
+      setWorkouts(
+        (currentWorkouts) =>
+          currentWorkouts.filter(
+            (item) =>
+              item.id !== id,
+          ),
       );
+
+      if (
+        expandedId === id
+      ) {
+        setExpandedId(
+          null,
+        );
+      }
+    } catch (deleteError) {
+      console.error(
+        'Failed to delete workout:',
+        deleteError,
+      );
+
+      setError(
+        deleteError.message
+        || 'Failed to delete workout.',
+      );
+    } finally {
+      setDeletingId(null);
     }
   }
+
 
   /* =========================================
      RENDER
@@ -613,667 +665,772 @@ export default function WorkoutsPage() {
 
       </header>
 
-      {/* =====================================
-          STATS
-      ===================================== */}
-
-      <section className="workouts-page__stats">
-
-        <article className="workouts-page__stat">
-
-          <span>
-            This Week
-          </span>
-
-          <strong>
-            {
-              stats.thisWeek
-            }
-          </strong>
-
-          <small>
-            workouts
-          </small>
-
-        </article>
-
-        <article className="workouts-page__stat">
-
-          <span>
-            Total Workouts
-          </span>
-
-          <strong>
-            {
-              stats.total
-            }
-          </strong>
-
-          <small>
-            sessions
-          </small>
-
-        </article>
-
-        <article className="workouts-page__stat">
-
-          <span>
-            Rep Volume
-          </span>
-
-          <strong>
-            {formatVolume(
-              stats.volume,
-            )}
-          </strong>
-
-          <small>
-            weight × reps
-          </small>
-
-        </article>
-
-        <article className="workouts-page__stat">
-
-          <span>
-            Time Under Tension
-          </span>
-
-          <strong>
-            {formatDuration(
-              stats.tut,
-            )}
-          </strong>
-
-          <small>
-            timed work
-          </small>
-
-        </article>
-
-      </section>
 
       {/* =====================================
-          HISTORY HEADER
+          API ERROR
       ===================================== */}
 
-      <div className="workouts-page__section-header">
-
-        <div>
-
-          <h2>
-            Workout History
-          </h2>
-
-          <p>
-            {
-              workouts.length
-            } completed{' '}
-            {workouts.length ===
-            1
-              ? 'workout'
-              : 'workouts'}
-          </p>
-
-        </div>
-
-        <div className="workouts-page__search">
-
-          <Search size={16} />
-
-          <input
-            type="search"
-            placeholder="Search workouts..."
-            value={search}
-            onChange={(
-              event,
-            ) =>
-              setSearch(
-                event.target
-                  .value,
-              )
-            }
-          />
-
-        </div>
-
-      </div>
-
-      {/* =====================================
-          EMPTY
-      ===================================== */}
-
-      {sortedWorkouts.length ===
-      0 ? (
-
+      {error && (
         <div className="panel workouts-page__empty">
 
-          <Dumbbell
-            size={28}
-          />
+          <Dumbbell size={28} />
 
           <h3>
-            {workouts.length ===
-            0
-              ? 'No workouts logged'
-              : 'No matching workouts'}
+            Something went wrong
           </h3>
 
           <p>
-            {workouts.length ===
-            0
-              ? 'Log a completed workout to start building your history.'
-              : 'Try a different search term.'}
+            {error}
           </p>
 
-          {workouts.length ===
-            0 && (
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={
+              loadWorkoutHistory
+            }
+          >
+            Try Again
+          </button>
 
-            <Link
-              to="/workouts/session"
-              className="button button--primary"
-            >
-              <Plus
-                size={15}
-              />
+        </div>
+      )}
 
-              Log Workout
-            </Link>
 
-          )}
+      {/* =====================================
+          LOADING
+      ===================================== */}
+
+      {loading ? (
+
+        <div className="panel workouts-page__empty">
+
+          <Dumbbell size={28} />
+
+          <h3>
+            Loading workouts
+          </h3>
+
+          <p>
+            Loading your training
+            history from FORGE.
+          </p>
 
         </div>
 
       ) : (
 
-        /* ===================================
-           WORKOUT HISTORY
-        =================================== */
+        <>
 
-        <section className="workouts-page__history">
+          {/* =================================
+              STATS
+          ================================= */}
 
-          {sortedWorkouts.map(
-            (workout) => {
-              const expanded =
-                expandedId ===
-                workout.id;
+          <section className="workouts-page__stats">
 
-              const exerciseCount =
-                workout
-                  .exercises
-                  ?.length || 0;
+            <article className="workouts-page__stat">
 
-              const repSets =
-                getRepSetCount(
-                  workout,
-                );
+              <span>
+                This Week
+              </span>
 
-              const timedIntervals =
-                getTimedIntervalCount(
-                  workout,
-                );
+              <strong>
+                {
+                  stats.thisWeek
+                }
+              </strong>
 
-              const volume =
-                getWorkoutVolume(
-                  workout,
-                );
+              <small>
+                workouts
+              </small>
 
-              const tut =
-                getWorkoutTUT(
-                  workout,
-                );
+            </article>
 
-              return (
-                <article
-                  className="panel workouts-page__workout"
-                  key={
-                    workout.id
-                  }
-                >
 
-                  {/* =========================
-                      WORKOUT SUMMARY
-                  ========================= */}
+            <article className="workouts-page__stat">
 
-                  <div className="workouts-page__workout-summary">
+              <span>
+                Total Workouts
+              </span>
 
-                    <button
-                      type="button"
-                      className="workouts-page__workout-toggle"
-                      aria-expanded={
-                        expanded
-                      }
-                      onClick={() =>
-                        setExpandedId(
-                          expanded
-                            ? null
-                            : workout.id,
-                        )
+              <strong>
+                {
+                  stats.total
+                }
+              </strong>
+
+              <small>
+                sessions
+              </small>
+
+            </article>
+
+
+            <article className="workouts-page__stat">
+
+              <span>
+                Rep Volume
+              </span>
+
+              <strong>
+                {formatVolume(
+                  stats.volume,
+                )}
+              </strong>
+
+              <small>
+                weight × reps
+              </small>
+
+            </article>
+
+
+            <article className="workouts-page__stat">
+
+              <span>
+                Time Under Tension
+              </span>
+
+              <strong>
+                {formatDuration(
+                  stats.tut,
+                )}
+              </strong>
+
+              <small>
+                timed work
+              </small>
+
+            </article>
+
+          </section>
+
+
+          {/* =================================
+              HISTORY HEADER
+          ================================= */}
+
+          <div className="workouts-page__section-header">
+
+            <div>
+
+              <h2>
+                Workout History
+              </h2>
+
+              <p>
+                {
+                  workouts.length
+                } completed{' '}
+                {
+                  workouts.length === 1
+                    ? 'workout'
+                    : 'workouts'
+                }
+              </p>
+
+            </div>
+
+
+            <div className="workouts-page__search">
+
+              <Search size={16} />
+
+              <input
+                type="search"
+                placeholder="Search workouts..."
+                value={search}
+                onChange={(
+                  event,
+                ) =>
+                  setSearch(
+                    event.target.value,
+                  )
+                }
+              />
+
+            </div>
+
+          </div>
+
+
+          {/* =================================
+              EMPTY
+          ================================= */}
+
+          {sortedWorkouts.length === 0 ? (
+
+            <div className="panel workouts-page__empty">
+
+              <Dumbbell
+                size={28}
+              />
+
+              <h3>
+                {
+                  workouts.length === 0
+                    ? 'No workouts logged'
+                    : 'No matching workouts'
+                }
+              </h3>
+
+              <p>
+                {
+                  workouts.length === 0
+                    ? 'Log a completed workout to start building your history.'
+                    : 'Try a different search term.'
+                }
+              </p>
+
+              {
+                workouts.length === 0 && (
+
+                  <Link
+                    to="/workouts/session"
+                    className="button button--primary"
+                  >
+                    <Plus
+                      size={15}
+                    />
+
+                    Log Workout
+                  </Link>
+
+                )
+              }
+
+            </div>
+
+          ) : (
+
+            /* ===============================
+               WORKOUT HISTORY
+            =============================== */
+
+            <section className="workouts-page__history">
+
+              {sortedWorkouts.map(
+                (workout) => {
+                  const expanded =
+                    expandedId
+                    === workout.id;
+
+                  const exerciseCount =
+                    workout
+                      .exercises
+                      ?.length || 0;
+
+                  const repSets =
+                    getRepSetCount(
+                      workout,
+                    );
+
+                  const timedIntervals =
+                    getTimedIntervalCount(
+                      workout,
+                    );
+
+                  const volume =
+                    getWorkoutVolume(
+                      workout,
+                    );
+
+                  const tut =
+                    getWorkoutTUT(
+                      workout,
+                    );
+
+                  return (
+                    <article
+                      className="panel workouts-page__workout"
+                      key={
+                        workout.id
                       }
                     >
-
-                      <div className="workouts-page__workout-icon">
-                        <Dumbbell
-                          size={19}
-                        />
-                      </div>
-
-                      <div className="workouts-page__workout-main">
-
-                        <h3>
-                          {workout.name ||
-                            'Workout'}
-                        </h3>
-
-                        <span className="workouts-page__workout-date">
-
-                          <CalendarDays
-                            size={13}
-                          />
-
-                          {formatDate(
-                            workout.date,
-                          )}
-
-                        </span>
-
-                        <div className="workouts-page__workout-meta">
-
-                          <span>
-                            {
-                              exerciseCount
-                            }{' '}
-                            {exerciseCount ===
-                            1
-                              ? 'exercise'
-                              : 'exercises'}
-                          </span>
-
-                          {repSets >
-                            0 && (
-
-                            <span>
-                              {
-                                repSets
-                              }{' '}
-                              {repSets ===
-                              1
-                                ? 'set'
-                                : 'sets'}
-                            </span>
-
-                          )}
-
-                          {timedIntervals >
-                            0 && (
-
-                            <span>
-                              <Clock3
-                                size={11}
-                              />
-
-                              {
-                                timedIntervals
-                              }{' '}
-                              {timedIntervals ===
-                              1
-                                ? 'interval'
-                                : 'intervals'}
-                            </span>
-
-                          )}
-
-                          {volume >
-                            0 && (
-
-                            <span>
-                              {formatVolume(
-                                volume,
-                              )}
-                            </span>
-
-                          )}
-
-                          {tut >
-                            0 && (
-
-                            <span>
-                              <Clock3
-                                size={11}
-                              />
-
-                              {formatDuration(
-                                tut,
-                              )}{' '}
-                              TUT
-                            </span>
-
-                          )}
-
-                        </div>
-
-                      </div>
-
-                      {expanded ? (
-                        <ChevronUp
-                          size={19}
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={19}
-                        />
-                      )}
-
-                    </button>
-
-                    <button
-                      type="button"
-                      className="workouts-page__delete"
-                      aria-label={`Delete ${
-                        workout.name ||
-                        'workout'
-                      }`}
-                      onClick={() =>
-                        deleteWorkout(
-                          workout.id,
-                        )
-                      }
-                    >
-                      <Trash2
-                        size={16}
-                      />
-                    </button>
-
-                  </div>
-
-                  {/* =========================
-                      DETAILS
-                  ========================= */}
-
-                  {expanded && (
-
-                    <div className="workouts-page__workout-details">
-
-                      <div className="workouts-page__details-heading">
-
-                        <div>
-                          <h4>
-                            Workout Details
-                          </h4>
-
-                          <span>
-                            {
-                              exerciseCount
-                            }{' '}
-                            {exerciseCount ===
-                            1
-                              ? 'exercise'
-                              : 'exercises'}{' '}
-                            recorded
-                          </span>
-                        </div>
-
-                        {workout.youtubeUrl && (
-
-                          <a
-                            href={
-                              workout.youtubeUrl
-                            }
-                            target="_blank"
-                            rel="noreferrer"
-                            className="button workouts-page__video-link"
-                          >
-                            <ExternalLink
-                              size={14}
-                            />
-
-                            Workout Video
-                          </a>
-
-                        )}
-
-                      </div>
 
                       {/* =====================
-                          EXERCISES
+                          WORKOUT SUMMARY
                       ===================== */}
 
-                      {(
-                        workout.exercises ||
-                        []
-                      ).map(
-                        (
-                          exercise,
-                          exerciseIndex,
-                        ) => {
-                          const mode =
-                            getTrackingMode(
-                              exercise,
-                            );
+                      <div className="workouts-page__workout-summary">
 
-                          const exerciseTUT =
-                            mode ===
-                            'time'
-                              ? (
-                                  exercise.sets ||
-                                  []
-                                ).reduce(
-                                  (
-                                    total,
-                                    set,
-                                  ) =>
-                                    total +
-                                    Number(
-                                      set.durationSeconds ||
-                                        0,
-                                    ),
-                                  0,
-                                )
-                              : 0;
+                        <button
+                          type="button"
+                          className="workouts-page__workout-toggle"
+                          aria-expanded={
+                            expanded
+                          }
+                          onClick={() =>
+                            setExpandedId(
+                              expanded
+                                ? null
+                                : workout.id,
+                            )
+                          }
+                        >
 
-                          return (
-                            <div
-                              className="workouts-page__exercise"
-                              key={
-                                exercise.id ||
-                                exerciseIndex
+                          <div className="workouts-page__workout-icon">
+
+                            <Dumbbell
+                              size={19}
+                            />
+
+                          </div>
+
+
+                          <div className="workouts-page__workout-main">
+
+                            <h3>
+                              {
+                                workout.name
+                                || 'Workout'
                               }
-                            >
+                            </h3>
 
-                              {/* EXERCISE HEADER */}
+                            <span className="workouts-page__workout-date">
 
-                              <div className="workouts-page__exercise-header">
+                              <CalendarDays
+                                size={13}
+                              />
+
+                              {formatDate(
+                                workout.date,
+                              )}
+
+                            </span>
+
+
+                            <div className="workouts-page__workout-meta">
+
+                              <span>
+                                {
+                                  exerciseCount
+                                }{' '}
+                                {
+                                  exerciseCount === 1
+                                    ? 'exercise'
+                                    : 'exercises'
+                                }
+                              </span>
+
+
+                              {repSets > 0 && (
 
                                 <span>
                                   {
-                                    exerciseIndex +
-                                    1
+                                    repSets
+                                  }{' '}
+                                  {
+                                    repSets === 1
+                                      ? 'set'
+                                      : 'sets'
                                   }
                                 </span>
 
-                                <strong>
+                              )}
+
+
+                              {timedIntervals > 0 && (
+
+                                <span>
+
+                                  <Clock3
+                                    size={11}
+                                  />
+
                                   {
-                                    exercise.name
+                                    timedIntervals
+                                  }{' '}
+
+                                  {
+                                    timedIntervals === 1
+                                      ? 'interval'
+                                      : 'intervals'
                                   }
-                                </strong>
 
-                                <small>
-                                  {mode ===
-                                  'time'
-                                    ? `${
-                                        (
-                                          exercise.sets ||
-                                          []
-                                        ).length
-                                      } intervals · ${formatDuration(
-                                        exerciseTUT,
-                                      )} TUT`
-                                    : `${
-                                        (
-                                          exercise.sets ||
-                                          []
-                                        ).length
-                                      } sets`}
-                                </small>
-
-                              </div>
-
-                              {/* =================
-                                  REP SETS
-                              ================= */}
-
-                              {mode ===
-                                'reps' && (
-
-                                <div className="workouts-page__sets">
-
-                                  <div className="workouts-page__set-heading">
-
-                                    <span>
-                                      Set
-                                    </span>
-
-                                    <span>
-                                      Weight
-                                    </span>
-
-                                    <span>
-                                      Reps
-                                    </span>
-
-                                  </div>
-
-                                  {(
-                                    exercise.sets ||
-                                    []
-                                  ).map(
-                                    (
-                                      set,
-                                      setIndex,
-                                    ) => (
-
-                                      <div
-                                        className="workouts-page__set"
-                                        key={
-                                          set.id ||
-                                          setIndex
-                                        }
-                                      >
-
-                                        <span>
-                                          {
-                                            setIndex +
-                                            1
-                                          }
-                                        </span>
-
-                                        <strong>
-                                          {formatWeight(
-                                            set.weight,
-                                          )}
-                                        </strong>
-
-                                        <strong>
-                                          {
-                                            set.reps ??
-                                            '—'
-                                          }
-                                        </strong>
-
-                                      </div>
-
-                                    ),
-                                  )}
-
-                                </div>
+                                </span>
 
                               )}
 
-                              {/* =================
-                                  TIMED INTERVALS
-                              ================= */}
 
-                              {mode ===
-                                'time' && (
+                              {volume > 0 && (
 
-                                <div className="workouts-page__sets">
-
-                                  <div className="workouts-page__set-heading">
-
-                                    <span>
-                                      Interval
-                                    </span>
-
-                                    <span>
-                                      Weight
-                                    </span>
-
-                                    <span>
-                                      Time
-                                    </span>
-
-                                  </div>
-
-                                  {(
-                                    exercise.sets ||
-                                    []
-                                  ).map(
-                                    (
-                                      set,
-                                      setIndex,
-                                    ) => (
-
-                                      <div
-                                        className="workouts-page__set"
-                                        key={
-                                          set.id ||
-                                          setIndex
-                                        }
-                                      >
-
-                                        <span>
-                                          {
-                                            setIndex +
-                                            1
-                                          }
-                                        </span>
-
-                                        <strong>
-                                          {formatWeight(
-                                            set.weight,
-                                          )}
-                                        </strong>
-
-                                        <strong>
-                                          {formatDuration(
-                                            set.durationSeconds,
-                                          )}
-                                        </strong>
-
-                                      </div>
-
-                                    ),
+                                <span>
+                                  {formatVolume(
+                                    volume,
                                   )}
+                                </span>
 
-                                </div>
+                              )}
+
+
+                              {tut > 0 && (
+
+                                <span>
+
+                                  <Clock3
+                                    size={11}
+                                  />
+
+                                  {formatDuration(
+                                    tut,
+                                  )}{' '}
+                                  TUT
+
+                                </span>
 
                               )}
 
                             </div>
-                          );
-                        },
+
+                          </div>
+
+
+                          {expanded ? (
+
+                            <ChevronUp
+                              size={19}
+                            />
+
+                          ) : (
+
+                            <ChevronDown
+                              size={19}
+                            />
+
+                          )}
+
+                        </button>
+
+
+                        <button
+                          type="button"
+                          className="workouts-page__delete"
+                          aria-label={`Delete ${
+                            workout.name
+                            || 'workout'
+                          }`}
+                          disabled={
+                            deletingId
+                            === workout.id
+                          }
+                          onClick={() =>
+                            handleDeleteWorkout(
+                              workout.id,
+                            )
+                          }
+                        >
+
+                          <Trash2
+                            size={16}
+                          />
+
+                        </button>
+
+                      </div>
+
+
+                      {/* =====================
+                          DETAILS
+                      ===================== */}
+
+                      {expanded && (
+
+                        <div className="workouts-page__workout-details">
+
+                          <div className="workouts-page__details-heading">
+
+                            <div>
+
+                              <h4>
+                                Workout Details
+                              </h4>
+
+                              <span>
+                                {
+                                  exerciseCount
+                                }{' '}
+                                {
+                                  exerciseCount === 1
+                                    ? 'exercise'
+                                    : 'exercises'
+                                }{' '}
+                                recorded
+                              </span>
+
+                            </div>
+
+
+                            {workout.youtubeUrl && (
+
+                              <a
+                                href={
+                                  workout.youtubeUrl
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="button workouts-page__video-link"
+                              >
+                                <ExternalLink
+                                  size={14}
+                                />
+
+                                Workout Video
+                              </a>
+
+                            )}
+
+                          </div>
+
+
+                          {/* =================
+                              EXERCISES
+                          ================= */}
+
+                          {(
+                            workout.exercises
+                            || []
+                          ).map(
+                            (
+                              exercise,
+                              exerciseIndex,
+                            ) => {
+                              const mode =
+                                getTrackingMode(
+                                  exercise,
+                                );
+
+                              const exerciseTUT =
+                                mode === 'time'
+                                  ? (
+                                      exercise.sets
+                                      || []
+                                    ).reduce(
+                                      (
+                                        total,
+                                        set,
+                                      ) =>
+                                        total
+                                        + Number(
+                                          set.durationSeconds
+                                          || 0,
+                                        ),
+                                      0,
+                                    )
+                                  : 0;
+
+                              return (
+                                <div
+                                  className="workouts-page__exercise"
+                                  key={
+                                    exercise.id
+                                    || exerciseIndex
+                                  }
+                                >
+
+                                  {/* EXERCISE HEADER */}
+
+                                  <div className="workouts-page__exercise-header">
+
+                                    <span>
+                                      {
+                                        exerciseIndex
+                                        + 1
+                                      }
+                                    </span>
+
+                                    <strong>
+                                      {
+                                        exercise.name
+                                      }
+                                    </strong>
+
+                                    <small>
+                                      {
+                                        mode === 'time'
+                                          ? `${
+                                              (
+                                                exercise.sets
+                                                || []
+                                              ).length
+                                            } intervals · ${
+                                              formatDuration(
+                                                exerciseTUT,
+                                              )
+                                            } TUT`
+                                          : `${
+                                              (
+                                                exercise.sets
+                                                || []
+                                              ).length
+                                            } sets`
+                                      }
+                                    </small>
+
+                                  </div>
+
+
+                                  {/* =================
+                                      REP SETS
+                                  ================= */}
+
+                                  {mode === 'reps' && (
+
+                                    <div className="workouts-page__sets">
+
+                                      <div className="workouts-page__set-heading">
+
+                                        <span>
+                                          Set
+                                        </span>
+
+                                        <span>
+                                          Weight
+                                        </span>
+
+                                        <span>
+                                          Reps
+                                        </span>
+
+                                      </div>
+
+
+                                      {(
+                                        exercise.sets
+                                        || []
+                                      ).map(
+                                        (
+                                          set,
+                                          setIndex,
+                                        ) => (
+
+                                          <div
+                                            className="workouts-page__set"
+                                            key={
+                                              set.id
+                                              || setIndex
+                                            }
+                                          >
+
+                                            <span>
+                                              {
+                                                setIndex
+                                                + 1
+                                              }
+                                            </span>
+
+                                            <strong>
+                                              {formatWeight(
+                                                set.weight,
+                                              )}
+                                            </strong>
+
+                                            <strong>
+                                              {
+                                                set.reps
+                                                ?? '—'
+                                              }
+                                            </strong>
+
+                                          </div>
+
+                                        ),
+                                      )}
+
+                                    </div>
+
+                                  )}
+
+
+                                  {/* =================
+                                      TIMED INTERVALS
+                                  ================= */}
+
+                                  {mode === 'time' && (
+
+                                    <div className="workouts-page__sets">
+
+                                      <div className="workouts-page__set-heading">
+
+                                        <span>
+                                          Interval
+                                        </span>
+
+                                        <span>
+                                          Weight
+                                        </span>
+
+                                        <span>
+                                          Time
+                                        </span>
+
+                                      </div>
+
+
+                                      {(
+                                        exercise.sets
+                                        || []
+                                      ).map(
+                                        (
+                                          set,
+                                          setIndex,
+                                        ) => (
+
+                                          <div
+                                            className="workouts-page__set"
+                                            key={
+                                              set.id
+                                              || setIndex
+                                            }
+                                          >
+
+                                            <span>
+                                              {
+                                                setIndex
+                                                + 1
+                                              }
+                                            </span>
+
+                                            <strong>
+                                              {formatWeight(
+                                                set.weight,
+                                              )}
+                                            </strong>
+
+                                            <strong>
+                                              {formatDuration(
+                                                set.durationSeconds,
+                                              )}
+                                            </strong>
+
+                                          </div>
+
+                                        ),
+                                      )}
+
+                                    </div>
+
+                                  )}
+
+                                </div>
+                              );
+                            },
+                          )}
+
+                        </div>
+
                       )}
 
-                    </div>
+                    </article>
+                  );
+                },
+              )}
 
-                  )}
+            </section>
 
-                </article>
-              );
-            },
           )}
 
-        </section>
+        </>
 
       )}
 
