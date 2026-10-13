@@ -1,8 +1,12 @@
+
+/* =========================================
+   WORKOUTS PAGE
+========================================= */
+
 .workouts-page {
   width: 100%;
   margin: 0 auto;
 }
-
 
 /* =========================================
    STATS
@@ -10,66 +14,43 @@
 
 .workouts-page__stats {
   display: grid;
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-
   margin-bottom: 34px;
 }
-
 
 .workouts-page__stat {
   display: flex;
   flex-direction: column;
-
   min-height: 132px;
-
   padding: 18px;
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.07);
-
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
-
   background: #14171a;
 }
 
-
 .workouts-page__stat > span {
   margin-bottom: auto;
-
   color: #7e868c;
-
   font-size: 11px;
   font-weight: 600;
-
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-
 .workouts-page__stat strong {
   margin-top: 18px;
-
   color: #f2f4f5;
-
   font-size: 26px;
   font-weight: 650;
-
   letter-spacing: -0.03em;
 }
 
-
 .workouts-page__stat small {
   margin-top: 4px;
-
   color: #777f85;
-
   font-size: 11px;
 }
-
 
 /* =========================================
    SECTION HEADER
@@ -77,36 +58,25 @@
 
 .workouts-page__section-header {
   display: flex;
-
   align-items: flex-end;
   justify-content: space-between;
-
   gap: 22px;
-
   margin-bottom: 15px;
 }
 
-
 .workouts-page__section-header h2 {
   margin: 0;
-
   color: #eef0f1;
-
   font-size: 21px;
   font-weight: 620;
-
   letter-spacing: -0.02em;
 }
 
-
 .workouts-page__section-header p {
   margin: 6px 0 0;
-
   color: #777f85;
-
   font-size: 12px;
 }
-
 
 /* =========================================
    SEARCH
@@ -114,54 +84,34 @@
 
 .workouts-page__search {
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
   width: 260px;
-
   min-height: 40px;
-
   padding: 0 11px;
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.08);
-
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 7px;
-
   background: #14171a;
-
   color: #6f777d;
 }
 
-
 .workouts-page__search:focus-within {
-  border-color:
-    rgba(217, 255, 119, 0.25);
+  border-color: rgba(217, 255, 119, 0.25);
 }
-
 
 .workouts-page__search input {
   width: 100%;
-
   border: 0;
   outline: 0;
-
   background: transparent;
-
   color: #e7e9ea;
-
   font: inherit;
   font-size: 12px;
 }
 
-
 .workouts-page__search input::placeholder {
   color: #626a70;
 }
-
 
 /* =========================================
    HISTORY
@@ -170,10 +120,8 @@
 .workouts-page__history {
   display: flex;
   flex-direction: column;
-
   gap: 10px;
 }
-
 
 /* =========================================
    WORKOUT CARD
@@ -183,55 +131,41 @@
   overflow: hidden;
 }
 
-
 .workouts-page__workout-summary {
   display: flex;
-
   align-items: stretch;
-
   min-height: 102px;
 }
 
-
 .workouts-page__workout-toggle {
   display: flex;
-
   align-items: center;
-
   flex: 1;
-
   gap: 14px;
-
   min-width: 0;
-
   padding: 17px;
-
   border: 0;
   outline: 0;
-
   background: transparent;
-
   color: inherit;
-
   font: inherit;
   text-align: left;
-
   cursor: pointer;
 }
 
-
 .workouts-page__workout-toggle:hover {
-  background:
-    rgba(255, 255, 255, 0.018);
+  background: rgba(255, 255, 255, 0.018);
 }
 
+.workouts-page__workout-toggle:focus-visible {
+  outline: 2px solid rgba(217, 255, 119, 0.5);
+  outline-offset: -2px;
+}
 
 .workouts-page__workout-toggle > svg {
   flex-shrink: 0;
-
   color: #687076;
 }
-
 
 /* =========================================
    WORKOUT ICON
@@ -239,26 +173,15 @@
 
 .workouts-page__workout-icon {
   display: grid;
-
   place-items: center;
-
   flex-shrink: 0;
-
   width: 43px;
   height: 43px;
-
-  border:
-    1px solid
-    rgba(217, 255, 119, 0.12);
-
+  border: 1px solid rgba(217, 255, 119, 0.12);
   border-radius: 8px;
-
-  background:
-    rgba(217, 255, 119, 0.055);
-
+  background: rgba(217, 255, 119, 0.055);
   color: #d9ff77;
 }
-
 
 /* =========================================
    WORKOUT MAIN INFO
@@ -266,45 +189,31 @@
 
 .workouts-page__workout-main {
   flex: 1;
-
   min-width: 0;
 }
 
-
 .workouts-page__workout-main h3 {
   overflow: hidden;
-
   margin: 0 0 6px;
-
   color: #f0f2f3;
-
   font-size: 16px;
   font-weight: 620;
-
   letter-spacing: -0.015em;
-
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-
 .workouts-page__workout-date {
   display: inline-flex;
-
   align-items: center;
-
   gap: 5px;
-
   color: #81898f;
-
   font-size: 11px;
 }
-
 
 .workouts-page__workout-date svg {
   color: #646c72;
 }
-
 
 /* =========================================
    WORKOUT META
@@ -313,57 +222,79 @@
 .workouts-page__workout-meta {
   display: flex;
   flex-wrap: wrap;
-
   gap: 6px;
-
   margin-top: 10px;
 }
 
-
 .workouts-page__workout-meta span {
   display: inline-flex;
-
   align-items: center;
-
   gap: 4px;
-
   min-height: 24px;
-
   padding: 0 8px;
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.06);
-
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 5px;
-
   background: #171a1d;
-
   color: #8f979d;
-
   font-size: 10px;
   font-weight: 500;
 }
 
-
 .workouts-page__workout-meta span svg {
   flex-shrink: 0;
-
   color: #a6c15d;
 }
 
+/* =========================================
+   EDIT WORKOUT BUTTON
+========================================= */
+
+.workouts-page__edit {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  margin-right: 6px;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+
+  background: transparent;
+  color: #899399;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.workouts-page__edit:hover {
+  border-color: rgba(217, 255, 119, 0.22);
+  background: rgba(217, 255, 119, 0.06);
+  color: #d9ff77;
+}
+
+.workouts-page__edit:focus-visible {
+  outline: 2px solid #d9ff77;
+  outline-offset: 2px;
+}
 
 /* =========================================
-   DELETE BUTTON
+   DELETE WORKOUT BUTTON
 ========================================= */
 
 .workouts-page__delete {
   display: grid;
-
   place-items: center;
-
   align-self: center;
-
   flex-shrink: 0;
 
   width: 34px;
@@ -371,37 +302,30 @@
 
   margin-right: 14px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.06);
-
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
 
   background: transparent;
-
   color: #697177;
 
   cursor: pointer;
 }
 
-
 .workouts-page__delete:hover:not(:disabled) {
-  border-color:
-    rgba(255, 105, 105, 0.2);
-
-  background:
-    rgba(255, 105, 105, 0.045);
-
+  border-color: rgba(255, 105, 105, 0.2);
+  background: rgba(255, 105, 105, 0.045);
   color: #ff8585;
 }
 
+.workouts-page__delete:focus-visible {
+  outline: 2px solid #ff8585;
+  outline-offset: 2px;
+}
 
 .workouts-page__delete:disabled {
   opacity: 0.45;
-
   cursor: not-allowed;
 }
-
 
 /* =========================================
    WORKOUT DETAILS
@@ -409,52 +333,35 @@
 
 .workouts-page__workout-details {
   padding: 18px;
-
-  border-top:
-    1px solid
-    rgba(255, 255, 255, 0.06);
-
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: #121518;
 }
 
-
 .workouts-page__details-heading {
   display: flex;
-
   align-items: center;
   justify-content: space-between;
-
   gap: 20px;
-
   margin-bottom: 14px;
 }
-
 
 .workouts-page__details-heading > div {
   min-width: 0;
 }
 
-
 .workouts-page__details-heading h4 {
   margin: 0;
-
   color: #dfe2e4;
-
   font-size: 13px;
   font-weight: 600;
 }
 
-
 .workouts-page__details-heading span {
   display: block;
-
   margin-top: 3px;
-
   color: #6f777d;
-
   font-size: 10px;
 }
-
 
 /* =========================================
    VIDEO LINK
@@ -462,33 +369,21 @@
 
 .workouts-page__video-link {
   flex-shrink: 0;
-
   min-height: 34px;
-
   padding: 0 11px;
 
-  border-color:
-    rgba(217, 255, 119, 0.13);
-
-  background:
-    rgba(217, 255, 119, 0.04);
+  border-color: rgba(217, 255, 119, 0.13);
+  background: rgba(217, 255, 119, 0.04);
 
   color: #b9d768;
-
   font-size: 10px;
 }
 
-
 .workouts-page__video-link:hover {
-  border-color:
-    rgba(217, 255, 119, 0.25);
-
-  background:
-    rgba(217, 255, 119, 0.07);
-
+  border-color: rgba(217, 255, 119, 0.25);
+  background: rgba(217, 255, 119, 0.07);
   color: #d9ff77;
 }
-
 
 /* =========================================
    EXERCISE INSIDE WORKOUT
@@ -496,17 +391,12 @@
 
 .workouts-page__exercise {
   padding: 15px 0;
-
-  border-top:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 
 .workouts-page__exercise:first-of-type {
   border-top: 0;
 }
-
 
 .workouts-page__exercise-header {
   display: grid;
@@ -517,52 +407,38 @@
     auto;
 
   align-items: center;
-
   gap: 10px;
-
   margin-bottom: 10px;
 }
 
-
 .workouts-page__exercise-header > span {
   display: grid;
-
   place-items: center;
 
   width: 26px;
   height: 26px;
 
   border-radius: 5px;
-
-  background:
-    rgba(217, 255, 119, 0.06);
+  background: rgba(217, 255, 119, 0.06);
 
   color: #d9ff77;
-
   font-size: 10px;
   font-weight: 650;
 }
 
-
 .workouts-page__exercise-header strong {
   overflow: hidden;
-
   color: #d9dcde;
-
   font-size: 13px;
   font-weight: 580;
-
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-
 .workouts-page__exercise-header small {
   color: #737b81;
-
   font-size: 10px;
 }
-
 
 /* =========================================
    SET / INTERVAL TABLE
@@ -570,18 +446,13 @@
 
 .workouts-page__sets {
   overflow: hidden;
-
   margin-left: 38px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.055);
-
+  border: 1px solid rgba(255, 255, 255, 0.055);
   border-radius: 7px;
 
   background: #14171a;
 }
-
 
 .workouts-page__set-heading,
 .workouts-page__set {
@@ -593,22 +464,15 @@
     minmax(70px, 1fr);
 
   align-items: center;
-
   min-height: 35px;
-
   padding: 0 12px;
 }
 
-
 .workouts-page__set-heading {
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.055);
-
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
   background: #16191c;
 
   color: #656d73;
-
   font-size: 9px;
   font-weight: 600;
 
@@ -616,37 +480,26 @@
   text-transform: uppercase;
 }
 
-
 .workouts-page__set {
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.04);
-
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: #858d93;
-
   font-size: 11px;
 }
-
 
 .workouts-page__set:last-child {
   border-bottom: 0;
 }
 
-
 .workouts-page__set > span {
   color: #858d93;
-
   font-size: 10px;
 }
 
-
 .workouts-page__set strong {
   color: #ccd0d2;
-
   font-size: 11px;
   font-weight: 550;
 }
-
 
 /* =========================================
    EMPTY STATE
@@ -654,55 +507,40 @@
 
 .workouts-page__empty {
   display: flex;
-
   align-items: center;
   flex-direction: column;
-
   padding: 54px 24px;
-
   text-align: center;
 }
 
-
 .workouts-page__empty > svg {
   margin-bottom: 15px;
-
   color: #d9ff77;
 }
 
-
 .workouts-page__empty h3 {
   margin: 0;
-
   color: #e7e9ea;
-
   font-size: 16px;
   font-weight: 600;
 }
 
-
 .workouts-page__empty p {
   max-width: 390px;
-
   margin: 8px 0 18px;
-
   color: #7e868c;
-
   font-size: 12px;
   line-height: 1.6;
 }
 
-
 /* =========================================
-   SUCCESS TOAST
+   TOAST NOTIFICATIONS
 ========================================= */
 
 .workouts-page__toast {
   position: fixed;
-
   top: 22px;
   right: 22px;
-
   z-index: 1400;
 
   display: grid;
@@ -713,96 +551,62 @@
     28px;
 
   align-items: center;
-
   gap: 10px;
 
-  width:
-    min(
-      calc(100vw - 32px),
-      360px
-    );
+  width: min(calc(100vw - 32px), 360px);
+  padding: 11px 11px 11px 12px;
 
-  padding:
-    11px 11px 11px 12px;
-
-  border:
-    1px solid
-    rgba(217, 255, 119, 0.18);
-
+  border: 1px solid rgba(217, 255, 119, 0.18);
   border-radius: 9px;
 
   background: #161a1c;
 
-  box-shadow:
-    0 18px 50px
-    rgba(0, 0, 0, 0.36);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
 
-  animation:
-    workouts-toast-in
-    180ms
-    ease-out;
+  animation: workouts-toast-in 180ms ease-out;
 }
-
 
 .workouts-page__toast::before {
   position: absolute;
-
   right: 0;
   bottom: 0;
   left: 0;
 
   height: 2px;
-
-  border-radius:
-    0 0 9px 9px;
-
+  border-radius: 0 0 9px 9px;
   background: #d9ff77;
 
   content: '';
-
   transform-origin: left;
 
   animation:
     workouts-toast-progress
-    3200ms
-    linear
-    forwards;
+    3200ms linear forwards;
 }
-
 
 .workouts-page__toast-icon {
   display: grid;
-
   place-items: center;
 
   width: 34px;
   height: 34px;
 
-  border:
-    1px solid
-    rgba(217, 255, 119, 0.13);
-
+  border: 1px solid rgba(217, 255, 119, 0.13);
   border-radius: 7px;
 
-  background:
-    rgba(217, 255, 119, 0.055);
-
+  background: rgba(217, 255, 119, 0.055);
   color: #d9ff77;
 }
-
 
 .workouts-page__toast-copy {
   min-width: 0;
 }
 
-
 .workouts-page__toast-copy strong {
   display: block;
-
   overflow: hidden;
 
   color: #edf0f1;
-
   font-size: 10px;
   font-weight: 650;
 
@@ -810,28 +614,21 @@
   white-space: nowrap;
 }
 
-
 .workouts-page__toast-copy span {
   display: block;
-
   overflow: hidden;
-
   margin-top: 3px;
 
   color: #7d858b;
-
   font-size: 9px;
-
   line-height: 1.45;
 
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-
 .workouts-page__toast-close {
   display: grid;
-
   place-items: center;
 
   width: 28px;
@@ -841,39 +638,62 @@
   border-radius: 5px;
 
   background: transparent;
-
   color: #687076;
 
   cursor: pointer;
 }
 
-
 .workouts-page__toast-close:hover {
-  background:
-    rgba(255, 255, 255, 0.035);
-
+  background: rgba(255, 255, 255, 0.035);
   color: #d5d9db;
 }
 
+/* =========================================
+   TOAST TYPES
+========================================= */
+
+.workouts-page__toast--success {
+  border-left: 4px solid #22c55e;
+}
+
+.workouts-page__toast--success
+.workouts-page__toast-icon {
+  color: #22c55e;
+}
+
+.workouts-page__toast--error {
+  border-left: 4px solid #ef4444;
+}
+
+.workouts-page__toast--error
+.workouts-page__toast-icon {
+  color: #ef4444;
+}
+
+.workouts-page__toast--info {
+  border-left: 4px solid #3b82f6;
+}
+
+.workouts-page__toast--info
+.workouts-page__toast-icon {
+  color: #3b82f6;
+}
+
+/* =========================================
+   TOAST ANIMATIONS
+========================================= */
 
 @keyframes workouts-toast-in {
   from {
     opacity: 0;
-
-    transform:
-      translateY(-8px)
-      translateX(8px);
+    transform: translateY(-8px) translateX(8px);
   }
 
   to {
     opacity: 1;
-
-    transform:
-      translateY(0)
-      translateX(0);
+    transform: translateY(0) translateX(0);
   }
 }
-
 
 @keyframes workouts-toast-progress {
   from {
@@ -885,114 +705,75 @@
   }
 }
 
-
 /* =========================================
    DELETE CONFIRMATION MODAL
 ========================================= */
 
 .workouts-page__modal-backdrop {
   position: fixed;
-
   inset: 0;
-
   z-index: 1200;
 
   display: grid;
-
   place-items: center;
 
   padding: 24px;
 
-  background:
-    rgba(5, 7, 8, 0.78);
+  background: rgba(5, 7, 8, 0.78);
+  backdrop-filter: blur(6px);
 
-  backdrop-filter:
-    blur(6px);
-
-  animation:
-    workouts-modal-fade
-    140ms
-    ease-out;
+  animation: workouts-modal-fade 140ms ease-out;
 }
-
 
 .workouts-page__delete-modal {
   position: relative;
-
-  width:
-    min(
-      100%,
-      430px
-    );
-
+  width: min(100%, 430px);
   padding: 24px;
 
-  border:
-    1px solid
-    rgba(255, 105, 105, 0.18);
-
+  border: 1px solid rgba(255, 105, 105, 0.18);
   border-radius: 12px;
 
   background: #14171a;
 
   box-shadow:
-    0 28px 80px
-      rgba(0, 0, 0, 0.48),
-    0 0 0 1px
-      rgba(255, 255, 255, 0.015);
+    0 28px 80px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
 
-  animation:
-    workouts-modal-rise
-    160ms
-    ease-out;
+  animation: workouts-modal-rise 160ms ease-out;
 }
-
 
 .workouts-page__modal-close {
   position: absolute;
-
   top: 14px;
   right: 14px;
 
   display: grid;
-
   place-items: center;
 
   width: 32px;
   height: 32px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.07);
-
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 6px;
 
   background: #111416;
-
   color: #737b81;
 
   cursor: pointer;
 }
 
-
 .workouts-page__modal-close:hover:not(:disabled) {
-  border-color:
-    rgba(255, 255, 255, 0.12);
-
+  border-color: rgba(255, 255, 255, 0.12);
   color: #d7dbdd;
 }
 
-
 .workouts-page__modal-close:disabled {
   opacity: 0.45;
-
   cursor: not-allowed;
 }
 
-
 .workouts-page__delete-modal-icon {
   display: grid;
-
   place-items: center;
 
   width: 46px;
@@ -1000,26 +781,18 @@
 
   margin-bottom: 18px;
 
-  border:
-    1px solid
-    rgba(255, 105, 105, 0.18);
-
+  border: 1px solid rgba(255, 105, 105, 0.18);
   border-radius: 9px;
 
-  background:
-    rgba(255, 105, 105, 0.07);
-
+  background: rgba(255, 105, 105, 0.07);
   color: #ff8585;
 }
 
-
 .workouts-page__delete-modal-copy > span {
   display: block;
-
   margin-bottom: 5px;
 
   color: #d86f6f;
-
   font-size: 9px;
   font-weight: 650;
 
@@ -1027,108 +800,77 @@
   text-transform: uppercase;
 }
 
-
 .workouts-page__delete-modal-copy h2 {
   margin: 0;
-
   color: #f0f2f3;
 
   font-size: 20px;
   font-weight: 650;
-
   letter-spacing: -0.025em;
 }
-
 
 .workouts-page__delete-modal-copy p {
   margin: 10px 0 0;
 
   color: #858d93;
-
   font-size: 11px;
-
   line-height: 1.65;
 }
 
-
 .workouts-page__delete-modal-copy p strong {
   color: #dfe2e4;
-
   font-weight: 600;
 }
 
-
 .workouts-page__delete-modal-error {
   margin-top: 13px;
-
   padding: 9px 10px;
 
-  border:
-    1px solid
-    rgba(255, 105, 105, 0.13);
-
+  border: 1px solid rgba(255, 105, 105, 0.13);
   border-radius: 6px;
 
-  background:
-    rgba(255, 105, 105, 0.045);
-
+  background: rgba(255, 105, 105, 0.045);
   color: #e38a8a;
 
   font-size: 9px;
   line-height: 1.5;
 }
 
-
 .workouts-page__delete-modal-actions {
   display: flex;
-
   justify-content: flex-end;
-
   gap: 8px;
 
   margin-top: 24px;
-
   padding-top: 18px;
 
-  border-top:
-    1px solid
-    rgba(255, 255, 255, 0.055);
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
 }
-
 
 .workouts-page__delete-modal-actions .button {
   min-width: 108px;
 }
 
-
 .workouts-page__delete-confirm {
-  border-color:
-    rgba(255, 105, 105, 0.24);
-
-  background:
-    rgba(255, 105, 105, 0.09);
-
+  border-color: rgba(255, 105, 105, 0.24);
+  background: rgba(255, 105, 105, 0.09);
   color: #ff9292;
 }
 
-
 .workouts-page__delete-confirm:hover:not(:disabled) {
-  border-color:
-    rgba(255, 105, 105, 0.38);
-
-  background:
-    rgba(255, 105, 105, 0.14);
-
+  border-color: rgba(255, 105, 105, 0.38);
+  background: rgba(255, 105, 105, 0.14);
   color: #ffaaaa;
 }
 
-
 .workouts-page__delete-confirm:disabled {
   opacity: 0.55;
-
   cursor: not-allowed;
 }
 
+/* =========================================
+   MODAL ANIMATIONS
+========================================= */
 
 @keyframes workouts-modal-fade {
   from {
@@ -1140,28 +882,20 @@
   }
 }
 
-
 @keyframes workouts-modal-rise {
   from {
     opacity: 0;
-
-    transform:
-      translateY(8px)
-      scale(0.985);
+    transform: translateY(8px) scale(0.985);
   }
 
   to {
     opacity: 1;
-
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
-
 /* =========================================
-   RESPONSIVE
+   RESPONSIVE - TABLETS
 ========================================= */
 
 @media (max-width: 1000px) {
@@ -1171,12 +905,14 @@
   }
 }
 
+/* =========================================
+   RESPONSIVE - SMALL TABLETS
+========================================= */
 
 @media (max-width: 700px) {
   .workouts-page__section-header {
     align-items: stretch;
     flex-direction: column;
-
     gap: 14px;
   }
 
@@ -1190,7 +926,6 @@
 
   .workouts-page__workout-toggle {
     align-items: flex-start;
-
     padding: 14px;
   }
 
@@ -1204,8 +939,7 @@
 
   .workouts-page__exercise-header {
     grid-template-columns:
-      26px
-      minmax(0, 1fr);
+      26px minmax(0, 1fr);
   }
 
   .workouts-page__exercise-header small {
@@ -1217,6 +951,9 @@
   }
 }
 
+/* =========================================
+   RESPONSIVE - MOBILE
+========================================= */
 
 @media (max-width: 650px) {
   .workouts-page__stats {
@@ -1257,11 +994,13 @@
   }
 }
 
+/* =========================================
+   RESPONSIVE - SMALL MOBILE
+========================================= */
 
 @media (max-width: 500px) {
   .workouts-page__details-heading {
     flex-direction: column;
-
     gap: 10px;
   }
 
@@ -1289,11 +1028,13 @@
     top: 14px;
     right: 14px;
     left: 14px;
-
     width: auto;
   }
 }
 
+/* =========================================
+   RESPONSIVE - EXTRA SMALL MOBILE
+========================================= */
 
 @media (max-width: 430px) {
   .workouts-page__workout-toggle {
@@ -1304,10 +1045,17 @@
     display: none;
   }
 
+  .workouts-page__edit,
   .workouts-page__delete {
     width: 31px;
     height: 31px;
+  }
 
+  .workouts-page__edit {
+    margin-right: 5px;
+  }
+
+  .workouts-page__delete {
     margin-right: 8px;
   }
 
@@ -1320,31 +1068,4 @@
 
     padding: 0 9px;
   }
-}
-
-/* Append these rules to your existing WorkoutsPage.css.
-   They extend the original toast styling without replacing anything. */
-
-.workouts-page__toast--success {
-  border-left: 4px solid #22c55e;
-}
-
-.workouts-page__toast--success .workouts-page__toast-icon {
-  color: #22c55e;
-}
-
-.workouts-page__toast--error {
-  border-left: 4px solid #ef4444;
-}
-
-.workouts-page__toast--error .workouts-page__toast-icon {
-  color: #ef4444;
-}
-
-.workouts-page__toast--info {
-  border-left: 4px solid #3b82f6;
-}
-
-.workouts-page__toast--info .workouts-page__toast-icon {
-  color: #3b82f6;
 }
