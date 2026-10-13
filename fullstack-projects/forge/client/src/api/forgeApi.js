@@ -227,9 +227,13 @@ export async function getHealth() {
 }
 
 
+
 // ============================================================
-// EXERCISES
+// EXERCISES — FULL CRUD
 // ============================================================
+
+// GET ALL ACTIVE EXERCISES
+// GET /api/exercises
 
 export async function getExercises() {
   const response =
@@ -238,6 +242,9 @@ export async function getExercises() {
   return response.data.exercises;
 }
 
+
+// GET A SINGLE EXERCISE
+// GET /api/exercises/:id
 
 export async function getExerciseById(
   id,
@@ -250,6 +257,53 @@ export async function getExerciseById(
   return response.data.exercise;
 }
 
+
+// CREATE A NEW EXERCISE
+// POST /api/exercises
+
+export async function createExercise(
+  exercise,
+) {
+  const response =
+    await api.post(
+      '/exercises',
+      exercise,
+    );
+
+  return response.data;
+}
+
+
+// UPDATE AN EXISTING EXERCISE
+// PUT /api/exercises/:id
+
+export async function updateExercise(
+  id,
+  exercise,
+) {
+  const response =
+    await api.put(
+      `/exercises/${id}`,
+      exercise,
+    );
+
+  return response.data;
+}
+
+
+// SOFT DELETE AN EXERCISE
+// DELETE /api/exercises/:id
+
+export async function deleteExercise(
+  id,
+) {
+  const response =
+    await api.delete(
+      `/exercises/${id}`,
+    );
+
+  return response.data;
+}
 
 // ============================================================
 // WORKOUTS
