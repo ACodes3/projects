@@ -1,1268 +1,848 @@
+
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
-} from 'react';
+} from "react";
+
+import { Link } from "react-router-dom";
 
 import {
+  Activity,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Coffee,
   Cookie,
   Dumbbell,
   Moon,
+  Plus,
+  RefreshCw,
+  Scale,
   Target,
   Utensils,
-} from 'lucide-react';
+  X,
+} from "lucide-react";
 
 import {
   createRestDay,
   deleteRestDay,
   getNutritionEntries,
   getNutritionGoals,
+  getProgressEntries,
   getRestDays,
   getWorkouts,
-} from '../api/forgeApi.js';
+} from "../api/forgeApi.js";
 
-import './CalendarPage.css';
-
-
-const MEALS = [
-  'Breakfast',
-  'Lunch',
-  'Snacks',
-  'Dinner',
-];
-
-
-const WEEKDAYS = [
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
-
-
-const GOAL_DEFINITIONS = {
-  calories: {
-    label: 'Calories',
-    unit: 'kcal',
-  },
-
-  protein: {
-    label: 'Protein',
-    unit: 'g',
-  },
-
-  carbs: {
-    label: 'Carbs',
-    unit: 'g',
-  },
-
-  fat: {
-    label: 'Fat',
-    unit: 'g',
-  },
-};
-
+import "./CalendarPage.css";
 
 /* =========================================
-   API NORMALIZATION
+   CONSTANTS
 ========================================= */
 
-function normalizeDate(
-  value,
-) {
-  if (!value) {
-    return '';
-  }
+const MEALS = [
+  "Breakfast",
+  "Lunch",
+  "Snacks",
+  "Dinner",
+];
 
-  if (
-    typeof value === 'string'
-  ) {
-    return value.slice(
-      0,
-      10,
-    );
-  }
+const WEEKDAYS = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
+];
 
-  try {
-    return new Date(value)
-      .toISOString()
-      .slice(
-        0,
-        10,
-      );
-  } catch {
-    return '';
-  }
+const GOALS = {
+  calories: { label: "Calories", unit: "kcal" },
+  protein: { label: "Protein", unit: "g" },
+  carbs: { label: "Carbs", unit: "g" },
+  fat: { label: "Fat", unit: "g" },
+};
+
+/* =========================================
+   DATE HELPERS
+========================================= */
+
+function dateKey(year, month, day) {
+  return [
+    year,
+    String(month + 1).padStart(2, "0"),
+    String(day).padStart(2, "0"),
+  ].join("-");
 }
 
+function todayKey() {
+  const today = new Date();
 
-function extractNutritionEntries(
-  response,
-) {
-  if (
-    Array.isArray(response)
-  ) {
-    return response;
+  return dateKey(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+}
+
+function normalizeDate(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    return value.slice(0, 10);
   }
 
-  if (
-    Array.isArray(
-      response?.entries,
-    )
-  ) {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toISOString().slice(0, 10);
+}
+
+function formatMonth(year, month) {
+  return new Date(year, month, 1).toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+      year: "numeric",
+    }
+  );
+}
+
+function formatFullDate(value) {
+  if (!value) return "";
+
+  return new Date(
+    `${value}T12:00:00`
+  ).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function isFutureDate(value) {
+  return value > todayKey();
+}
+
+/* =========================================
+   API HELPERS
+========================================= */
+
+function extractEntries(response, property) {
+  if (Array.isArray(response)) return response;
+
+  if (Array.isArray(response?.[property])) {
+    return response[property];
+  }
+
+  if (Array.isArray(response?.entries)) {
     return response.entries;
   }
 
-  if (
-    Array.isArray(
-      response?.nutritionEntries,
-    )
-  ) {
-    return response.nutritionEntries;
-  }
-
-  if (
-    Array.isArray(
-      response?.data,
-    )
-  ) {
+  if (Array.isArray(response?.data)) {
     return response.data;
   }
 
   return [];
 }
 
-
-function normalizeNutritionEntry(
-  entry,
-) {
+function normalizeNutrition(entry) {
   return {
-    id:
-      entry.id,
-
-    date:
-      normalizeDate(
-        entry.entry_date
-        ?? entry.date,
-      ),
-
-    meal:
-      entry.meal
-      ?? 'Breakfast',
-
-    name:
-      entry.name
-      ?? '',
-
-    calories:
-      Number(
-        entry.calories
-        ?? 0,
-      ),
-
-    protein:
-      Number(
-        entry.protein_g
-        ?? entry.protein
-        ?? 0,
-      ),
-
-    carbs:
-      Number(
-        entry.carbs_g
-        ?? entry.carbs
-        ?? 0,
-      ),
-
-    fat:
-      Number(
-        entry.fat_g
-        ?? entry.fat
-        ?? 0,
-      ),
+    id: entry.id,
+    date: normalizeDate(
+      entry.entry_date ?? entry.date
+    ),
+    meal: entry.meal ?? "Breakfast",
+    name: entry.name ?? "",
+    calories: Number(entry.calories ?? 0),
+    protein: Number(
+      entry.protein_g ?? entry.protein ?? 0
+    ),
+    carbs: Number(entry.carbs_g ?? entry.carbs ?? 0),
+    fat: Number(entry.fat_g ?? entry.fat ?? 0),
   };
 }
 
-
-function groupNutritionByDate(
-  entries,
-) {
-  return entries.reduce(
-    (
-      grouped,
-      rawEntry,
-    ) => {
-      const entry =
-        normalizeNutritionEntry(
-          rawEntry,
-        );
-
-      if (!entry.date) {
-        return grouped;
-      }
-
-      if (
-        !grouped[
-          entry.date
-        ]
-      ) {
-        grouped[
-          entry.date
-        ] = [];
-      }
-
-      grouped[
-        entry.date
-      ].push(
-        entry,
-      );
-
-      return grouped;
-    },
-    {},
-  );
-}
-
-
-function normalizeGoals(
-  response,
-) {
-  const raw =
-    response?.goals
-    ?? response?.nutritionGoals
-    ?? response?.data?.goals
-    ?? response
-    ?? {};
-
-  return {
-    calories:
-      Number(
-        raw.calories
-        ?? 0,
-      ),
-
-    protein:
-      Number(
-        raw.protein_g
-        ?? raw.protein
-        ?? 0,
-      ),
-
-    carbs:
-      Number(
-        raw.carbs_g
-        ?? raw.carbs
-        ?? 0,
-      ),
-
-    fat:
-      Number(
-        raw.fat_g
-        ?? raw.fat
-        ?? 0,
-      ),
-  };
-}
-
-
-function extractRestDays(
-  response,
-) {
-  let raw = [];
-
-  if (
-    Array.isArray(response)
-  ) {
-    raw =
-      response;
-  } else if (
-    Array.isArray(
-      response?.restDays,
-    )
-  ) {
-    raw =
-      response.restDays;
-  } else if (
-    Array.isArray(
-      response?.rest_days,
-    )
-  ) {
-    raw =
-      response.rest_days;
-  } else if (
-    Array.isArray(
-      response?.data,
-    )
-  ) {
-    raw =
-      response.data;
-  }
-
-  return raw
-    .map(
-      (item) => {
-        if (
-          typeof item ===
-          'string'
-        ) {
-          return normalizeDate(
-            item,
-          );
-        }
-
-        return normalizeDate(
-          item?.rest_date
-          ?? item?.date,
-        );
-      },
-    )
-    .filter(
-      Boolean,
+function normalizeProgress(entry) {
+  const optionalNumber = (...values) => {
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        item !== ""
     );
+
+    if (value === undefined) return null;
+
+    const number = Number(value);
+
+    return Number.isFinite(number) ? number : null;
+  };
+
+  return {
+    id: entry.id,
+    date: normalizeDate(
+      entry.entry_date ?? entry.date
+    ),
+    weight: optionalNumber(
+      entry.weight_kg,
+      entry.weight
+    ),
+    bodyFat: optionalNumber(
+      entry.body_fat_percent,
+      entry.bodyFat
+    ),
+    waist: optionalNumber(
+      entry.waist_cm,
+      entry.waist
+    ),
+    chest: optionalNumber(
+      entry.chest_cm,
+      entry.chest
+    ),
+    arms: optionalNumber(
+      entry.arms_cm,
+      entry.arms
+    ),
+    thighs: optionalNumber(
+      entry.thighs_cm,
+      entry.thighs
+    ),
+    notes: entry.notes ?? "",
+  };
 }
 
+function normalizeGoals(response) {
+  const raw =
+    response?.goals ??
+    response?.nutritionGoals ??
+    response?.data?.goals ??
+    response ??
+    {};
+
+  return {
+    calories: Number(raw.calories ?? 0),
+    protein: Number(
+      raw.protein_g ?? raw.protein ?? 0
+    ),
+    carbs: Number(
+      raw.carbs_g ?? raw.carbs ?? 0
+    ),
+    fat: Number(
+      raw.fat_g ?? raw.fat ?? 0
+    ),
+  };
+}
+
+function normalizeRestDays(response) {
+  const entries = Array.isArray(response)
+    ? response
+    : Array.isArray(response?.restDays)
+      ? response.restDays
+      : Array.isArray(response?.rest_days)
+        ? response.rest_days
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+  return entries
+    .map((item) =>
+      typeof item === "string"
+        ? normalizeDate(item)
+        : normalizeDate(
+            item.rest_date ?? item.date
+          )
+    )
+    .filter(Boolean);
+}
+
+function groupByDate(entries) {
+  return entries.reduce((grouped, entry) => {
+    if (!entry.date) return grouped;
+
+    if (!grouped[entry.date]) {
+      grouped[entry.date] = [];
+    }
+
+    grouped[entry.date].push(entry);
+
+    return grouped;
+  }, {});
+}
 
 /* =========================================
-   DATE HELPERS
+   NUTRITION HELPERS
 ========================================= */
 
-function toDateKey(
-  year,
-  month,
-  day,
-) {
-  return `${year}-${String(
-    month + 1,
-  ).padStart(
-    2,
-    '0',
-  )}-${String(
-    day,
-  ).padStart(
-    2,
-    '0',
-  )}`;
-}
-
-
-function getTodayKey() {
-  const today =
-    new Date();
-
-  return toDateKey(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  );
-}
-
-
-function isFutureDate(
-  dateKey,
-) {
-  return (
-    dateKey >
-    getTodayKey()
-  );
-}
-
-
-function formatMonth(
-  year,
-  month,
-) {
-  return new Date(
-    year,
-    month,
-    1,
-  ).toLocaleDateString(
-    'en-US',
-    {
-      month: 'long',
-      year: 'numeric',
-    },
-  );
-}
-
-
-function formatFullDate(
-  dateKey,
-) {
-  if (!dateKey) {
-    return '';
-  }
-
-  return new Date(
-    `${dateKey}T12:00:00`,
-  ).toLocaleDateString(
-    'en-US',
-    {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    },
-  );
-}
-
-
-/* =========================================
-   NUTRITION
-========================================= */
-
-function getNutritionTotals(
-  entries = [],
-) {
+function getTotals(entries = []) {
   return entries.reduce(
-    (
-      totals,
-      entry,
-    ) => ({
+    (total, entry) => ({
       calories:
-        totals.calories
-        + Number(
-          entry.calories || 0,
-        ),
-
+        total.calories + Number(entry.calories || 0),
       protein:
-        totals.protein
-        + Number(
-          entry.protein || 0,
-        ),
-
+        total.protein + Number(entry.protein || 0),
       carbs:
-        totals.carbs
-        + Number(
-          entry.carbs || 0,
-        ),
-
+        total.carbs + Number(entry.carbs || 0),
       fat:
-        totals.fat
-        + Number(
-          entry.fat || 0,
-        ),
+        total.fat + Number(entry.fat || 0),
     }),
     {
       calories: 0,
       protein: 0,
       carbs: 0,
       fat: 0,
-    },
+    }
   );
 }
 
-
-function getConfiguredGoals(
-  goals,
-) {
-  return Object.entries(
-    GOAL_DEFINITIONS,
-  )
-    .map(
-      (
-        [
-          key,
-          definition,
-        ],
-      ) => ({
-        key,
-
-        ...definition,
-
-        target:
-          Number(
-            goals[key],
-          ) || 0,
-      }),
-    )
-    .filter(
-      (goal) =>
-        goal.target > 0,
-    );
+function configuredGoals(goals) {
+  return Object.entries(GOALS)
+    .map(([key, definition]) => ({
+      key,
+      ...definition,
+      target: Number(goals[key]) || 0,
+    }))
+    .filter((goal) => goal.target > 0);
 }
 
+function targetRatio(key, actual, target) {
+  if (!target) return 0;
 
-/* =========================================
-   TARGET SCORING
-========================================= */
+  const value = Math.max(0, Number(actual) || 0);
 
-function getTargetRatio(
-  key,
-  actual,
-  target,
-) {
-  if (!target) {
-    return 0;
+  if (key === "protein") {
+    return Math.min(1, value / target);
   }
-
-  const value =
-    Math.max(
-      0,
-      Number(
-        actual,
-      ) || 0,
-    );
-
-  /*
-    Protein is treated as a minimum.
-  */
-
-  if (
-    key === 'protein'
-  ) {
-    return Math.min(
-      1,
-      value / target,
-    );
-  }
-
-  /*
-    Calories, carbs and fat are
-    scored by closeness.
-  */
 
   const deviation =
-    Math.abs(
-      value - target,
-    ) / target;
+    Math.abs(value - target) / target;
 
-  return Math.max(
-    0,
-    1 - deviation,
-  );
+  return Math.max(0, 1 - deviation);
 }
 
-
-function calculateNutritionScore(
-  nutritionEntries,
-  goals,
+function calculateDayScore(
+  workouts,
+  nutrition,
+  restDay,
+  goals
 ) {
-  const totals =
-    getNutritionTotals(
-      nutritionEntries,
-    );
+  const trainingScore =
+    workouts.length > 0 || restDay ? 40 : 0;
 
-  const configuredGoals =
-    getConfiguredGoals(
-      goals,
-    );
+  const totals = getTotals(nutrition);
+  const targets = configuredGoals(goals);
 
-  /*
-    If targets do not exist,
-    score by meals logged.
-  */
+  const loggedMeals = MEALS.filter((meal) =>
+    nutrition.some((entry) => entry.meal === meal)
+  );
 
-  if (
-    configuredGoals.length ===
-    0
-  ) {
-    const loggedMeals =
-      MEALS.filter(
-        (meal) =>
-          nutritionEntries.some(
-            (entry) =>
-              entry.meal ===
-              meal,
-          ),
-      );
+  if (targets.length === 0) {
+    const nutritionScore = loggedMeals.length * 15;
 
     return {
-      score:
-        loggedMeals.length
-        * 15,
-
-      mode:
-        'logging',
-
+      total: trainingScore + nutritionScore,
+      trainingScore,
+      nutritionScore,
+      nutritionMode: "logging",
       totals,
-
       loggedMeals,
-
       goalScores: [],
     };
   }
 
-  const pointsPerGoal =
-    60
-    / configuredGoals.length;
+  const pointsPerGoal = 60 / targets.length;
 
-  const goalScores =
-    configuredGoals.map(
-      (goal) => {
-        const actual =
-          totals[
-            goal.key
-          ];
+  const goalScores = targets.map((goal) => {
+    const actual = totals[goal.key];
 
-        const ratio =
-          getTargetRatio(
-            goal.key,
-            actual,
-            goal.target,
-          );
-
-        return {
-          ...goal,
-
-          actual,
-
-          ratio,
-
-          points:
-            ratio
-            * pointsPerGoal,
-
-          percentage:
-            Math.round(
-              (
-                actual
-                / goal.target
-              )
-              * 100,
-            ),
-        };
-      },
+    const ratio = targetRatio(
+      goal.key,
+      actual,
+      goal.target
     );
 
-  const score =
-    Math.round(
-      goalScores.reduce(
-        (
-          total,
-          goal,
-        ) =>
-          total
-          + goal.points,
-        0,
+    return {
+      ...goal,
+      actual,
+      ratio,
+      percentage: Math.round(
+        (actual / goal.target) * 100
       ),
-    );
+      points: ratio * pointsPerGoal,
+    };
+  });
+
+  const nutritionScore = Math.round(
+    goalScores.reduce(
+      (total, goal) => total + goal.points,
+      0
+    )
+  );
 
   return {
-    score,
-
-    mode:
-      'targets',
-
+    total: trainingScore + nutritionScore,
+    trainingScore,
+    nutritionScore,
+    nutritionMode: "targets",
     totals,
-
-    loggedMeals: [],
-
+    loggedMeals,
     goalScores,
   };
 }
 
+function scoreLevel(score, future) {
+  if (future) return "future";
+  if (score >= 80) return "good";
+  if (score >= 50) return "moderate";
 
-/* =========================================
-   DAILY SCORE
-========================================= */
-
-function calculateDayScore(
-  workouts,
-  nutritionEntries,
-  isRestDay,
-  goals,
-) {
-  const hasWorkout =
-    workouts.length > 0;
-
-  const trainingScore =
-    hasWorkout
-    || isRestDay
-      ? 40
-      : 0;
-
-  const nutrition =
-    calculateNutritionScore(
-      nutritionEntries,
-      goals,
-    );
-
-  return {
-    total:
-      trainingScore
-      + nutrition.score,
-
-    trainingScore,
-
-    nutritionScore:
-      nutrition.score,
-
-    hasWorkout,
-
-    isRestDay,
-
-    nutritionMode:
-      nutrition.mode,
-
-    nutritionTotals:
-      nutrition.totals,
-
-    loggedMeals:
-      nutrition.loggedMeals,
-
-    goalScores:
-      nutrition.goalScores,
-  };
+  return "poor";
 }
 
+function scoreLabel(score, future) {
+  if (future) return "Upcoming";
+  if (score >= 80) return "Good day";
+  if (score >= 50) return "Moderate";
+  if (score > 0) return "Needs work";
 
-/* =========================================
-   SCORE LEVEL
-========================================= */
-
-function getScoreLevel(
-  score,
-  future,
-) {
-  if (future) {
-    return 'future';
-  }
-
-  if (
-    score >= 80
-  ) {
-    return 'good';
-  }
-
-  if (
-    score >= 50
-  ) {
-    return 'moderate';
-  }
-
-  return 'poor';
+  return "No progress";
 }
 
+function mealIcon(meal) {
+  if (meal === "Breakfast") return Coffee;
+  if (meal === "Snacks") return Cookie;
 
-function getScoreLabel(
-  score,
-  future,
-) {
-  if (future) {
-    return 'Upcoming';
-  }
-
-  if (
-    score >= 80
-  ) {
-    return 'Good day';
-  }
-
-  if (
-    score >= 50
-  ) {
-    return 'Moderate';
-  }
-
-  if (
-    score > 0
-  ) {
-    return 'Needs work';
-  }
-
-  return 'No progress';
+  return Utensils;
 }
 
-
-/* =========================================
-   MEALS
-========================================= */
-
-function getMealIcon(
-  meal,
-) {
-  switch (meal) {
-    case 'Breakfast':
-      return Coffee;
-
-    case 'Snacks':
-      return Cookie;
-
-    default:
-      return Utensils;
+function formatNumber(value) {
+  if (value === null || value === undefined) {
+    return "—";
   }
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) return "—";
+
+  return Number.isInteger(number)
+    ? String(number)
+    : number.toFixed(1);
 }
 
-
 /* =========================================
-   PAGE
+   CALENDAR PAGE
 ========================================= */
 
 export default function CalendarPage() {
-  const today =
-    new Date();
+  const [workouts, setWorkouts] = useState([]);
+  const [nutrition, setNutrition] = useState({});
+  const [progress, setProgress] = useState({});
+  const [goals, setGoals] = useState({});
+  const [restDays, setRestDays] = useState([]);
 
-  const [
-    workouts,
-    setWorkouts,
-  ] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [restSaving, setRestSaving] = useState(false);
 
-  const [
-    nutrition,
-    setNutrition,
-  ] = useState({});
+  const [error, setError] = useState("");
+  const [toast, setToast] = useState(null);
 
-  const [
-    goals,
-    setGoals,
-  ] = useState({});
+  const [currentMonth, setCurrentMonth] = useState(
+    () => {
+      const today = new Date();
 
-  const [
-    restDays,
-    setRestDays,
-  ] = useState([]);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    restSaving,
-    setRestSaving,
-  ] = useState(false);
-
-  const [
-    error,
-    setError,
-  ] = useState('');
-
-  const [
-    currentMonth,
-    setCurrentMonth,
-  ] = useState({
-    year:
-      today.getFullYear(),
-
-    month:
-      today.getMonth(),
-  });
-
-  const [
-    selectedDate,
-    setSelectedDate,
-  ] = useState(
-    getTodayKey(),
+      return {
+        year: today.getFullYear(),
+        month: today.getMonth(),
+      };
+    }
   );
 
+  const [selectedDate, setSelectedDate] = useState(
+    todayKey
+  );
 
   /* =========================================
-     LOAD CALENDAR DATA
+     LOAD ALL CALENDAR DATA
   ========================================= */
 
-  async function loadCalendarData() {
-    try {
-      setLoading(true);
-      setError('');
+  const loadCalendarData = useCallback(
+    async (showLoading = true) => {
+      try {
+        if (showLoading) {
+          setLoading(true);
+        }
 
-      const [
-        workoutsResponse,
-        nutritionResponse,
-        goalsResponse,
-        restDaysResponse,
-      ] = await Promise.all([
-        getWorkouts(),
-        getNutritionEntries(),
-        getNutritionGoals(),
-        getRestDays(),
-      ]);
+        setError("");
 
-      setWorkouts(
-        Array.isArray(
+        const [
           workoutsResponse,
-        )
-          ? workoutsResponse
-          : [],
-      );
-
-      setNutrition(
-        groupNutritionByDate(
-          extractNutritionEntries(
-            nutritionResponse,
-          ),
-        ),
-      );
-
-      setGoals(
-        normalizeGoals(
+          nutritionResponse,
           goalsResponse,
-        ),
-      );
-
-      setRestDays(
-        extractRestDays(
           restDaysResponse,
-        ),
-      );
-    } catch (loadError) {
-      console.error(
-        'Failed to load calendar:',
-        loadError,
-      );
+          progressResponse,
+        ] = await Promise.all([
+          getWorkouts(),
+          getNutritionEntries(),
+          getNutritionGoals(),
+          getRestDays(),
+          getProgressEntries(),
+        ]);
 
-      setError(
-        loadError.message
-        || 'Failed to load calendar data.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+        setWorkouts(
+          extractEntries(
+            workoutsResponse,
+            "workouts"
+          )
+        );
 
+        const nutritionEntries = extractEntries(
+          nutritionResponse,
+          "nutritionEntries"
+        ).map(normalizeNutrition);
+
+        setNutrition(groupByDate(nutritionEntries));
+
+        setGoals(normalizeGoals(goalsResponse));
+
+        setRestDays(
+          normalizeRestDays(restDaysResponse)
+        );
+
+        const progressEntries = extractEntries(
+          progressResponse,
+          "progressEntries"
+        ).map(normalizeProgress);
+
+        setProgress(groupByDate(progressEntries));
+      } catch (loadError) {
+        console.error(
+          "Failed to load calendar:",
+          loadError
+        );
+
+        setError(
+          loadError.message ||
+            "Failed to load calendar data."
+        );
+      } finally {
+        if (showLoading) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    const loadTimer = setTimeout(() => {
+    const initialLoadTimeout = setTimeout(() => {
       loadCalendarData();
     }, 0);
 
-    return () => {
-      clearTimeout(loadTimer);
-    };
-  }, []);
+    // Refresh when returning from an edit page.
+    function handleFocus() {
+      loadCalendarData(false);
+    }
 
+    function handleVisibility() {
+      if (
+        document.visibilityState === "visible"
+      ) {
+        loadCalendarData(false);
+      }
+    }
+
+    window.addEventListener("focus", handleFocus);
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      clearTimeout(initialLoadTimeout);
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, [loadCalendarData]);
+
+  /* =========================================
+     TOAST AUTO DISMISS
+  ========================================= */
+
+  useEffect(() => {
+    if (!toast) return undefined;
+
+    const timeout = setTimeout(() => {
+      setToast(null);
+    }, 3500);
+
+    return () => clearTimeout(timeout);
+  }, [toast]);
+
+  function showToast(type, title, message) {
+    setToast({ type, title, message });
+  }
 
   /* =========================================
      WORKOUTS BY DATE
   ========================================= */
 
-  const workoutsByDate =
-    useMemo(() => {
-      return workouts.reduce(
-        (
-          grouped,
-          workout,
-        ) => {
-          const date =
-            normalizeDate(
-              workout.date,
-            );
+  const workoutsByDate = useMemo(() => {
+    const grouped = {};
 
-          if (!date) {
-            return grouped;
-          }
-
-          if (
-            !grouped[
-              date
-            ]
-          ) {
-            grouped[
-              date
-            ] = [];
-          }
-
-          grouped[
-            date
-          ].push(
-            workout,
-          );
-
-          return grouped;
-        },
-        {},
+    for (const workout of workouts) {
+      const date = normalizeDate(
+        workout.date ?? workout.workout_date
       );
-    }, [
-      workouts,
-    ]);
 
+      if (!date) continue;
+
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+
+      grouped[date].push(workout);
+    }
+
+    return grouped;
+  }, [workouts]);
 
   /* =========================================
-     CALENDAR CELLS
+     CALENDAR DAYS
   ========================================= */
 
-  const calendarDays =
-    useMemo(() => {
-      const {
-        year,
-        month,
-      } = currentMonth;
+  const calendarDays = useMemo(() => {
+    const { year, month } = currentMonth;
 
-      const daysInMonth =
-        new Date(
-          year,
-          month + 1,
-          0,
-        ).getDate();
+    const daysInMonth = new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
 
-      const firstDay =
-        new Date(
-          year,
-          month,
-          1,
-        ).getDay();
+    const firstDay = new Date(
+      year,
+      month,
+      1
+    ).getDay();
 
-      const mondayOffset =
-        (
-          firstDay + 6
-        ) % 7;
+    const mondayOffset = (firstDay + 6) % 7;
 
-      const cells = [];
+    const cells = [];
 
-      for (
-        let index = 0;
-        index <
-        mondayOffset;
-        index += 1
-      ) {
-        cells.push(
-          null,
-        );
-      }
+    for (
+      let index = 0;
+      index < mondayOffset;
+      index += 1
+    ) {
+      cells.push(null);
+    }
 
-      for (
-        let day = 1;
-        day <=
-        daysInMonth;
-        day += 1
-      ) {
-        const date =
-          toDateKey(
-            year,
-            month,
-            day,
-          );
+    for (
+      let day = 1;
+      day <= daysInMonth;
+      day += 1
+    ) {
+      const date = dateKey(year, month, day);
 
-        const dayWorkouts =
-          workoutsByDate[
-            date
-          ] || [];
+      const dayWorkouts =
+        workoutsByDate[date] || [];
 
-        const dayNutrition =
-          nutrition[
-            date
-          ] || [];
+      const dayNutrition =
+        nutrition[date] || [];
 
-        const restDay =
-          restDays.includes(
-            date,
-          )
-          && dayWorkouts.length ===
-            0;
+      const dayProgress =
+        progress[date] || [];
 
-        const score =
-          calculateDayScore(
-            dayWorkouts,
-            dayNutrition,
-            restDay,
-            goals,
-          );
+      const restDay =
+        restDays.includes(date) &&
+        dayWorkouts.length === 0;
 
-        cells.push({
-          day,
-          date,
+      const score = calculateDayScore(
+        dayWorkouts,
+        dayNutrition,
+        restDay,
+        goals
+      );
 
-          workouts:
-            dayWorkouts,
+      cells.push({
+        day,
+        date,
+        workouts: dayWorkouts,
+        nutrition: dayNutrition,
+        progress: dayProgress,
+        restDay,
+        future: isFutureDate(date),
+        score,
+      });
+    }
 
-          nutrition:
-            dayNutrition,
+    while (cells.length % 7 !== 0) {
+      cells.push(null);
+    }
 
-          restDay,
-
-          future:
-            isFutureDate(
-              date,
-            ),
-
-          score,
-        });
-      }
-
-      while (
-        cells.length % 7 !==
-        0
-      ) {
-        cells.push(
-          null,
-        );
-      }
-
-      return cells;
-    }, [
-      currentMonth,
-      workoutsByDate,
-      nutrition,
-      restDays,
-      goals,
-    ]);
-
+    return cells;
+  }, [
+    currentMonth,
+    workoutsByDate,
+    nutrition,
+    progress,
+    restDays,
+    goals,
+  ]);
 
   /* =========================================
-     SELECTED DAY
+     SELECTED DAY DATA
   ========================================= */
 
   const selectedWorkouts =
-    workoutsByDate[
-      selectedDate
-    ] || [];
+    workoutsByDate[selectedDate] || [];
 
   const selectedNutrition =
-    nutrition[
-      selectedDate
-    ] || [];
+    nutrition[selectedDate] || [];
+
+  const selectedProgress =
+    progress[selectedDate] || [];
 
   const selectedIsRestDay =
-    restDays.includes(
-      selectedDate,
-    )
-    && selectedWorkouts.length ===
-      0;
+    restDays.includes(selectedDate) &&
+    selectedWorkouts.length === 0;
 
   const selectedIsFuture =
-    isFutureDate(
-      selectedDate,
-    );
+    isFutureDate(selectedDate);
 
-  const selectedScore =
-    calculateDayScore(
-      selectedWorkouts,
-      selectedNutrition,
-      selectedIsRestDay,
-      goals,
-    );
+  const selectedScore = calculateDayScore(
+    selectedWorkouts,
+    selectedNutrition,
+    selectedIsRestDay,
+    goals
+  );
 
-  const selectedLevel =
-    getScoreLevel(
-      selectedScore.total,
-      selectedIsFuture,
-    );
+  const selectedLevel = scoreLevel(
+    selectedScore.total,
+    selectedIsFuture
+  );
 
-  const selectedTotals =
-    selectedScore
-      .nutritionTotals;
+  const selectedTotals = selectedScore.totals;
 
   const goalsConfigured =
-    getConfiguredGoals(
-      goals,
-    ).length > 0;
-
+    configuredGoals(goals).length > 0;
 
   /* =========================================
-     REST DAY
+     REST DAY CREATE / DELETE
   ========================================= */
 
   async function toggleRestDay() {
     if (
-      selectedIsFuture
-      || selectedWorkouts.length >
-        0
-      || restSaving
+      selectedIsFuture ||
+      selectedWorkouts.length > 0 ||
+      restSaving
     ) {
       return;
     }
 
-    const exists =
-      restDays.includes(
-        selectedDate,
-      );
+    const wasRestDay =
+      restDays.includes(selectedDate);
 
     try {
-      setRestSaving(
-        true,
-      );
+      setRestSaving(true);
+      setError("");
 
-      setError('');
-
-      if (exists) {
-        await deleteRestDay(
-          selectedDate,
-        );
+      if (wasRestDay) {
+        await deleteRestDay(selectedDate);
       } else {
         await createRestDay({
-          date:
-            selectedDate,
-
-          note: '',
+          date: selectedDate,
+          note: "",
         });
       }
 
-      const response =
-        await getRestDays();
+      // Update the calendar immediately after
+      // the API confirms the change.
+      setRestDays((current) =>
+        wasRestDay
+          ? current.filter(
+              (date) => date !== selectedDate
+            )
+          : [...current, selectedDate]
+      );
 
-      setRestDays(
-        extractRestDays(
-          response,
-        ),
+      showToast(
+        "success",
+        wasRestDay
+          ? "Rest day removed"
+          : "Rest day saved",
+        wasRestDay
+          ? "This day is no longer marked as recovery."
+          : "Your recovery day was recorded."
       );
     } catch (restError) {
       console.error(
-        'Failed to update rest day:',
-        restError,
+        "Failed to update rest day:",
+        restError
       );
 
       setError(
-        restError.message
-        || 'Failed to update rest day.',
+        restError.message ||
+          "Failed to update rest day."
+      );
+
+      showToast(
+        "error",
+        "Unable to update rest day",
+        restError.message ||
+          "Please try again."
       );
     } finally {
-      setRestSaving(
-        false,
-      );
+      setRestSaving(false);
     }
   }
-
 
   /* =========================================
      MONTH NAVIGATION
   ========================================= */
 
-  function changeMonth(
-    direction,
-  ) {
-    const nextDate =
-      new Date(
-        currentMonth.year,
-        currentMonth.month
-        + direction,
-        1,
-      );
+  function changeMonth(direction) {
+    const nextDate = new Date(
+      currentMonth.year,
+      currentMonth.month + direction,
+      1
+    );
 
     const next = {
-      year:
-        nextDate.getFullYear(),
-
-      month:
-        nextDate.getMonth(),
+      year: nextDate.getFullYear(),
+      month: nextDate.getMonth(),
     };
 
-    setCurrentMonth(
-      next,
-    );
+    setCurrentMonth(next);
 
     setSelectedDate(
-      toDateKey(
-        next.year,
-        next.month,
-        1,
-      ),
+      dateKey(next.year, next.month, 1)
     );
   }
-
 
   function goToToday() {
-    const now =
-      new Date();
+    const now = new Date();
 
     setCurrentMonth({
-      year:
-        now.getFullYear(),
-
-      month:
-        now.getMonth(),
+      year: now.getFullYear(),
+      month: now.getMonth(),
     });
 
-    setSelectedDate(
-      getTodayKey(),
-    );
+    setSelectedDate(todayKey());
   }
-
 
   /* =========================================
      RENDER
@@ -1272,13 +852,41 @@ export default function CalendarPage() {
     <main className="calendar-page">
 
       {/* =====================================
+          TOAST
+      ===================================== */}
+
+      {toast && (
+        <div
+          className={`calendar-page__toast calendar-page__toast--${toast.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="calendar-page__toast-icon">
+            <CheckCircle2 size={18} />
+          </div>
+
+          <div className="calendar-page__toast-copy">
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+
+          <button
+            type="button"
+            className="calendar-page__toast-close"
+            aria-label="Dismiss notification"
+            onClick={() => setToast(null)}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* =====================================
           HEADER
       ===================================== */}
 
       <header className="page__header">
-
         <div className="page__header-text">
-
           <span className="page__eyebrow">
             Daily Progress
           </span>
@@ -1288,1252 +896,831 @@ export default function CalendarPage() {
           </h1>
 
           <p className="page__description">
-            See training,
-            recovery and
-            nutrition quality
-            together across each
-            day.
+            See training, recovery, nutrition, and
+            body measurements together across each day.
           </p>
-
         </div>
 
-        <button
-          type="button"
-          className="button"
-          onClick={
-            goToToday
-          }
-        >
-          <CalendarDays
-            size={16}
-          />
+        <div className="calendar-page__header-actions">
+          <button
+            type="button"
+            className="button"
+            onClick={() =>
+              loadCalendarData()
+            }
+            disabled={loading}
+          >
+            <RefreshCw size={15} />
+            Refresh
+          </button>
 
-          Today
-        </button>
-
+          <button
+            type="button"
+            className="button"
+            onClick={goToToday}
+          >
+            <CalendarDays size={16} />
+            Today
+          </button>
+        </div>
       </header>
 
-
       {/* =====================================
-          API STATUS
+          ERROR
       ===================================== */}
 
       {error && (
-
-        <div className="calendar-page__goal-notice">
-
-          <Target
-            size={14}
-          />
-
+        <div
+          className="calendar-page__goal-notice"
+          role="alert"
+        >
+          <Target size={14} />
           {error}
-
         </div>
-
       )}
-
 
       {/* =====================================
           LEGEND
       ===================================== */}
 
       <section className="calendar-page__legend">
-
         <div>
-
           <span className="calendar-page__legend-dot calendar-page__legend-dot--good" />
-
-          <strong>
-            80–100%
-          </strong>
-
-          <span>
-            Good
-          </span>
-
+          <strong>80–100%</strong>
+          <span>Good</span>
         </div>
 
-
         <div>
-
           <span className="calendar-page__legend-dot calendar-page__legend-dot--moderate" />
-
-          <strong>
-            50–79%
-          </strong>
-
-          <span>
-            Moderate
-          </span>
-
+          <strong>50–79%</strong>
+          <span>Moderate</span>
         </div>
 
-
         <div>
-
           <span className="calendar-page__legend-dot calendar-page__legend-dot--poor" />
-
-          <strong>
-            0–49%
-          </strong>
-
-          <span>
-            Needs work
-          </span>
-
+          <strong>0–49%</strong>
+          <span>Needs work</span>
         </div>
-
 
         <div>
-
           <span className="calendar-page__legend-dot calendar-page__legend-dot--rest" />
-
-          <strong>
-            Rest
-          </strong>
-
-          <span>
-            Recovery day
-          </span>
-
+          <strong>Rest</strong>
+          <span>Recovery day</span>
         </div>
-
 
         <p>
-          Training / recovery =
-          40% · nutrition targets =
-          60%
+          Training / recovery = 40% ·
+          nutrition = 60%
         </p>
-
       </section>
-
 
       {/* =====================================
           CALENDAR
       ===================================== */}
 
       <section className="panel calendar-page__calendar">
-
         <div className="calendar-page__calendar-header">
-
           <button
             type="button"
             aria-label="Previous month"
-            onClick={() =>
-              changeMonth(
-                -1,
-              )
-            }
+            onClick={() => changeMonth(-1)}
           >
-            <ChevronLeft
-              size={18}
-            />
+            <ChevronLeft size={18} />
           </button>
 
           <h2>
             {formatMonth(
               currentMonth.year,
-              currentMonth.month,
+              currentMonth.month
             )}
           </h2>
 
           <button
             type="button"
             aria-label="Next month"
-            onClick={() =>
-              changeMonth(
-                1,
-              )
-            }
+            onClick={() => changeMonth(1)}
           >
-            <ChevronRight
-              size={18}
-            />
+            <ChevronRight size={18} />
           </button>
-
         </div>
-
 
         <div className="calendar-page__weekdays">
-
-          {WEEKDAYS.map(
-            (weekday) => (
-
-              <span
-                key={
-                  weekday
-                }
-              >
-                {weekday}
-              </span>
-
-            ),
-          )}
-
+          {WEEKDAYS.map((weekday) => (
+            <span key={weekday}>
+              {weekday}
+            </span>
+          ))}
         </div>
-
 
         <div className="calendar-page__grid">
-
-          {calendarDays.map(
-            (
-              calendarDay,
-              index,
-            ) => {
-              if (
-                !calendarDay
-              ) {
-                return (
-                  <div
-                    className="calendar-page__day calendar-page__day--empty"
-                    key={`empty-${index}`}
-                  />
-                );
-              }
-
-              const {
-                day,
-                date,
-
-                workouts:
-                  dayWorkouts,
-
-                nutrition:
-                  dayNutrition,
-
-                restDay,
-                future,
-                score,
-              } =
-                calendarDay;
-
-              const level =
-                getScoreLevel(
-                  score.total,
-                  future,
-                );
-
-              const isSelected =
-                selectedDate ===
-                date;
-
-              const isToday =
-                date ===
-                getTodayKey();
-
+          {calendarDays.map((calendarDay, index) => {
+            if (!calendarDay) {
               return (
-                <button
-                  type="button"
-                  key={
-                    date
-                  }
-                  className={[
-                    'calendar-page__day',
+                <div
+                  className="calendar-page__day calendar-page__day--empty"
+                  key={`empty-${index}`}
+                />
+              );
+            }
 
-                    `calendar-page__day--${level}`,
+            const {
+              day,
+              date,
+              workouts: dayWorkouts,
+              nutrition: dayNutrition,
+              progress: dayProgress,
+              restDay,
+              future,
+              score,
+            } = calendarDay;
 
-                    restDay
-                      ? 'calendar-page__day--rest'
-                      : '',
+            const level = scoreLevel(
+              score.total,
+              future
+            );
 
-                    isSelected
-                      ? 'calendar-page__day--selected'
-                      : '',
+            const isSelected =
+              selectedDate === date;
 
-                    isToday
-                      ? 'calendar-page__day--today'
-                      : '',
-                  ]
-                    .filter(
-                      Boolean,
-                    )
-                    .join(
-                      ' ',
-                    )}
-                  onClick={() =>
-                    setSelectedDate(
-                      date,
-                    )
-                  }
-                >
+            const isToday =
+              date === todayKey();
 
-                  <div className="calendar-page__day-top">
-
-                    <span className="calendar-page__day-number">
-                      {day}
-                    </span>
-
-                    {!future && (
-
-                      <strong className="calendar-page__score">
-                        {
-                          score.total
-                        }%
-                      </strong>
-
-                    )}
-
-                  </div>
-
+            return (
+              <button
+                type="button"
+                key={date}
+                className={[
+                  "calendar-page__day",
+                  `calendar-page__day--${level}`,
+                  restDay
+                    ? "calendar-page__day--rest"
+                    : "",
+                  isSelected
+                    ? "calendar-page__day--selected"
+                    : "",
+                  isToday
+                    ? "calendar-page__day--today"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() =>
+                  setSelectedDate(date)
+                }
+              >
+                <div className="calendar-page__day-top">
+                  <span className="calendar-page__day-number">
+                    {day}
+                  </span>
 
                   {!future && (
+                    <strong className="calendar-page__score">
+                      {score.total}%
+                    </strong>
+                  )}
+                </div>
 
-                    <div className="calendar-page__day-progress">
+                {!future && (
+                  <div className="calendar-page__day-progress">
+                    <span
+                      style={{
+                        width: `${score.total}%`,
+                      }}
+                    />
+                  </div>
+                )}
 
-                      <span
-                        style={{
-                          width:
-                            `${score.total}%`,
-                        }}
-                      />
-
-                    </div>
-
+                <div className="calendar-page__day-activity">
+                  {restDay ? (
+                    <span className="calendar-page__rest-badge">
+                      <Moon size={12} />
+                      Rest
+                    </span>
+                  ) : (
+                    <span>
+                      <Dumbbell size={12} />
+                      {dayWorkouts.length}
+                    </span>
                   )}
 
+                  <span>
+                    <Utensils size={12} />
+                    {dayNutrition.length}
+                  </span>
 
-                  <div className="calendar-page__day-activity">
-
-                    {restDay ? (
-
-                      <span className="calendar-page__rest-badge">
-
-                        <Moon
-                          size={12}
-                        />
-
-                        Rest
-                      </span>
-
-                    ) : (
-
-                      <span>
-
-                        <Dumbbell
-                          size={12}
-                        />
-
-                        {
-                          dayWorkouts.length
-                        }
-                      </span>
-
-                    )}
-
-
-                    <span>
-
-                      <Utensils
-                        size={12}
-                      />
-
-                      {
-                        dayNutrition.length
-                      }
+                  {dayProgress.length > 0 && (
+                    <span className="calendar-page__progress-badge">
+                      <Scale size={12} />
+                      {dayProgress.length}
                     </span>
-
-                  </div>
-
-                </button>
-              );
-            },
-          )}
-
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
-
       </section>
 
-
       {/* =====================================
-          SELECTED DAY
+          DAY DETAILS
       ===================================== */}
 
       <section className="calendar-page__details">
 
-        {/* =================================
-            SCORE SUMMARY
-        ================================= */}
+        {/* ===================================
+            DAILY SCORE SUMMARY
+        =================================== */}
 
         <article className="panel calendar-page__summary">
-
           <div className="calendar-page__summary-heading">
-
             <div>
-
-              <span>
-                Selected Day
-              </span>
+              <span>Selected Day</span>
 
               <h2>
-                {formatFullDate(
-                  selectedDate,
-                )}
+                {formatFullDate(selectedDate)}
               </h2>
 
               {selectedIsRestDay && (
-
                 <div className="calendar-page__rest-status">
-
-                  <Moon
-                    size={13}
-                  />
-
-                  Intentional recovery day
+                  <Moon size={14} />
+                  Recovery day
                 </div>
-
               )}
-
             </div>
-
 
             <div
               className={`calendar-page__score-circle calendar-page__score-circle--${selectedLevel}`}
             >
-
               {selectedIsFuture ? (
-
                 <>
-                  <CalendarDays
-                    size={20}
-                  />
-
-                  <span>
-                    Upcoming
-                  </span>
+                  <CalendarDays size={23} />
+                  <span>Upcoming</span>
                 </>
-
               ) : (
-
                 <>
                   <strong>
-                    {
-                      selectedScore.total
-                    }%
+                    {selectedScore.total}%
                   </strong>
 
                   <span>
-                    {getScoreLabel(
+                    {scoreLabel(
                       selectedScore.total,
-                      false,
+                      false
                     )}
                   </span>
                 </>
-
               )}
-
             </div>
-
           </div>
 
+          <div className="calendar-page__breakdown">
 
-          {!selectedIsFuture && (
+            <div>
+              <div className="calendar-page__breakdown-heading">
+                <span>Training / Recovery</span>
 
-            <>
-
-              <div className="calendar-page__breakdown">
-
-                {/* TRAINING */}
-
-                <div>
-
-                  <div className="calendar-page__breakdown-heading">
-
-                    <span>
-                      Training /
-                      Recovery
-                    </span>
-
-                    <strong>
-                      {
-                        selectedScore
-                          .trainingScore
-                      }
-                      /40
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-page__breakdown-bar">
-
-                    <span
-                      style={{
-                        width:
-                          `${(
-                            selectedScore
-                              .trainingScore
-                            / 40
-                          ) * 100}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-
-                {/* NUTRITION */}
-
-                <div>
-
-                  <div className="calendar-page__breakdown-heading">
-
-                    <span>
-                      Nutrition
-                    </span>
-
-                    <strong>
-                      {
-                        selectedScore
-                          .nutritionScore
-                      }
-                      /60
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-page__breakdown-bar">
-
-                    <span
-                      style={{
-                        width:
-                          `${(
-                            selectedScore
-                              .nutritionScore
-                            / 60
-                          ) * 100}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
+                <strong>
+                  {selectedScore.trainingScore} / 40
+                </strong>
               </div>
 
-
-              {/* =============================
-                  NUTRITION SCORE DETAIL
-              ============================= */}
-
-              <div className="calendar-page__nutrition-score">
-
-                <div className="calendar-page__nutrition-score-heading">
-
-                  <div>
-
-                    <Target
-                      size={15}
-                    />
-
-                    <div>
-
-                      <strong>
-                        Nutrition Score
-                      </strong>
-
-                      <span>
-                        {
-                          selectedScore
-                            .nutritionMode
-                          === 'targets'
-                            ? 'Based on your configured daily targets'
-                            : 'Targets are not configured yet — using meal logging'
-                        }
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  <strong>
-                    {
-                      selectedScore
-                        .nutritionScore
-                    }
-                    /60
-                  </strong>
-
-                </div>
-
-
-                {selectedScore
-                  .nutritionMode ===
-                'targets' ? (
-
-                  <div className="calendar-page__nutrition-targets">
-
-                    {selectedScore
-                      .goalScores
-                      .map(
-                        (goal) => (
-
-                          <div
-                            className="calendar-page__nutrition-target"
-                            key={
-                              goal.key
-                            }
-                          >
-
-                            <div className="calendar-page__nutrition-target-heading">
-
-                              <span>
-                                {
-                                  goal.label
-                                }
-                              </span>
-
-                              <strong>
-                                {Math.round(
-                                  goal.actual,
-                                )}
-
-                                {goal.unit ===
-                                'g'
-                                  ? 'g'
-                                  : ''}{' '}
-
-                                /{' '}
-
-                                {
-                                  goal.target
-                                }
-
-                                {goal.unit ===
-                                'g'
-                                  ? 'g'
-                                  : ` ${goal.unit}`}
-                              </strong>
-
-                              <small>
-                                {
-                                  goal.percentage
-                                }%
-                              </small>
-
-                            </div>
-
-
-                            <div className="calendar-page__nutrition-target-bar">
-
-                              <span
-                                style={{
-                                  width:
-                                    `${Math.min(
-                                      100,
-                                      Math.max(
-                                        0,
-                                        goal.ratio
-                                        * 100,
-                                      ),
-                                    )}%`,
-                                }}
-                              />
-
-                            </div>
-
-                          </div>
-
-                        ),
-                      )}
-
-                  </div>
-
-                ) : (
-
-                  <div className="calendar-page__logging-score">
-
-                    {MEALS.map(
-                      (meal) => {
-                        const logged =
-                          selectedScore
-                            .loggedMeals
-                            .includes(
-                              meal,
-                            );
-
-                        return (
-                          <span
-                            className={
-                              logged
-                                ? 'calendar-page__logging-meal calendar-page__logging-meal--complete'
-                                : 'calendar-page__logging-meal'
-                            }
-                            key={
-                              meal
-                            }
-                          >
-                            {meal}
-                          </span>
-                        );
-                      },
-                    )}
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-              {/* =============================
-                  REST CONTROL
-              ============================= */}
-
-              <div className="calendar-page__rest-control">
-
-                <div>
-
-                  <Moon
-                    size={16}
-                  />
-
-                  <div>
-
-                    <strong>
-                      Recovery Day
-                    </strong>
-
-                    <span>
-                      Rest is part of
-                      progress too.
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                {selectedWorkouts.length >
-                0 ? (
-
-                  <span className="calendar-page__rest-control-note">
-                    Workout completed
-                  </span>
-
-                ) : (
-
-                  <button
-                    type="button"
-                    disabled={
-                      restSaving
-                      || loading
-                    }
-                    className={
-                      selectedIsRestDay
-                        ? 'button calendar-page__rest-button calendar-page__rest-button--active'
-                        : 'button calendar-page__rest-button'
-                    }
-                    onClick={
-                      toggleRestDay
-                    }
-                  >
-                    <Moon
-                      size={14}
-                    />
-
-                    {
-                      restSaving
-                        ? 'Saving...'
-                        : selectedIsRestDay
-                          ? 'Remove Rest Day'
-                          : 'Mark Rest Day'
-                    }
-                  </button>
-
-                )}
-
-              </div>
-
-            </>
-
-          )}
-
-        </article>
-
-
-        {/* =================================
-            TRAINING
-        ================================= */}
-
-        <article className="panel calendar-page__section">
-
-          <div className="calendar-page__section-heading">
-
-            <div className="calendar-page__section-icon">
-
-              {selectedIsRestDay ? (
-
-                <Moon
-                  size={17}
+              <div className="calendar-page__breakdown-bar">
+                <span
+                  style={{
+                    width: `${
+                      (selectedScore.trainingScore / 40) *
+                      100
+                    }%`,
+                  }}
                 />
-
-              ) : (
-
-                <Dumbbell
-                  size={17}
-                />
-
-              )}
-
+              </div>
             </div>
 
             <div>
-
-              <h3>
-                {
-                  selectedIsRestDay
-                    ? 'Recovery'
-                    : 'Training'
-                }
-              </h3>
-
-              <span>
-                {
-                  selectedIsRestDay
-                    ? 'Rest day'
-                    : `${selectedWorkouts.length} ${
-                        selectedWorkouts.length ===
-                        1
-                          ? 'workout'
-                          : 'workouts'
-                      }`
-                }
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {selectedIsRestDay ? (
-
-            <div className="calendar-page__recovery">
-
-              <Moon
-                size={20}
-              />
-
-              <div>
+              <div className="calendar-page__breakdown-heading">
+                <span>Nutrition</span>
 
                 <strong>
-                  Intentional Rest Day
+                  {selectedScore.nutritionScore} / 60
+                </strong>
+              </div>
+
+              <div className="calendar-page__breakdown-bar">
+                <span
+                  style={{
+                    width: `${
+                      (selectedScore.nutritionScore / 60) *
+                      100
+                    }%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="calendar-page__nutrition-score">
+            <div className="calendar-page__nutrition-score-heading">
+              <div>
+                <Target size={18} />
+
+                <div>
+                  <strong>
+                    Nutrition Progress
+                  </strong>
+
+                  <span>
+                    {goalsConfigured
+                      ? "Calculated against your daily targets."
+                      : "Based on meals logged because no targets are configured."}
+                  </span>
+                </div>
+              </div>
+
+              <strong>
+                {selectedScore.nutritionScore} / 60
+              </strong>
+            </div>
+
+            {goalsConfigured ? (
+              <div className="calendar-page__nutrition-targets">
+                {selectedScore.goalScores.map(
+                  (goal) => (
+                    <div
+                      className="calendar-page__nutrition-target"
+                      key={goal.key}
+                    >
+                      <div className="calendar-page__nutrition-target-heading">
+                        <span>{goal.label}</span>
+
+                        <strong>
+                          {Math.round(goal.actual)}
+                          {" / "}
+                          {goal.target}
+                          {goal.unit === "g"
+                            ? "g"
+                            : ""}
+                        </strong>
+
+                        <small>
+                          {goal.percentage}%
+                        </small>
+                      </div>
+
+                      <div className="calendar-page__nutrition-target-bar">
+                        <span
+                          style={{
+                            width: `${
+                              Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  goal.percentage
+                                )
+                              )
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="calendar-page__logging-score">
+                {MEALS.map((meal) => (
+                  <div
+                    className={[
+                      "calendar-page__logging-meal",
+                      selectedScore.loggedMeals.includes(
+                        meal
+                      )
+                        ? "calendar-page__logging-meal--complete"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    key={meal}
+                  >
+                    {meal}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* REST DAY CONTROL */}
+
+          <div className="calendar-page__rest-control">
+            <div>
+              <Moon size={18} />
+
+              <div>
+                <strong>
+                  Recovery Day
                 </strong>
 
                 <span>
-                  Recovery counts
-                  toward the daily
-                  training score.
+                  {selectedWorkouts.length > 0
+                    ? "This day has a recorded workout."
+                    : selectedIsFuture
+                      ? "Future days cannot be marked as completed recovery."
+                      : "Mark a day without training as recovery."}
                 </span>
-
               </div>
-
             </div>
 
-          ) : selectedWorkouts.length ===
-          0 ? (
+            <button
+              type="button"
+              className={[
+                "button",
+                "calendar-page__rest-button",
+                selectedIsRestDay
+                  ? "calendar-page__rest-button--active"
+                  : "",
+              ].join(" ")}
+              disabled={
+                restSaving ||
+                selectedIsFuture ||
+                selectedWorkouts.length > 0
+              }
+              onClick={toggleRestDay}
+            >
+              <Moon size={14} />
 
-            <div className="calendar-page__empty">
-              No workout completed
-              on this day.
-            </div>
-
-          ) : (
-
-            <div className="calendar-page__workouts">
-
-              {selectedWorkouts.map(
-                (workout) => {
-                  const exercises =
-                    workout.exercises
-                    || [];
-
-                  const repSets =
-                    exercises.reduce(
-                      (
-                        total,
-                        exercise,
-                      ) => {
-                        const mode =
-                          exercise
-                            .trackingMode
-                          || 'reps';
-
-                        if (
-                          mode !==
-                          'reps'
-                        ) {
-                          return total;
-                        }
-
-                        return (
-                          total
-                          + (
-                            exercise.sets
-                            || []
-                          ).length
-                        );
-                      },
-                      0,
-                    );
-
-                  const intervals =
-                    exercises.reduce(
-                      (
-                        total,
-                        exercise,
-                      ) => {
-                        if (
-                          exercise
-                            .trackingMode !==
-                          'time'
-                        ) {
-                          return total;
-                        }
-
-                        return (
-                          total
-                          + (
-                            exercise.sets
-                            || []
-                          ).length
-                        );
-                      },
-                      0,
-                    );
-
-                  return (
-                    <div
-                      className="calendar-page__workout"
-                      key={
-                        workout.id
-                      }
-                    >
-
-                      <div>
-
-                        <strong>
-                          {
-                            workout.name
-                            || 'Workout'
-                          }
-                        </strong>
-
-                        <span>
-                          {
-                            exercises.length
-                          }{' '}
-                          exercises
-
-                          {repSets > 0
-                            && ` · ${repSets} sets`}
-
-                          {intervals > 0
-                            && ` · ${intervals} intervals`}
-                        </span>
-
-                      </div>
-
-                      <Dumbbell
-                        size={16}
-                      />
-
-                    </div>
-                  );
-                },
-              )}
-
-            </div>
-
-          )}
-
+              {restSaving
+                ? "Saving..."
+                : selectedIsRestDay
+                  ? "Remove Rest Day"
+                  : "Mark Rest Day"}
+            </button>
+          </div>
         </article>
 
-
-        {/* =================================
-            NUTRITION
-        ================================= */}
+        {/* ===================================
+            WORKOUTS
+        =================================== */}
 
         <article className="panel calendar-page__section">
-
           <div className="calendar-page__section-heading">
-
             <div className="calendar-page__section-icon">
-
-              <Utensils
-                size={17}
-              />
-
+              <Dumbbell size={18} />
             </div>
 
             <div>
-
-              <h3>
-                Nutrition
-              </h3>
-
+              <h3>Workouts</h3>
               <span>
-                {
-                  selectedNutrition.length
-                } food{' '}
-                {
-                  selectedNutrition.length ===
-                  1
-                    ? 'entry'
-                    : 'entries'
-                }
+                {selectedWorkouts.length}
+                {" "}
+                recorded on this day
               </span>
-
             </div>
 
+            <Link
+              to="/workouts"
+              className="calendar-page__section-link"
+            >
+              View All
+            </Link>
           </div>
 
-
-          <div className="calendar-page__macro-summary">
-
-            <div>
-
-              <strong>
-                {Math.round(
-                  selectedTotals.calories,
-                )}
-              </strong>
-
-              <span>
-                {
-                  goals.calories
-                    ? `/ ${goals.calories} kcal`
-                    : 'kcal'
-                }
-              </span>
-
+          {selectedWorkouts.length === 0 ? (
+            <div className="calendar-page__empty">
+              No workout recorded for this day.
             </div>
+          ) : (
+            <div className="calendar-page__workouts">
+              {selectedWorkouts.map((workout) => (
+                <div
+                  className="calendar-page__workout"
+                  key={workout.id}
+                >
+                  <div>
+                    <strong>
+                      {workout.name || "Workout"}
+                    </strong>
 
+                    <span>
+                      {workout.exercises?.length ?? 0}
+                      {" "}
+                      exercises
+                    </span>
+                  </div>
 
-            <div>
-
-              <strong>
-                {Math.round(
-                  selectedTotals.protein,
-                )}g
-              </strong>
-
-              <span>
-                {
-                  goals.protein
-                    ? `/ ${goals.protein}g protein`
-                    : 'protein'
-                }
-              </span>
-
+                  <Link
+                    to={`/workouts/${workout.id}/edit`}
+                    className="calendar-page__item-link"
+                  >
+                    Edit
+                  </Link>
+                </div>
+              ))}
             </div>
-
-
-            <div>
-
-              <strong>
-                {Math.round(
-                  selectedTotals.carbs,
-                )}g
-              </strong>
-
-              <span>
-                {
-                  goals.carbs
-                    ? `/ ${goals.carbs}g carbs`
-                    : 'carbs'
-                }
-              </span>
-
-            </div>
-
-
-            <div>
-
-              <strong>
-                {Math.round(
-                  selectedTotals.fat,
-                )}g
-              </strong>
-
-              <span>
-                {
-                  goals.fat
-                    ? `/ ${goals.fat}g fat`
-                    : 'fat'
-                }
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {!goalsConfigured && (
-
-            <div className="calendar-page__goal-notice">
-
-              <Target
-                size={14}
-              />
-
-              Nutrition targets
-              have not been set
-              yet. Calendar
-              nutrition scoring is
-              temporarily based on
-              meal logging.
-
-            </div>
-
           )}
 
-
-          <div className="calendar-page__meals">
-
-            {MEALS.map(
-              (meal) => {
-                const entries =
-                  selectedNutrition.filter(
-                    (entry) =>
-                      entry.meal ===
-                      meal,
-                  );
-
-                const totals =
-                  getNutritionTotals(
-                    entries,
-                  );
-
-                const MealIcon =
-                  getMealIcon(
-                    meal,
-                  );
-
-                const logged =
-                  entries.length > 0;
-
-                return (
-                  <div
-                    className={[
-                      'calendar-page__meal',
-
-                      logged
-                        ? 'calendar-page__meal--logged'
-                        : '',
-                    ]
-                      .filter(
-                        Boolean,
-                      )
-                      .join(
-                        ' ',
-                      )}
-                    key={
-                      meal
-                    }
-                  >
-
-                    <div className="calendar-page__meal-heading">
-
-                      <div className="calendar-page__meal-icon">
-
-                        <MealIcon
-                          size={15}
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <strong>
-                          {meal}
-                        </strong>
-
-                        <span>
-                          {
-                            logged
-                              ? `${entries.length} ${
-                                  entries.length === 1
-                                    ? 'item'
-                                    : 'items'
-                                }`
-                              : 'Not logged'
-                          }
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                    {logged && (
-
-                      <>
-
-                        <div className="calendar-page__meal-macros">
-
-                          <span>
-                            {Math.round(
-                              totals.calories,
-                            )}{' '}
-                            kcal
-                          </span>
-
-                          <span>
-                            {Math.round(
-                              totals.protein,
-                            )}g P
-                          </span>
-
-                          <span>
-                            {Math.round(
-                              totals.carbs,
-                            )}g C
-                          </span>
-
-                          <span>
-                            {Math.round(
-                              totals.fat,
-                            )}g F
-                          </span>
-
-                        </div>
-
-
-                        <div className="calendar-page__meal-foods">
-
-                          {entries.map(
-                            (entry) => (
-
-                              <span
-                                key={
-                                  entry.id
-                                }
-                              >
-                                {
-                                  entry.name
-                                }
-                              </span>
-
-                            ),
-                          )}
-
-                        </div>
-
-                      </>
-
-                    )}
-
-                  </div>
-                );
-              },
-            )}
-
+          <div className="calendar-page__section-actions">
+            <Link
+              to="/workouts/new"
+              className="button"
+            >
+              <Plus size={14} />
+              Log Workout
+            </Link>
           </div>
-
         </article>
 
+        {/* ===================================
+            NUTRITION
+        =================================== */}
+
+        <article className="panel calendar-page__section">
+          <div className="calendar-page__section-heading">
+            <div className="calendar-page__section-icon">
+              <Utensils size={18} />
+            </div>
+
+            <div>
+              <h3>Nutrition</h3>
+              <span>
+                {selectedNutrition.length}
+                {" "}
+                food entries
+              </span>
+            </div>
+
+            <Link
+              to="/nutrition"
+              className="calendar-page__section-link"
+            >
+              Manage
+            </Link>
+          </div>
+
+          <div className="calendar-page__macro-summary">
+            <div>
+              <strong>
+                {Math.round(selectedTotals.calories)}
+              </strong>
+              <span>Calories</span>
+            </div>
+
+            <div>
+              <strong>
+                {Math.round(selectedTotals.protein)}g
+              </strong>
+              <span>Protein</span>
+            </div>
+
+            <div>
+              <strong>
+                {Math.round(selectedTotals.carbs)}g
+              </strong>
+              <span>Carbs</span>
+            </div>
+
+            <div>
+              <strong>
+                {Math.round(selectedTotals.fat)}g
+              </strong>
+              <span>Fat</span>
+            </div>
+          </div>
+
+          {!goalsConfigured && (
+            <div className="calendar-page__goal-notice">
+              <Target size={14} />
+              Daily targets are not configured.
+              Nutrition scoring uses meal logging.
+            </div>
+          )}
+
+          <div className="calendar-page__meals">
+            {MEALS.map((meal) => {
+              const entries = selectedNutrition.filter(
+                (entry) => entry.meal === meal
+              );
+
+              const totals = getTotals(entries);
+              const MealIcon = mealIcon(meal);
+              const logged = entries.length > 0;
+
+              return (
+                <div
+                  className={[
+                    "calendar-page__meal",
+                    logged
+                      ? "calendar-page__meal--logged"
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  key={meal}
+                >
+                  <div className="calendar-page__meal-heading">
+                    <div className="calendar-page__meal-icon">
+                      <MealIcon size={15} />
+                    </div>
+
+                    <div>
+                      <strong>{meal}</strong>
+
+                      <span>
+                        {logged
+                          ? `${entries.length} ${
+                              entries.length === 1
+                                ? "item"
+                                : "items"
+                            }`
+                          : "Not logged"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {logged && (
+                    <>
+                      <div className="calendar-page__meal-macros">
+                        <span>
+                          {Math.round(totals.calories)}
+                          {" "}kcal
+                        </span>
+
+                        <span>
+                          {Math.round(totals.protein)}g P
+                        </span>
+
+                        <span>
+                          {Math.round(totals.carbs)}g C
+                        </span>
+
+                        <span>
+                          {Math.round(totals.fat)}g F
+                        </span>
+                      </div>
+
+                      <div className="calendar-page__meal-foods">
+                        {entries.map((entry) => (
+                          <span key={entry.id}>
+                            {entry.name}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="calendar-page__section-actions">
+            <Link
+              to="/nutrition"
+              className="button"
+            >
+              <Plus size={14} />
+              Log Food
+            </Link>
+          </div>
+        </article>
+
+        {/* ===================================
+            PROGRESS MEASUREMENTS — NEW
+        =================================== */}
+
+        <article className="panel calendar-page__section calendar-page__progress-section">
+          <div className="calendar-page__section-heading">
+            <div className="calendar-page__section-icon">
+              <Scale size={18} />
+            </div>
+
+            <div>
+              <h3>Body Progress</h3>
+
+              <span>
+                {selectedProgress.length}
+                {" "}
+                measurement entries
+              </span>
+            </div>
+
+            <Link
+              to="/progress"
+              className="calendar-page__section-link"
+            >
+              Manage
+            </Link>
+          </div>
+
+          {selectedProgress.length === 0 ? (
+            <div className="calendar-page__empty">
+              No body measurements recorded for this day.
+            </div>
+          ) : (
+            <div className="calendar-page__progress-list">
+              {selectedProgress.map((entry) => (
+                <div
+                  className="calendar-page__progress-entry"
+                  key={entry.id}
+                >
+                  <div className="calendar-page__progress-entry-heading">
+                    <Activity size={15} />
+
+                    <strong>
+                      Measurement Entry
+                    </strong>
+                  </div>
+
+                  <div className="calendar-page__progress-values">
+                    {entry.weight !== null && (
+                      <span>
+                        Weight:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.weight)} kg
+                        </strong>
+                      </span>
+                    )}
+
+                    {entry.bodyFat !== null && (
+                      <span>
+                        Body Fat:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.bodyFat)}%
+                        </strong>
+                      </span>
+                    )}
+
+                    {entry.waist !== null && (
+                      <span>
+                        Waist:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.waist)} cm
+                        </strong>
+                      </span>
+                    )}
+
+                    {entry.chest !== null && (
+                      <span>
+                        Chest:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.chest)} cm
+                        </strong>
+                      </span>
+                    )}
+
+                    {entry.arms !== null && (
+                      <span>
+                        Arms:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.arms)} cm
+                        </strong>
+                      </span>
+                    )}
+
+                    {entry.thighs !== null && (
+                      <span>
+                        Thighs:
+                        {" "}
+                        <strong>
+                          {formatNumber(entry.thighs)} cm
+                        </strong>
+                      </span>
+                    )}
+                  </div>
+
+                  {entry.notes && (
+                    <p className="calendar-page__progress-notes">
+                      {entry.notes}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="calendar-page__section-actions">
+            <Link
+              to="/progress"
+              className="button"
+            >
+              <Plus size={14} />
+              Log Measurement
+            </Link>
+          </div>
+        </article>
       </section>
 
+      {loading && (
+        <div
+          className="calendar-page__loading"
+          role="status"
+        >
+          <RefreshCw size={16} />
+          Loading calendar data...
+        </div>
+      )}
     </main>
   );
 }
