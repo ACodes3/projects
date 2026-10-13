@@ -1,13 +1,15 @@
+
 import {
-  CalendarDays,
   AlertCircle,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Clock3,
   Dumbbell,
-  Info,
   ExternalLink,
+  Info,
+  Pencil,
   Plus,
   Search,
   Trash2,
@@ -15,7 +17,6 @@ import {
 } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react";
-
 import { Link } from "react-router-dom";
 
 import {
@@ -26,80 +27,59 @@ import {
 import "./WorkoutsPage.css";
 
 /* =========================================
-
    CONSTANTS
-
-\========================================= */
+========================================= */
 
 const NEW_WORKOUT_TOAST_WINDOW = 7000;
 
 /* =========================================
-
    DATE HELPERS
-
-\========================================= */
+========================================= */
 
 function parseDate(date) {
-  if (!date) {
-    return 0;
-  }
+  if (!date) return 0;
 
-  const timestamp = new Date(`${date}T12:00:00`).getTime();
+  const timestamp = new Date(
+    `${date.slice(0, 10)}T12:00:00`
+  ).getTime();
 
   return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function formatDate(date) {
-  if (!date) {
-    return "Unknown date";
-  }
+  if (!date) return "Unknown date";
 
-  return new Date(`${date}T12:00:00`).toLocaleDateString(
-    "en-US",
-
-    {
-      day: "numeric",
-
-      month: "long",
-
-      year: "numeric",
-    },
-  );
+  return new Date(
+    `${date.slice(0, 10)}T12:00:00`
+  ).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function getWeekRange() {
   const start = new Date();
-
   const day = start.getDay();
 
-  start.setDate(start.getDate() - ((day + 6) % 7));
-
-  start.setHours(
-    0,
-
-    0,
-
-    0,
-
-    0,
+  start.setDate(
+    start.getDate() - ((day + 6) % 7)
   );
 
-  const end = new Date(start);
+  start.setHours(0, 0, 0, 0);
 
+  const end = new Date(start);
   end.setDate(end.getDate() + 7);
 
   return {
     start: start.getTime(),
-
     end: end.getTime(),
   };
 }
 
 /* =========================================
-
    WORKOUT HELPERS
-
-\========================================= */
+========================================= */
 
 function getTrackingMode(exercise) {
   return exercise.trackingMode || "reps";
@@ -107,95 +87,63 @@ function getTrackingMode(exercise) {
 
 function getRepSetCount(workout) {
   return (workout.exercises || []).reduce(
-    (
-      total,
-
-      exercise,
-    ) => {
+    (total, exercise) => {
       if (getTrackingMode(exercise) !== "reps") {
         return total;
       }
 
       return total + (exercise.sets || []).length;
     },
-
-    0,
+    0
   );
 }
 
 function getTimedIntervalCount(workout) {
   return (workout.exercises || []).reduce(
-    (
-      total,
-
-      exercise,
-    ) => {
+    (total, exercise) => {
       if (getTrackingMode(exercise) !== "time") {
         return total;
       }
 
       return total + (exercise.sets || []).length;
     },
-
-    0,
+    0
   );
 }
 
 function getWorkoutTUT(workout) {
   return (workout.exercises || []).reduce(
-    (
-      total,
-
-      exercise,
-    ) => {
+    (total, exercise) => {
       if (getTrackingMode(exercise) !== "time") {
         return total;
       }
 
-      return (
-        total +
-        (exercise.sets || []).reduce(
-          (
-            exerciseTotal,
-
-            set,
-          ) => exerciseTotal + Number(set.durationSeconds || 0),
-
-          0,
-        )
+      return total + (exercise.sets || []).reduce(
+        (sum, set) =>
+          sum + Number(set.durationSeconds || 0),
+        0
       );
     },
-
-    0,
+    0
   );
 }
 
 function getWorkoutVolume(workout) {
   return (workout.exercises || []).reduce(
-    (
-      total,
-
-      exercise,
-    ) => {
+    (total, exercise) => {
       if (getTrackingMode(exercise) !== "reps") {
         return total;
       }
 
-      return (
-        total +
-        (exercise.sets || []).reduce(
-          (
-            setTotal,
-
-            set,
-          ) => setTotal + Number(set.weight || 0) * Number(set.reps || 0),
-
-          0,
-        )
+      return total + (exercise.sets || []).reduce(
+        (sum, set) =>
+          sum +
+          Number(set.weight || 0) *
+          Number(set.reps || 0),
+        0
       );
     },
-
-    0,
+    0
   );
 }
 
@@ -210,184 +158,122 @@ function formatVolume(volume) {
 function formatDuration(seconds) {
   const total = Math.max(
     0,
-
-    Math.round(Number(seconds) || 0),
+    Math.round(Number(seconds) || 0)
   );
 
   const hours = Math.floor(total / 3600);
-
   const minutes = Math.floor((total % 3600) / 60);
-
-  const remainingSeconds = total % 60;
+  const remaining = total % 60;
 
   if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(
-      2,
-
-      "0",
-    )}:${String(remainingSeconds).padStart(
-      2,
-
-      "0",
-    )}`;
+    return [
+      hours,
+      String(minutes).padStart(2, "0"),
+      String(remaining).padStart(2, "0"),
+    ].join(":");
   }
 
   if (minutes > 0) {
-    return `${minutes}:${String(remainingSeconds).padStart(
-      2,
-
-      "0",
-    )}`;
+    return `${minutes}:${String(remaining).padStart(2, "0")}`;
   }
 
-  return `${remainingSeconds}s`;
+  return `${remaining}s`;
 }
 
 function formatWeight(weight) {
   const value = Number(weight || 0);
-
-  if (value <= 0) {
-    return "—";
-  }
-
-  return `${value} kg`;
+  return value > 0 ? `${value} kg` : "—";
 }
 
 /* =========================================
-
    NEW WORKOUT DETECTION
-
-\========================================= */
+========================================= */
 
 function getNewestWorkout(workouts) {
-  if (!Array.isArray(workouts) || workouts.length === 0) {
+  if (!Array.isArray(workouts) || !workouts.length) {
     return null;
   }
 
-  return workouts.reduce(
-    (
-      newest,
+  return workouts.reduce((newest, workout) => {
+    if (!newest) return workout;
 
-      workout,
-    ) => {
-      if (!newest) {
-        return workout;
-      }
+    const a = new Date(newest.createdAt || 0).getTime();
+    const b = new Date(workout.createdAt || 0).getTime();
 
-      const newestTime = new Date(newest.createdAt || 0).getTime();
-
-      const workoutTime = new Date(workout.createdAt || 0).getTime();
-
-      return workoutTime > newestTime ? workout : newest;
-    },
-
-    null,
-  );
+    return b > a ? workout : newest;
+  }, null);
 }
 
 function wasJustCreated(workout) {
-  if (!workout?.createdAt) {
-    return false;
-  }
+  if (!workout?.createdAt) return false;
 
   const createdAt = new Date(workout.createdAt).getTime();
 
-  if (!Number.isFinite(createdAt)) {
-    return false;
-  }
+  if (!Number.isFinite(createdAt)) return false;
 
   const difference = Date.now() - createdAt;
 
-  return difference >= 0 && difference <= NEW_WORKOUT_TOAST_WINDOW;
+  return difference >= 0 &&
+    difference <= NEW_WORKOUT_TOAST_WINDOW;
 }
 
 /* =========================================
-
    PAGE
-
-\========================================= */
+========================================= */
 
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState([]);
-
   const [search, setSearch] = useState("");
-
   const [expandedId, setExpandedId] = useState(null);
 
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
   const [deletingId, setDeletingId] = useState(null);
-
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const [toast, setToast] = useState(null);
 
   /* =========================================
-
-     LOAD WORKOUTS FROM API
-
+     LOAD WORKOUTS
   ========================================= */
 
   async function loadWorkoutHistory() {
     try {
       setLoading(true);
-
       setError("");
 
       const data = await getWorkouts();
-
       const workoutData = Array.isArray(data) ? data : [];
 
       setWorkouts(workoutData);
 
-      /*
+      const newest = getNewestWorkout(workoutData);
 
-       * A newly-created workout comes
-
-       * back from PostgreSQL with its
-
-       * createdAt timestamp.
-
-       *
-
-       * If it was created only a few
-
-       * seconds ago, this page was most
-
-       * likely reached immediately after
-
-       * Save Workout.
-
-       */
-
-      const newestWorkout = getNewestWorkout(workoutData);
-
-      if (wasJustCreated(newestWorkout)) {
+      if (wasJustCreated(newest)) {
         setToast({
           type: "success",
-
           title: "Workout saved",
-
-          message: newestWorkout?.name
-            ? `"${newestWorkout.name}" was added successfully.`
+          message: newest.name
+            ? `"${newest.name}" was added successfully.`
             : "Your workout was added successfully.",
         });
       }
     } catch (loadError) {
       console.error(
         "Failed to load workouts:",
-
-        loadError,
+        loadError
       );
 
-      setError(loadError.message || "Failed to load workouts.");
+      setError(
+        loadError.message || "Failed to load workouts."
+      );
 
       setToast({
         type: "error",
         title: "Could not load workouts",
-        message: loadError.message || "Failed to load workouts.",
+        message:
+          loadError.message || "Failed to load workouts.",
       });
     } finally {
       setLoading(false);
@@ -395,129 +281,97 @@ export default function WorkoutsPage() {
   }
 
   useEffect(() => {
-    const loadTimeout = setTimeout(
-      () => {
-        loadWorkoutHistory();
-      },
+    const timeout = setTimeout(() => {
+      loadWorkoutHistory();
+    }, 0);
 
-      0,
-    );
-
-    return () => {
-      clearTimeout(loadTimeout);
-    };
+    return () => clearTimeout(timeout);
   }, []);
 
   /* =========================================
-
      TOAST
-
   ========================================= */
 
   useEffect(() => {
-    if (!toast) {
-      return undefined;
-    }
+    if (!toast) return undefined;
 
-    const timeout = setTimeout(
-      () => {
-        setToast(null);
-      },
+    const timeout = setTimeout(() => {
+      setToast(null);
+    }, 3200);
 
-      3200,
-    );
-
-    return () => {
-      clearTimeout(timeout);
-    };
+    return () => clearTimeout(timeout);
   }, [toast]);
 
   /* =========================================
-
-     DELETE MODAL BEHAVIOUR
-
+     DELETE MODAL
   ========================================= */
 
   useEffect(() => {
-    if (!deleteTarget) {
-      return undefined;
-    }
+    if (!deleteTarget) return undefined;
 
-    const previousOverflow = document.body.style.overflow;
+    const previousOverflow =
+      document.body.style.overflow;
 
     function handleKeyDown(event) {
-      if (event.key === "Escape" && deletingId === null) {
+      if (
+        event.key === "Escape" &&
+        deletingId === null
+      ) {
         setDeleteTarget(null);
       }
     }
 
     document.body.style.overflow = "hidden";
-
     window.addEventListener(
       "keydown",
-
-      handleKeyDown,
+      handleKeyDown
     );
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow =
+        previousOverflow;
 
       window.removeEventListener(
         "keydown",
-
-        handleKeyDown,
+        handleKeyDown
       );
     };
   }, [deleteTarget, deletingId]);
 
   /* =========================================
-
-     SORT + FILTER
-
+     SORT AND FILTER
   ========================================= */
 
   const sortedWorkouts = useMemo(() => {
-    const query = search
-
-      .trim()
-
-      .toLowerCase();
+    const query = search.trim().toLowerCase();
 
     return [...workouts]
+      .sort((a, b) => {
+        const difference =
+          parseDate(b.date) - parseDate(a.date);
 
-      .sort(
-        (
-          a,
-
-          b,
-        ) => {
-          const dateDifference = parseDate(b.date) - parseDate(a.date);
-
-          if (dateDifference !== 0) {
-            return dateDifference;
-          }
-
-          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        },
-      )
-
-      .filter((workout) => {
-        if (!query) {
-          return true;
+        if (difference !== 0) {
+          return difference;
         }
 
+        return (
+          new Date(b.createdAt || 0) -
+          new Date(a.createdAt || 0)
+        );
+      })
+      .filter((workout) => {
+        if (!query) return true;
+
         const nameMatch = (workout.name || "")
-
           .toLowerCase()
-
           .includes(query);
 
-        const exerciseMatch = (workout.exercises || []).some((exercise) =>
+        const exerciseMatch = (
+          workout.exercises || []
+        ).some((exercise) =>
           (exercise.name || "")
-
             .toLowerCase()
-
-            .includes(query),
+            .includes(query)
         );
 
         return nameMatch || exerciseMatch;
@@ -525,9 +379,7 @@ export default function WorkoutsPage() {
   }, [workouts, search]);
 
   /* =========================================
-
-     STATS
-
+     STATISTICS
   ========================================= */
 
   const stats = useMemo(() => {
@@ -537,56 +389,41 @@ export default function WorkoutsPage() {
       thisWeek: workouts.filter((workout) => {
         const date = parseDate(workout.date);
 
-        return date >= week.start && date < week.end;
+        return date >= week.start &&
+          date < week.end;
       }).length,
 
       total: workouts.length,
 
       volume: workouts.reduce(
-        (
-          total,
-
-          workout,
-        ) => total + getWorkoutVolume(workout),
-
-        0,
+        (total, workout) =>
+          total + getWorkoutVolume(workout),
+        0
       ),
 
       tut: workouts.reduce(
-        (
-          total,
-
-          workout,
-        ) => total + getWorkoutTUT(workout),
-
-        0,
+        (total, workout) =>
+          total + getWorkoutTUT(workout),
+        0
       ),
     };
   }, [workouts]);
 
   /* =========================================
-
-     DELETE
-
+     DELETE ACTIONS
   ========================================= */
 
   function requestDeleteWorkout(workout) {
-    if (deletingId !== null) {
-      return;
-    }
+    if (deletingId !== null) return;
 
     setError("");
-
     setDeleteTarget(workout);
   }
 
   function closeDeleteModal() {
-    if (deletingId !== null) {
-      return;
-    }
+    if (deletingId !== null) return;
 
     setDeleteTarget(null);
-
     setError("");
 
     setToast({
@@ -597,21 +434,19 @@ export default function WorkoutsPage() {
   }
 
   async function handleDeleteWorkout() {
-    if (!deleteTarget) {
-      return;
-    }
+    if (!deleteTarget) return;
 
     const id = deleteTarget.id;
+    const name = deleteTarget.name;
 
     try {
       setDeletingId(id);
-
       setError("");
 
       await deleteWorkoutRequest(id);
 
-      setWorkouts((currentWorkouts) =>
-        currentWorkouts.filter((item) => item.id !== id),
+      setWorkouts((current) =>
+        current.filter((item) => item.id !== id)
       );
 
       if (expandedId === id) {
@@ -623,23 +458,27 @@ export default function WorkoutsPage() {
       setToast({
         type: "success",
         title: "Workout deleted",
-        message: deleteTarget.name
-          ? `"${deleteTarget.name}" was deleted successfully.`
+        message: name
+          ? `"${name}" was deleted successfully.`
           : "Your workout was deleted successfully.",
       });
     } catch (deleteError) {
       console.error(
         "Failed to delete workout:",
-
-        deleteError,
+        deleteError
       );
 
-      setError(deleteError.message || "Failed to delete workout.");
+      setError(
+        deleteError.message ||
+        "Failed to delete workout."
+      );
 
       setToast({
         type: "error",
         title: "Could not delete workout",
-        message: deleteError.message || "Failed to delete workout.",
+        message:
+          deleteError.message ||
+          "Failed to delete workout.",
       });
     } finally {
       setDeletingId(null);
@@ -647,24 +486,23 @@ export default function WorkoutsPage() {
   }
 
   /* =========================================
-
      RENDER
-
   ========================================= */
 
   return (
     <main className="workouts-page">
-      {/* =====================================
 
-          SUCCESS / ERROR / INFO TOAST
-
-      ===================================== */}
+      {/* NOTIFICATIONS */}
 
       {toast && (
         <div
           className={`workouts-page__toast workouts-page__toast--${toast.type || "success"}`}
           role={toast.type === "error" ? "alert" : "status"}
-          aria-live={toast.type === "error" ? "assertive" : "polite"}
+          aria-live={
+            toast.type === "error"
+              ? "assertive"
+              : "polite"
+          }
         >
           <div className="workouts-page__toast-icon">
             {toast.type === "error" ? (
@@ -678,7 +516,6 @@ export default function WorkoutsPage() {
 
           <div className="workouts-page__toast-copy">
             <strong>{toast.title}</strong>
-
             <span>{toast.message}</span>
           </div>
 
@@ -693,42 +530,40 @@ export default function WorkoutsPage() {
         </div>
       )}
 
-      {/* =====================================
-
-          HEADER
-
-      ===================================== */}
+      {/* HEADER */}
 
       <header className="page__header">
         <div className="page__header-text">
-          <span className="page__eyebrow">Training Log</span>
+          <span className="page__eyebrow">
+            Training Log
+          </span>
 
-          <h1 className="page__title">Workouts</h1>
+          <h1 className="page__title">
+            Workouts
+          </h1>
 
           <p className="page__description">
-            Your completed training sessions, including traditional lifting and
+            Your completed training sessions,
+            including traditional lifting and
             timed workouts.
           </p>
         </div>
 
-        <Link to="/workouts/session" className="button button--primary">
+        <Link
+          to="/workouts/session"
+          className="button button--primary"
+        >
           <Plus size={16} />
           Log Workout
         </Link>
       </header>
 
-      {/* =====================================
-
-          API ERROR
-
-      ===================================== */}
+      {/* API ERROR */}
 
       {error && !deleteTarget && (
         <div className="panel workouts-page__empty">
           <Dumbbell size={28} />
-
           <h3>Something went wrong</h3>
-
           <p>{error}</p>
 
           <button
@@ -741,67 +576,53 @@ export default function WorkoutsPage() {
         </div>
       )}
 
-      {/* =====================================
-
-          LOADING
-
-      ===================================== */}
+      {/* LOADING */}
 
       {loading ? (
         <div className="panel workouts-page__empty">
           <Dumbbell size={28} />
-
           <h3>Loading workouts</h3>
-
-          <p>Loading your training history from FORGE.</p>
+          <p>
+            Loading your training history
+            from FORGE.
+          </p>
         </div>
       ) : (
         <>
-          {/* =================================
 
-              STATS
-
-          ================================= */}
+          {/* STATISTICS */}
 
           <section className="workouts-page__stats">
             <article className="workouts-page__stat">
               <span>This Week</span>
-
               <strong>{stats.thisWeek}</strong>
-
               <small>workouts</small>
             </article>
 
             <article className="workouts-page__stat">
               <span>Total Workouts</span>
-
               <strong>{stats.total}</strong>
-
               <small>sessions</small>
             </article>
 
             <article className="workouts-page__stat">
               <span>Rep Volume</span>
-
-              <strong>{formatVolume(stats.volume)}</strong>
-
+              <strong>
+                {formatVolume(stats.volume)}
+              </strong>
               <small>weight × reps</small>
             </article>
 
             <article className="workouts-page__stat">
               <span>Time Under Tension</span>
-
-              <strong>{formatDuration(stats.tut)}</strong>
-
+              <strong>
+                {formatDuration(stats.tut)}
+              </strong>
               <small>timed work</small>
             </article>
           </section>
 
-          {/* =================================
-
-              HISTORY HEADER
-
-          ================================= */}
+          {/* HISTORY HEADER */}
 
           <div className="workouts-page__section-header">
             <div>
@@ -809,7 +630,9 @@ export default function WorkoutsPage() {
 
               <p>
                 {workouts.length} completed{" "}
-                {workouts.length === 1 ? "workout" : "workouts"}
+                {workouts.length === 1
+                  ? "workout"
+                  : "workouts"}
               </p>
             </div>
 
@@ -820,16 +643,14 @@ export default function WorkoutsPage() {
                 type="search"
                 placeholder="Search workouts..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
               />
             </div>
           </div>
 
-          {/* =================================
-
-              EMPTY
-
-          ================================= */}
+          {/* EMPTY STATE */}
 
           {sortedWorkouts.length === 0 ? (
             <div className="panel workouts-page__empty">
@@ -848,51 +669,59 @@ export default function WorkoutsPage() {
               </p>
 
               {workouts.length === 0 && (
-                <Link to="/workouts/session" className="button button--primary">
+                <Link
+                  to="/workouts/session"
+                  className="button button--primary"
+                >
                   <Plus size={15} />
                   Log Workout
                 </Link>
               )}
             </div>
           ) : (
-            /* ===============================
 
-               WORKOUT HISTORY
-
-            =============================== */
+            /* WORKOUT HISTORY */
 
             <section className="workouts-page__history">
               {sortedWorkouts.map((workout) => {
-                const expanded = expandedId === workout.id;
+                const expanded =
+                  expandedId === workout.id;
 
-                const exerciseCount = workout.exercises?.length || 0;
+                const exerciseCount =
+                  workout.exercises?.length || 0;
 
-                const repSets = getRepSetCount(workout);
+                const repSets =
+                  getRepSetCount(workout);
 
-                const timedIntervals = getTimedIntervalCount(workout);
+                const timedIntervals =
+                  getTimedIntervalCount(workout);
 
-                const volume = getWorkoutVolume(workout);
+                const volume =
+                  getWorkoutVolume(workout);
 
-                const tut = getWorkoutTUT(workout);
+                const tut =
+                  getWorkoutTUT(workout);
 
                 return (
                   <article
                     className="panel workouts-page__workout"
                     key={workout.id}
                   >
-                    {/* =====================
 
-                          WORKOUT SUMMARY
-
-                      ===================== */}
+                    {/* WORKOUT SUMMARY */}
 
                     <div className="workouts-page__workout-summary">
+
                       <button
                         type="button"
                         className="workouts-page__workout-toggle"
                         aria-expanded={expanded}
                         onClick={() =>
-                          setExpandedId(expanded ? null : workout.id)
+                          setExpandedId(
+                            expanded
+                              ? null
+                              : workout.id
+                          )
                         }
                       >
                         <div className="workouts-page__workout-icon">
@@ -900,23 +729,29 @@ export default function WorkoutsPage() {
                         </div>
 
                         <div className="workouts-page__workout-main">
-                          <h3>{workout.name || "Workout"}</h3>
+                          <h3>
+                            {workout.name || "Workout"}
+                          </h3>
 
                           <span className="workouts-page__workout-date">
                             <CalendarDays size={13} />
-
                             {formatDate(workout.date)}
                           </span>
 
                           <div className="workouts-page__workout-meta">
                             <span>
                               {exerciseCount}{" "}
-                              {exerciseCount === 1 ? "exercise" : "exercises"}
+                              {exerciseCount === 1
+                                ? "exercise"
+                                : "exercises"}
                             </span>
 
                             {repSets > 0 && (
                               <span>
-                                {repSets} {repSets === 1 ? "set" : "sets"}
+                                {repSets}{" "}
+                                {repSets === 1
+                                  ? "set"
+                                  : "sets"}
                               </span>
                             )}
 
@@ -930,7 +765,11 @@ export default function WorkoutsPage() {
                               </span>
                             )}
 
-                            {volume > 0 && <span>{formatVolume(volume)}</span>}
+                            {volume > 0 && (
+                              <span>
+                                {formatVolume(volume)}
+                              </span>
+                            )}
 
                             {tut > 0 && (
                               <span>
@@ -948,32 +787,47 @@ export default function WorkoutsPage() {
                         )}
                       </button>
 
+                      {/* EDIT WORKOUT */}
+
+                      <Link
+                        to={`/workouts/${workout.id}/edit`}
+                        className="workouts-page__edit"
+                        aria-label={`Edit ${workout.name || "workout"}`}
+                        title="Edit workout"
+                      >
+                        <Pencil size={16} />
+                      </Link>
+
+                      {/* DELETE WORKOUT */}
+
                       <button
                         type="button"
                         className="workouts-page__delete"
                         aria-label={`Delete ${workout.name || "workout"}`}
-                        disabled={deletingId === workout.id}
-                        onClick={() => requestDeleteWorkout(workout)}
+                        disabled={
+                          deletingId === workout.id
+                        }
+                        onClick={() =>
+                          requestDeleteWorkout(workout)
+                        }
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
 
-                    {/* =====================
-
-                          DETAILS
-
-                      ===================== */}
+                    {/* EXPANDED DETAILS */}
 
                     {expanded && (
                       <div className="workouts-page__workout-details">
+
                         <div className="workouts-page__details-heading">
                           <div>
                             <h4>Workout Details</h4>
-
                             <span>
                               {exerciseCount}{" "}
-                              {exerciseCount === 1 ? "exercise" : "exercises"}{" "}
+                              {exerciseCount === 1
+                                ? "exercise"
+                                : "exercises"}{" "}
                               recorded
                             </span>
                           </div>
@@ -991,141 +845,128 @@ export default function WorkoutsPage() {
                           )}
                         </div>
 
-                        {/* =================
-
-                              EXERCISES
-
-                          ================= */}
+                        {/* EXERCISES */}
 
                         {(workout.exercises || []).map(
-                          (
-                            exercise,
-
-                            exerciseIndex,
-                          ) => {
-                            const mode = getTrackingMode(exercise);
+                          (exercise, exerciseIndex) => {
+                            const mode =
+                              getTrackingMode(exercise);
 
                             const exerciseTUT =
                               mode === "time"
                                 ? (exercise.sets || []).reduce(
-                                    (
-                                      total,
-
-                                      set,
-                                    ) =>
-                                      total + Number(set.durationSeconds || 0),
-
-                                    0,
+                                    (total, set) =>
+                                      total + Number(
+                                        set.durationSeconds || 0
+                                      ),
+                                    0
                                   )
                                 : 0;
 
                             return (
                               <div
                                 className="workouts-page__exercise"
-                                key={exercise.id || exerciseIndex}
+                                key={
+                                  exercise.id ||
+                                  exerciseIndex
+                                }
                               >
-                                {/* EXERCISE HEADER */}
-
                                 <div className="workouts-page__exercise-header">
-                                  <span>{exerciseIndex + 1}</span>
+                                  <span>
+                                    {exerciseIndex + 1}
+                                  </span>
 
-                                  <strong>{exercise.name}</strong>
+                                  <strong>
+                                    {exercise.name}
+                                  </strong>
 
                                   <small>
                                     {mode === "time"
-                                      ? `${
-                                          (exercise.sets || []).length
-                                        } intervals · ${formatDuration(
-                                          exerciseTUT,
-                                        )} TUT`
+                                      ? `${(exercise.sets || []).length} intervals · ${formatDuration(exerciseTUT)} TUT`
                                       : `${(exercise.sets || []).length} sets`}
                                   </small>
                                 </div>
 
-                                {/* =================
-
-                                      REP SETS
-
-                                  ================= */}
+                                {/* REP SETS */}
 
                                 {mode === "reps" && (
                                   <div className="workouts-page__sets">
                                     <div className="workouts-page__set-heading">
                                       <span>Set</span>
-
                                       <span>Weight</span>
-
                                       <span>Reps</span>
                                     </div>
 
                                     {(exercise.sets || []).map(
-                                      (
-                                        set,
-
-                                        setIndex,
-                                      ) => (
+                                      (set, setIndex) => (
                                         <div
                                           className="workouts-page__set"
-                                          key={set.id || setIndex}
+                                          key={
+                                            set.id ||
+                                            setIndex
+                                          }
                                         >
-                                          <span>{setIndex + 1}</span>
+                                          <span>
+                                            {setIndex + 1}
+                                          </span>
 
                                           <strong>
-                                            {formatWeight(set.weight)}
+                                            {formatWeight(
+                                              set.weight
+                                            )}
                                           </strong>
 
-                                          <strong>{set.reps ?? "—"}</strong>
+                                          <strong>
+                                            {set.reps ?? "—"}
+                                          </strong>
                                         </div>
-                                      ),
+                                      )
                                     )}
                                   </div>
                                 )}
 
-                                {/* =================
-
-                                      TIMED INTERVALS
-
-                                  ================= */}
+                                {/* TIMED INTERVALS */}
 
                                 {mode === "time" && (
                                   <div className="workouts-page__sets">
                                     <div className="workouts-page__set-heading">
                                       <span>Interval</span>
-
                                       <span>Weight</span>
-
                                       <span>Time</span>
                                     </div>
 
                                     {(exercise.sets || []).map(
-                                      (
-                                        set,
-
-                                        setIndex,
-                                      ) => (
+                                      (set, setIndex) => (
                                         <div
                                           className="workouts-page__set"
-                                          key={set.id || setIndex}
+                                          key={
+                                            set.id ||
+                                            setIndex
+                                          }
                                         >
-                                          <span>{setIndex + 1}</span>
+                                          <span>
+                                            {setIndex + 1}
+                                          </span>
 
                                           <strong>
-                                            {formatWeight(set.weight)}
+                                            {formatWeight(
+                                              set.weight
+                                            )}
                                           </strong>
 
                                           <strong>
                                             {formatDuration(
-                                              set.durationSeconds,
+                                              set.durationSeconds
                                             )}
                                           </strong>
                                         </div>
-                                      ),
+                                      )
                                     )}
                                   </div>
                                 )}
                               </div>
                             );
-                          },
+                          }
                         )}
                       </div>
                     )}
@@ -1137,17 +978,15 @@ export default function WorkoutsPage() {
         </>
       )}
 
-      {/* =====================================
-
-          DELETE CONFIRMATION MODAL
-
-      ===================================== */}
+      {/* DELETE CONFIRMATION MODAL */}
 
       {deleteTarget && (
         <div
           className="workouts-page__modal-backdrop"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+            if (
+              event.target === event.currentTarget
+            ) {
               closeDeleteModal();
             }
           }}
@@ -1175,15 +1014,22 @@ export default function WorkoutsPage() {
             <div className="workouts-page__delete-modal-copy">
               <span>Delete Workout</span>
 
-              <h2 id="delete-workout-title">Delete this workout?</h2>
+              <h2 id="delete-workout-title">
+                Delete this workout?
+              </h2>
 
               <p>
-                <strong>{deleteTarget.name || "Workout"}</strong> will be
-                permanently deleted. This action cannot be undone.
+                <strong>
+                  {deleteTarget.name || "Workout"}
+                </strong>{" "}
+                will be permanently deleted.
+                This action cannot be undone.
               </p>
 
               {error && (
-                <div className="workouts-page__delete-modal-error">{error}</div>
+                <div className="workouts-page__delete-modal-error">
+                  {error}
+                </div>
               )}
             </div>
 
@@ -1205,7 +1051,9 @@ export default function WorkoutsPage() {
               >
                 <Trash2 size={15} />
 
-                {deletingId !== null ? "Deleting..." : "Delete Workout"}
+                {deletingId !== null
+                  ? "Deleting..."
+                  : "Delete Workout"}
               </button>
             </div>
           </div>

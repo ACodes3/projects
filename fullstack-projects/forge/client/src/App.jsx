@@ -1,3 +1,4 @@
+
 import {
   Navigate,
   Route,
@@ -74,6 +75,11 @@ export default function App() {
 
         <Route
           path="/workouts/session"
+          element={<WorkoutSessionPage />}
+        />
+
+        <Route
+          path="/workouts/:id/edit"
           element={<WorkoutSessionPage />}
         />
 
