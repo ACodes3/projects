@@ -546,7 +546,7 @@ export async function getWorkouts(req, res) {
         SELECT
           id,
           name,
-          workout_date,
+          workout_date::text AS workout_date,
           youtube_url,
           notes,
           created_at,
@@ -583,7 +583,7 @@ export async function getWorkouts(req, res) {
     const populatedWorkouts =
       workouts.map((workout) => ({
         ...workout,
-
+        workout_date: workout.workout_date,
         exercises:
           exercisesByWorkout.get(
             String(workout.id),
@@ -629,7 +629,7 @@ export async function getWorkoutById(
         SELECT
           id,
           name,
-          workout_date,
+          workout_date::text AS workout_date,
           youtube_url,
           notes,
           created_at,
@@ -744,7 +744,7 @@ export async function createWorkout(
           RETURNING
             id,
             name,
-            workout_date,
+            workout_date::text AS workout_date,
             youtube_url,
             notes,
             created_at,
@@ -967,7 +967,7 @@ export async function updateWorkout(
           RETURNING
             id,
             name,
-            workout_date,
+            workout_date::text AS workout_date,
             youtube_url,
             notes,
             created_at,
