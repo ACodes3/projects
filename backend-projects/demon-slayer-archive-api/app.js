@@ -1,9 +1,16 @@
 
+import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 
 import archiveRoutes from "./src/routes/archiveRoutes.js";
+
+import {
+  apiLimiter,
+  writeLimiter
+} from "./src/middleware/rateLimiter.js";
 
 import {
   notFound
@@ -19,10 +26,9 @@ const app = express();
 // SECURITY MIDDLEWARE
 // ==========================================
 
-// Set security-related HTTP headers
 app.use(helmet());
 
-// Configure allowed browser origins
+// Allowed browser origins
 const allowedOrigins = (
   process.env.CLIENT_ORIGIN || "http://localhost:5173"
 )
@@ -32,15 +38,16 @@ const allowedOrigins = (
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow requests without Origin headers,
-      // such as Thunder Client or curl.
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(
-        new Error("Origin not allowed by CORS")
+      const error = new Error(
+        "Origin not allowed by CORS"
       );
+
+      error.status = 403;
+      return callback(error);
     },
 
     methods: [
@@ -59,10 +66,9 @@ app.use(
 );
 
 // ==========================================
-// BODY PARSING
+// REQUEST BODY PARSING
 // ==========================================
 
-// Limit JSON request size
 app.use(
   express.json({
     limit: "100kb"
@@ -82,6 +88,24 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================
+// API RATE LIMITING
+// ==========================================
+
+// Applies to all API requests
+app.use("/api", apiLimiter);
+
+// Applies only to write methods
+app.use("/api", (req, res, next) => {
+  if (
+    ["POST", "PATCH", "DELETE"].includes(req.method)
+  ) {
+    return writeLimiter(req, res, next);
+  }
+
+  next();
+});
+
+// ==========================================
 // API ROUTES
 // ==========================================
 
@@ -91,10 +115,8 @@ app.use("/api", archiveRoutes);
 // ERROR HANDLING
 // ==========================================
 
-// Unknown endpoints
 app.use(notFound);
 
-// Centralized error handler
 app.use(errorHandler);
 
 export default app;
