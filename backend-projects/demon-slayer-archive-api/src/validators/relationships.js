@@ -1,4 +1,3 @@
-
 import pool from "../config/db.js";
 import AppError from "../utils/AppError.js";
 
@@ -22,10 +21,7 @@ const TABLES = {
 // ==========================================
 
 async function recordExists(table, id) {
-  const result = await pool.query(
-    `SELECT 1 FROM ${table} WHERE id = $1`,
-    [id]
-  );
+  const result = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1`, [id]);
 
   return result.rowCount > 0;
 }
@@ -43,21 +39,17 @@ async function checkIds(ids, table, field) {
     FROM ${table}
     WHERE id = ANY($1::text[])
     `,
-    [uniqueIds]
+    [uniqueIds],
   );
 
-  const existing = new Set(
-    result.rows.map((row) => row.id)
-  );
+  const existing = new Set(result.rows.map((row) => row.id));
 
-  const missing = uniqueIds.filter(
-    (id) => !existing.has(id)
-  );
+  const missing = uniqueIds.filter((id) => !existing.has(id));
 
   if (missing.length > 0) {
     throw new AppError(
       `${field} contains unknown IDs: ${missing.join(", ")}`,
-      400
+      400,
     );
   }
 }
@@ -69,9 +61,7 @@ async function checkCharacters(ids, currentId) {
   }
 
   // A character may reference itself when being created.
-  const uniqueIds = [
-    ...new Set(ids.filter((id) => id !== currentId))
-  ];
+  const uniqueIds = [...new Set(ids.filter((id) => id !== currentId))];
 
   if (uniqueIds.length === 0) {
     return;
@@ -87,21 +77,17 @@ async function checkCharacters(ids, currentId) {
     SELECT id FROM demons
     WHERE id = ANY($1::text[])
     `,
-    [uniqueIds]
+    [uniqueIds],
   );
 
-  const existing = new Set(
-    result.rows.map((row) => row.id)
-  );
+  const existing = new Set(result.rows.map((row) => row.id));
 
-  const missing = uniqueIds.filter(
-    (id) => !existing.has(id)
-  );
+  const missing = uniqueIds.filter((id) => !existing.has(id));
 
   if (missing.length > 0) {
     throw new AppError(
       `Unknown related characters: ${missing.join(", ")}`,
-      400
+      400,
     );
   }
 }
@@ -110,12 +96,7 @@ async function checkCharacters(ids, currentId) {
 // TECHNIQUE REFERENCE VALIDATION
 // ==========================================
 
-async function checkTechniques(
-  ids,
-  category,
-  field,
-  expectedParentIds
-) {
+async function checkTechniques(ids, category, field, expectedParentIds) {
   if (ids === undefined || ids.length === 0) {
     return;
   }
@@ -128,12 +109,10 @@ async function checkTechniques(
     FROM techniques
     WHERE id = ANY($1::text[])
     `,
-    [uniqueIds]
+    [uniqueIds],
   );
 
-  const found = new Map(
-    result.rows.map((row) => [row.id, row])
-  );
+  const found = new Map(result.rows.map((row) => [row.id, row]));
 
   for (const id of uniqueIds) {
     const technique = found.get(id);
@@ -141,15 +120,12 @@ async function checkTechniques(
     if (!technique) {
       throw new AppError(
         `${field} references an unknown technique: ${id}`,
-        400
+        400,
       );
     }
 
     if (technique.category !== category) {
-      throw new AppError(
-        `Technique ${id} has the wrong category`,
-        400
-      );
+      throw new AppError(`Technique ${id} has the wrong category`, 400);
     }
 
     if (
@@ -158,7 +134,7 @@ async function checkTechniques(
     ) {
       throw new AppError(
         `Technique ${id} does not belong to the specified parent`,
-        400
+        400,
       );
     }
   }
@@ -172,19 +148,12 @@ async function checkSlayer(data, id) {
   await checkIds(
     data.breathing_style_ids,
     "breathing_styles",
-    "breathing_style_ids"
+    "breathing_style_ids",
   );
 
-  await checkTechniques(
-    data.technique_ids,
-    "breathing",
-    "technique_ids"
-  );
+  await checkTechniques(data.technique_ids, "breathing", "technique_ids");
 
-  await checkCharacters(
-    data.related_character_ids,
-    id
-  );
+  await checkCharacters(data.related_character_ids, id);
 }
 
 // ==========================================
@@ -195,19 +164,12 @@ async function checkDemon(data, id) {
   await checkIds(
     data.blood_demon_art_ids,
     "blood_demon_arts",
-    "blood_demon_art_ids"
+    "blood_demon_art_ids",
   );
 
-  await checkTechniques(
-    data.ability_ids,
-    "blood-demon-art",
-    "ability_ids"
-  );
+  await checkTechniques(data.ability_ids, "blood-demon-art", "ability_ids");
 
-  await checkCharacters(
-    data.related_character_ids,
-    id
-  );
+  await checkCharacters(data.related_character_ids, id);
 }
 
 // ==========================================
@@ -219,21 +181,15 @@ async function checkBreathingStyle(data, id) {
 
   if (parentId !== undefined && parentId !== null) {
     if (parentId === id) {
-      throw new AppError(
-        "A Breathing Style cannot derive from itself",
-        400
-      );
+      throw new AppError("A Breathing Style cannot derive from itself", 400);
     }
 
-    const exists = await recordExists(
-      "breathing_styles",
-      parentId
-    );
+    const exists = await recordExists("breathing_styles", parentId);
 
     if (!exists) {
       throw new AppError(
         `Parent Breathing Style does not exist: ${parentId}`,
-        400
+        400,
       );
     }
 
@@ -260,29 +216,20 @@ async function checkBreathingStyle(data, id) {
       WHERE id = $2
       LIMIT 1
       `,
-      [parentId, id]
+      [parentId, id],
     );
 
     if (result.rowCount > 0) {
       throw new AppError(
         "This Breathing Style would create an inheritance cycle",
-        400
+        400,
       );
     }
   }
 
-  await checkIds(
-    data.user_ids,
-    "slayers",
-    "user_ids"
-  );
+  await checkCharacters(data.user_ids);
 
-  await checkTechniques(
-    data.technique_ids,
-    "breathing",
-    "technique_ids",
-    [id]
-  );
+  await checkTechniques(data.technique_ids, "breathing", "technique_ids", [id]);
 }
 
 // ==========================================
@@ -291,25 +238,16 @@ async function checkBreathingStyle(data, id) {
 
 async function checkBloodDemonArt(data, id) {
   if (data.user_id !== undefined && data.user_id !== null) {
-    const exists = await recordExists(
-      "demons",
-      data.user_id
-    );
+    const exists = await recordExists("demons", data.user_id);
 
     if (!exists) {
-      throw new AppError(
-        `Demon does not exist: ${data.user_id}`,
-        400
-      );
+      throw new AppError(`Demon does not exist: ${data.user_id}`, 400);
     }
   }
 
-  await checkTechniques(
-    data.ability_ids,
-    "blood-demon-art",
-    "ability_ids",
-    [id]
-  );
+  await checkTechniques(data.ability_ids, "blood-demon-art", "ability_ids", [
+    id,
+  ]);
 }
 
 // ==========================================
@@ -321,24 +259,18 @@ async function checkTechnique(data, id) {
   let parentId = data.parent_id;
 
   // PATCH might supply only one field.
-  if (
-    id &&
-    (category === undefined || parentId === undefined)
-  ) {
+  if (id && (category === undefined || parentId === undefined)) {
     const result = await pool.query(
       `
       SELECT category, parent_id
       FROM techniques
       WHERE id = $1
       `,
-      [id]
+      [id],
     );
 
     if (result.rowCount === 0) {
-      throw new AppError(
-        "Technique not found",
-        404
-      );
+      throw new AppError("Technique not found", 404);
     }
 
     category ??= result.rows[0].category;
@@ -346,55 +278,29 @@ async function checkTechnique(data, id) {
   }
 
   if (category === "breathing") {
-    const exists = await recordExists(
-      "breathing_styles",
-      parentId
-    );
+    const exists = await recordExists("breathing_styles", parentId);
 
     if (!exists) {
-      throw new AppError(
-        `Breathing Style does not exist: ${parentId}`,
-        400
-      );
+      throw new AppError(`Breathing Style does not exist: ${parentId}`, 400);
     }
 
-    await checkIds(
-      data.user_ids,
-      "slayers",
-      "user_ids"
-    );
+    await checkCharacters(data.user_ids);
   } else if (category === "blood-demon-art") {
-    const exists = await recordExists(
-      "blood_demon_arts",
-      parentId
-    );
+    const exists = await recordExists("blood_demon_arts", parentId);
 
     if (!exists) {
-      throw new AppError(
-        `Blood Demon Art does not exist: ${parentId}`,
-        400
-      );
+      throw new AppError(`Blood Demon Art does not exist: ${parentId}`, 400);
     }
 
-    await checkIds(
-      data.user_ids,
-      "demons",
-      "user_ids"
-    );
+    await checkIds(data.user_ids, "demons", "user_ids");
   } else {
-    throw new AppError(
-      "Invalid Technique category",
-      400
-    );
+    throw new AppError("Invalid Technique category", 400);
   }
 
   // Prevent changing the category or parent when
   // another collection references this technique
   // through its parent-specific technique array.
-  if (id && (
-    data.category !== undefined ||
-    data.parent_id !== undefined
-  )) {
+  if (id && (data.category !== undefined || data.parent_id !== undefined)) {
     const references = await pool.query(
       `
       SELECT EXISTS (
@@ -408,7 +314,7 @@ async function checkTechnique(data, id) {
           AND id <> $2
       ) AS other_art_refs
       `,
-      [id, parentId]
+      [id, parentId],
     );
 
     const refs = references.rows[0];
@@ -416,7 +322,7 @@ async function checkTechnique(data, id) {
     if (refs.other_breathing_refs || refs.other_art_refs) {
       throw new AppError(
         "Technique has references under another parent. Update those references first.",
-        409
+        409,
       );
     }
   }
@@ -432,10 +338,7 @@ export function validateRelationships(collection) {
       const data = res.locals.validatedBody;
 
       if (!data) {
-        throw new AppError(
-          "Validated request body is missing",
-          500
-        );
+        throw new AppError("Validated request body is missing", 500);
       }
 
       const id = req.params.id ?? data.id;
@@ -462,10 +365,7 @@ export function validateRelationships(collection) {
           break;
 
         default:
-          throw new AppError(
-            "Unknown collection",
-            404
-          );
+          throw new AppError("Unknown collection", 404);
       }
 
       next();
@@ -525,33 +425,22 @@ export function protectDeletion(collection) {
       const checks = deletionChecks[collection];
 
       if (!table || !checks) {
-        throw new AppError(
-          "Unknown collection",
-          404
-        );
+        throw new AppError("Unknown collection", 404);
       }
 
       const exists = await recordExists(table, id);
 
       if (!exists) {
-        throw new AppError(
-          "Record not found",
-          404
-        );
+        throw new AppError("Record not found", 404);
       }
 
       for (const [refTable, column, kind] of checks) {
         // Exclude the record being deleted from
         // self-reference checks.
-        const excludeSelf =
-          refTable === table
-            ? " AND id <> $1"
-            : "";
+        const excludeSelf = refTable === table ? " AND id <> $1" : "";
 
         const condition =
-          kind === "array"
-            ? `$1 = ANY(${column})`
-            : `${column} = $1`;
+          kind === "array" ? `$1 = ANY(${column})` : `${column} = $1`;
 
         const result = await pool.query(
           `
@@ -560,13 +449,13 @@ export function protectDeletion(collection) {
           WHERE ${condition}${excludeSelf}
           LIMIT 1
           `,
-          [id]
+          [id],
         );
 
         if (result.rowCount > 0) {
           throw new AppError(
             `Cannot delete ${collection}/${id}: referenced by ${refTable}.${column}`,
-            409
+            409,
           );
         }
       }
