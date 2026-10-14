@@ -334,3 +334,39 @@ export async function updateSlayer(req, res) {
     });
   }
 }
+
+
+// DELETE a Slayer by ID
+export async function deleteSlayer(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      DELETE FROM slayers
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    // No Slayer found with that ID
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Slayer not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Slayer deleted successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error deleting Slayer:", error);
+
+    return res.status(500).json({
+      message: "Failed to delete Slayer"
+    });
+  }
+}

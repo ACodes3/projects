@@ -5,7 +5,8 @@ import {
   getAll,
   getById,
   createSlayer,
-  updateSlayer
+  updateSlayer,
+  deleteSlayer
 } from "../controllers/archiveController.js";
 
 const router = Router();
@@ -15,6 +16,9 @@ router.post("/slayers", createSlayer);
 
 // PATCH
 router.patch("/slayers/:id", updateSlayer);
+
+// DELETE
+router.delete("/slayers/:id", deleteSlayer);
 
 // GET
 router.get("/:collection", getAll);
