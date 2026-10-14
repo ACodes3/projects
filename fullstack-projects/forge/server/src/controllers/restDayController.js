@@ -80,7 +80,7 @@ export async function getRestDays(
     let query = `
       SELECT
         id,
-        rest_date,
+        rest_date::text AS rest_date,
         note,
         created_at,
         updated_at

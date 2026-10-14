@@ -10,6 +10,7 @@ import {
   Info,
   Pencil,
   Plus,
+  Moon,
   Search,
   Trash2,
   X,
@@ -21,6 +22,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   deleteWorkout as deleteWorkoutRequest,
   getWorkouts,
+  getRestDays,
+  createRestDay,
+  deleteRestDay,
 } from "../api/forgeApi.js";
 
 import "./WorkoutsPage.css";
@@ -30,6 +34,20 @@ import "./WorkoutsPage.css";
 ========================================= */
 
 const NEW_WORKOUT_TOAST_WINDOW = 7000;
+
+function getLocalToday() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function normalizeRestDay(item) {
+  const date =
+    typeof item === "string"
+      ? item
+      : (item?.rest_date ?? item?.restDate ?? item?.date);
+  if (!date) return null;
+  return { date: String(date).slice(0, 10), kind: "rest" };
+}
 
 /* =========================================
    DATE HELPERS
@@ -202,6 +220,14 @@ function wasJustCreated(workout) {
 
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState([]);
+  const [restDays, setRestDays] = useState([]);
+  const [showRestModal, setShowRestModal] = useState(false);
+  const [restDate, setRestDate] = useState(getLocalToday);
+  const [restSaving, setRestSaving] = useState(false);
+  const [restDeletingDate, setRestDeletingDate] = useState(null);
+  const [restDeleteTarget, setRestDeleteTarget] = useState(null);
+  const [restDeleteError, setRestDeleteError] = useState("");
+  const [restError, setRestError] = useState("");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState(null);
 
@@ -225,10 +251,21 @@ export default function WorkoutsPage() {
       setLoading(true);
       setError("");
 
-      const data = await getWorkouts();
+      const [data, restResponse] = await Promise.all([
+        getWorkouts(),
+        getRestDays(),
+      ]);
       const workoutData = Array.isArray(data) ? data : [];
+      const restData = Array.isArray(restResponse)
+        ? restResponse
+        : (restResponse?.restDays ?? restResponse?.rest_days ?? []);
 
       setWorkouts(workoutData);
+      setRestDays(
+        Array.isArray(restData)
+          ? restData.map(normalizeRestDay).filter(Boolean)
+          : [],
+      );
 
       const newest = getNewestWorkout(workoutData);
 
@@ -329,6 +366,89 @@ export default function WorkoutsPage() {
     };
   }, [deleteTarget, deletingId]);
 
+  async function handleCreateRestDay(event) {
+    event.preventDefault();
+    if (!restDate || restSaving) return;
+    setRestError("");
+    try {
+      setRestSaving(true);
+      await createRestDay({ date: restDate });
+      const response = await getRestDays();
+      const items = Array.isArray(response)
+        ? response
+        : (response?.restDays ?? response?.rest_days ?? []);
+      setRestDays(
+        Array.isArray(items) ? items.map(normalizeRestDay).filter(Boolean) : [],
+      );
+      setShowRestModal(false);
+      setToast({
+        type: "success",
+        title: "Rest day saved",
+        message: `${formatDate(restDate)} was marked as a rest day.`,
+      });
+    } catch (saveError) {
+      setRestError(saveError.message || "Could not add rest day.");
+    } finally {
+      setRestSaving(false);
+    }
+  }
+
+  function requestDeleteRestDay(date) {
+    if (restDeletingDate !== null) return;
+    setRestDeleteError("");
+    setRestDeleteTarget(date);
+  }
+
+  function closeRestDeleteModal() {
+    if (restDeletingDate !== null) return;
+    setRestDeleteTarget(null);
+    setRestDeleteError("");
+  }
+
+  useEffect(() => {
+    if (!restDeleteTarget) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape" && restDeletingDate === null) {
+        setRestDeleteTarget(null);
+        setRestDeleteError("");
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [restDeleteTarget, restDeletingDate]);
+
+  async function handleDeleteRestDay() {
+    const date = restDeleteTarget;
+    if (!date || restDeletingDate !== null) return;
+
+    try {
+      setRestDeletingDate(date);
+      setRestDeleteError("");
+      await deleteRestDay(date);
+      setRestDays((current) => current.filter((day) => day.date !== date));
+      setRestDeleteTarget(null);
+      setToast({
+        type: "success",
+        title: "Rest day removed",
+        message: `${formatDate(date)} is no longer marked as a rest day.`,
+      });
+    } catch (deleteError) {
+      setRestDeleteError(
+        deleteError.message || "Could not remove rest day. Try again.",
+      );
+    } finally {
+      setRestDeletingDate(null);
+    }
+  }
+
   /* =========================================
      SORT AND FILTER
   ========================================= */
@@ -336,7 +456,10 @@ export default function WorkoutsPage() {
   const sortedWorkouts = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return [...workouts]
+    return [
+      ...workouts.map((workout) => ({ ...workout, kind: "workout" })),
+      ...restDays,
+    ]
       .sort((a, b) => {
         const difference = parseDate(b.date) - parseDate(a.date);
 
@@ -349,6 +472,12 @@ export default function WorkoutsPage() {
       .filter((workout) => {
         if (!query) return true;
 
+        if (workout.kind === "rest")
+          return (
+            "rest day".includes(query) ||
+            formatDate(workout.date).toLowerCase().includes(query)
+          );
+
         const nameMatch = (workout.name || "").toLowerCase().includes(query);
 
         const exerciseMatch = (workout.exercises || []).some((exercise) =>
@@ -357,7 +486,7 @@ export default function WorkoutsPage() {
 
         return nameMatch || exerciseMatch;
       });
-  }, [workouts, search]);
+  }, [workouts, restDays, search]);
 
   /* =========================================
      STATISTICS
@@ -507,10 +636,24 @@ export default function WorkoutsPage() {
           </p>
         </div>
 
-        <Link to="/workouts/session" className="button button--primary">
-          <Plus size={16} />
-          Log Workout
-        </Link>
+        <div className="workouts-page__header-actions">
+          <button
+            type="button"
+            className="button"
+            onClick={() => {
+              setRestDate(getLocalToday());
+              setRestError("");
+              setShowRestModal(true);
+            }}
+          >
+            <Moon size={16} />
+            Add Rest Day
+          </button>
+          <Link to="/workouts/session" className="button button--primary">
+            <Plus size={16} />
+            Log Workout
+          </Link>
+        </div>
       </header>
 
       {/* API ERROR */}
@@ -577,7 +720,9 @@ export default function WorkoutsPage() {
 
               <p>
                 {workouts.length} completed{" "}
-                {workouts.length === 1 ? "workout" : "workouts"}
+                {workouts.length === 1 ? "workout" : "workouts"} ·{" "}
+                {restDays.length}{" "}
+                {restDays.length === 1 ? "rest day" : "rest days"}
               </p>
             </div>
 
@@ -586,7 +731,7 @@ export default function WorkoutsPage() {
 
               <input
                 type="search"
-                placeholder="Search workouts..."
+                placeholder="Search history..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -600,14 +745,14 @@ export default function WorkoutsPage() {
               <Dumbbell size={28} />
 
               <h3>
-                {workouts.length === 0
-                  ? "No workouts logged"
-                  : "No matching workouts"}
+                {workouts.length === 0 && restDays.length === 0
+                  ? "No training history yet"
+                  : "No matching entries"}
               </h3>
 
               <p>
-                {workouts.length === 0
-                  ? "Log a completed workout to start building your history."
+                {workouts.length === 0 && restDays.length === 0
+                  ? "Log a workout or mark a rest day to start building your history."
                   : "Try a different search term."}
               </p>
 
@@ -623,6 +768,42 @@ export default function WorkoutsPage() {
 
             <section className="workouts-page__history">
               {sortedWorkouts.map((workout) => {
+                if (workout.kind === "rest") {
+                  return (
+                    <article
+                      className="panel workouts-page__workout workouts-page__rest-day"
+                      key={`rest-${workout.date}`}
+                    >
+                      <div className="workouts-page__workout-summary">
+                        <div className="workouts-page__rest-summary">
+                          <div className="workouts-page__rest-icon">
+                            <Moon size={19} />
+                          </div>
+                          <div className="workouts-page__workout-main">
+                            <h3>Rest Day</h3>
+                            <span className="workouts-page__workout-date">
+                              <CalendarDays size={13} />
+                              {formatDate(workout.date)}
+                            </span>
+                            <div className="workouts-page__workout-meta">
+                              <span>Recovery</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="workouts-page__delete"
+                          aria-label={`Remove rest day ${formatDate(workout.date)}`}
+                          disabled={restDeletingDate === workout.date}
+                          onClick={() => requestDeleteRestDay(workout.date)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                }
+
                 const expanded = expandedId === workout.id;
 
                 const exerciseCount = workout.exercises?.length || 0;
@@ -859,6 +1040,137 @@ export default function WorkoutsPage() {
             </section>
           )}
         </>
+      )}
+
+      {showRestModal && (
+        <div
+          className="workouts-page__modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !restSaving)
+              setShowRestModal(false);
+          }}
+        >
+          <form
+            className="workouts-page__rest-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rest-day-title"
+            onSubmit={handleCreateRestDay}
+          >
+            <button
+              type="button"
+              className="workouts-page__modal-close"
+              aria-label="Close"
+              disabled={restSaving}
+              onClick={() => setShowRestModal(false)}
+            >
+              <X size={17} />
+            </button>
+            <div className="workouts-page__rest-icon">
+              <Moon size={22} />
+            </div>
+            <h2 id="rest-day-title">Add Rest Day</h2>
+            <p>Mark a day for recovery without logging a workout.</p>
+            <label htmlFor="workouts-rest-date">Date</label>
+            <input
+              id="workouts-rest-date"
+              type="date"
+              required
+              value={restDate}
+              onChange={(event) => {
+                setRestDate(event.target.value);
+                setRestError("");
+              }}
+            />
+            {restError && (
+              <div className="workouts-page__delete-modal-error" role="alert">
+                {restError}
+              </div>
+            )}
+            <div className="workouts-page__delete-modal-actions">
+              <button
+                type="button"
+                className="button"
+                disabled={restSaving}
+                onClick={() => setShowRestModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="button button--primary"
+                disabled={!restDate || restSaving}
+              >
+                {restSaving ? "Saving..." : "Save Rest Day"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* REST DAY DELETE CONFIRMATION MODAL */}
+      {restDeleteTarget && (
+        <div
+          className="workouts-page__modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeRestDeleteModal();
+          }}
+        >
+          <div
+            className="workouts-page__delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-rest-day-title"
+          >
+            <button
+              type="button"
+              className="workouts-page__modal-close"
+              aria-label="Close delete confirmation"
+              disabled={restDeletingDate !== null}
+              onClick={closeRestDeleteModal}
+            >
+              <X size={17} />
+            </button>
+
+            <div className="workouts-page__delete-modal-icon">
+              <Trash2 size={20} />
+            </div>
+
+            <div className="workouts-page__delete-modal-copy">
+              <span>Delete Rest Day</span>
+              <h2 id="delete-rest-day-title">Delete this rest day?</h2>
+              <p>
+                The rest day on <strong>{formatDate(restDeleteTarget)}</strong>{" "}
+                will be permanently removed. This action cannot be undone.
+              </p>
+              {restDeleteError && (
+                <div className="workouts-page__delete-modal-error" role="alert">
+                  {restDeleteError}
+                </div>
+              )}
+            </div>
+
+            <div className="workouts-page__delete-modal-actions">
+              <button
+                type="button"
+                className="button"
+                disabled={restDeletingDate !== null}
+                onClick={closeRestDeleteModal}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button workouts-page__delete-confirm"
+                disabled={restDeletingDate !== null}
+                onClick={handleDeleteRestDay}
+              >
+                <Trash2 size={15} />
+                {restDeletingDate !== null ? "Deleting..." : "Delete Rest Day"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* DELETE CONFIRMATION MODAL */}
