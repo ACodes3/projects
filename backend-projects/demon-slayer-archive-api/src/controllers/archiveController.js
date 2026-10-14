@@ -370,3 +370,293 @@ export async function deleteSlayer(req, res) {
     });
   }
 }
+
+
+// DEMONS
+// POST a new Demon
+export async function createDemon(req, res) {
+  const {
+    id,
+    name,
+    rank = null,
+    blood_demon_art_ids = [],
+    ability_ids = [],
+    related_character_ids = [],
+    description = "",
+    stats = {},
+    image = null
+  } = req.body ?? {};
+
+  const isStringArray = (value) =>
+    Array.isArray(value) &&
+    value.every((item) => typeof item === "string");
+
+  const validStats =
+    stats !== null &&
+    typeof stats === "object" &&
+    !Array.isArray(stats);
+
+  if (
+    typeof id !== "string" ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    (rank !== null && typeof rank !== "string") ||
+    !isStringArray(blood_demon_art_ids) ||
+    !isStringArray(ability_ids) ||
+    !isStringArray(related_character_ids) ||
+    typeof description !== "string" ||
+    !validStats ||
+    (image !== null && typeof image !== "string")
+  ) {
+    return res.status(400).json({
+      message: "Invalid Demon data"
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO demons (
+        id,
+        name,
+        rank,
+        blood_demon_art_ids,
+        ability_ids,
+        related_character_ids,
+        description,
+        stats,
+        image
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7,
+        $8::jsonb, $9
+      )
+      RETURNING *
+      `,
+      [
+        id,
+        name.trim(),
+        rank,
+        blood_demon_art_ids,
+        ability_ids,
+        related_character_ids,
+        description,
+        JSON.stringify(stats),
+        image
+      ]
+    );
+
+    return res.status(201).json({
+      message: "Demon created successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "A Demon with this ID already exists"
+      });
+    }
+
+    console.error("Error creating Demon:", error);
+
+    return res.status(500).json({
+      message: "Failed to create Demon"
+    });
+  }
+}
+
+
+// PUT to update an existing Demon
+export async function updateDemon(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (
+    !updates ||
+    typeof updates !== "object" ||
+    Array.isArray(updates)
+  ) {
+    return res.status(400).json({
+      message: "Request body must be a JSON object"
+    });
+  }
+
+  const allowedFields = [
+    "name",
+    "rank",
+    "blood_demon_art_ids",
+    "ability_ids",
+    "related_character_ids",
+    "description",
+    "stats",
+    "image"
+  ];
+
+  const fields = Object.keys(updates);
+
+  if (fields.length === 0) {
+    return res.status(400).json({
+      message: "No fields provided for updating"
+    });
+  }
+
+  const invalidFields = fields.filter(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (invalidFields.length > 0) {
+    return res.status(400).json({
+      message: "Invalid fields",
+      fields: invalidFields
+    });
+  }
+
+  const arrayFields = [
+    "blood_demon_art_ids",
+    "ability_ids",
+    "related_character_ids"
+  ];
+
+  for (const field of fields) {
+    const value = updates[field];
+
+    if (
+      arrayFields.includes(field) &&
+      (!Array.isArray(value) ||
+        !value.every((item) => typeof item === "string"))
+    ) {
+      return res.status(400).json({
+        message: `${field} must be an array of strings`
+      });
+    }
+
+    if (
+      ["name", "description"].includes(field) &&
+      (typeof value !== "string" ||
+        (field === "name" && !value.trim()))
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      ["rank", "image"].includes(field) &&
+      value !== null &&
+      typeof value !== "string"
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      field === "stats" &&
+      (
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value)
+      )
+    ) {
+      return res.status(400).json({
+        message: "stats must be a JSON object"
+      });
+    }
+  }
+
+  const setClause = fields
+    .map((field, index) =>
+      field === "stats"
+        ? `${field} = $${index + 1}::jsonb`
+        : `${field} = $${index + 1}`
+    )
+    .join(", ");
+
+  const values = fields.map((field) => {
+    if (field === "stats") {
+      return JSON.stringify(updates[field]);
+    }
+
+    if (field === "name") {
+      return updates[field].trim();
+    }
+
+    return updates[field];
+  });
+
+  values.push(id);
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE demons
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+      `,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Demon not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Demon updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error updating Demon:", error);
+
+    return res.status(500).json({
+      message: "Failed to update Demon"
+    });
+  }
+}
+
+// DELETE a Demon by ID
+export async function deleteDemon(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      DELETE FROM demons
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Demon not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Demon deleted successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    // For example, a Blood Demon Art may reference this Demon
+    if (error.code === "23503") {
+      return res.status(409).json({
+        message:
+          "Cannot delete this Demon because other database records reference it"
+      });
+    }
+
+    console.error("Error deleting Demon:", error);
+
+    return res.status(500).json({
+      message: "Failed to delete Demon"
+    });
+  }
+}

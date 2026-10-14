@@ -6,21 +6,25 @@ import {
   getById,
   createSlayer,
   updateSlayer,
-  deleteSlayer
+  deleteSlayer,
+  createDemon,
+  updateDemon,
+  deleteDemon
 } from "../controllers/archiveController.js";
 
 const router = Router();
 
-// POST
+// SLAYERS
 router.post("/slayers", createSlayer);
-
-// PATCH
 router.patch("/slayers/:id", updateSlayer);
-
-// DELETE
 router.delete("/slayers/:id", deleteSlayer);
 
-// GET
+// DEMONS
+router.post("/demons", createDemon);
+router.patch("/demons/:id", updateDemon);
+router.delete("/demons/:id", deleteDemon);
+
+// GET (all collections)
 router.get("/:collection", getAll);
 router.get("/:collection/:id", getById);
 
