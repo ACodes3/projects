@@ -15,6 +15,9 @@ import {
   createBloodDemonArt,
   updateBloodDemonArt,
   deleteBloodDemonArt,
+  createTechnique,
+  updateTechnique,
+  deleteTechnique,
 } from "../controllers/archiveController.js";
 
 const router = Router();
@@ -38,6 +41,11 @@ router.delete("/demons/:id", deleteDemon);
 router.post("/breathing-styles", createBreathingStyle);
 router.patch("/breathing-styles/:id", updateBreathingStyle);
 router.delete("/breathing-styles/:id", deleteBreathingStyle);
+
+// TECHNIQUES
+router.post("/techniques", createTechnique);
+router.patch("/techniques/:id", updateTechnique);
+router.delete("/techniques/:id", deleteTechnique);
 
 // GET (all collections)
 router.get("/:collection", getAll);
