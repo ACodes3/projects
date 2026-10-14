@@ -20,34 +20,69 @@ import {
   deleteTechnique,
 } from "../controllers/archiveController.js";
 
+import { validate } from "../middleware/validate.js";
+
+import {
+  slayerSchema,
+  slayerPatchSchema,
+  demonSchema,
+  demonPatchSchema,
+  breathingStyleSchema,
+  breathingStylePatchSchema,
+  bloodDemonArtSchema,
+  bloodDemonArtPatchSchema,
+  techniqueSchema,
+  techniquePatchSchema,
+} from "../validators/archiveSchemas.js";
+
 const router = Router();
 
 // SLAYERS
-router.post("/slayers", createSlayer);
-router.patch("/slayers/:id", updateSlayer);
+router.post("/slayers", validate(slayerSchema), createSlayer);
+router.patch("/slayers/:id", validate(slayerPatchSchema), updateSlayer);
 router.delete("/slayers/:id", deleteSlayer);
 
-// BLOOD DEMON ARTS
-router.post("/blood-demon-arts", createBloodDemonArt);
-router.patch("/blood-demon-arts/:id", updateBloodDemonArt);
-router.delete("/blood-demon-arts/:id", deleteBloodDemonArt);
-
 // DEMONS
-router.post("/demons", createDemon);
-router.patch("/demons/:id", updateDemon);
+router.post("/demons", validate(demonSchema), createDemon);
+router.patch("/demons/:id", validate(demonPatchSchema), updateDemon);
 router.delete("/demons/:id", deleteDemon);
 
 // BREATHING STYLES
-router.post("/breathing-styles", createBreathingStyle);
-router.patch("/breathing-styles/:id", updateBreathingStyle);
+router.post(
+  "/breathing-styles",
+  validate(breathingStyleSchema),
+  createBreathingStyle,
+);
+router.patch(
+  "/breathing-styles/:id",
+  validate(breathingStylePatchSchema),
+  updateBreathingStyle,
+);
 router.delete("/breathing-styles/:id", deleteBreathingStyle);
 
+// BLOOD DEMON ARTS
+router.post(
+  "/blood-demon-arts",
+  validate(bloodDemonArtSchema),
+  createBloodDemonArt,
+);
+router.patch(
+  "/blood-demon-arts/:id",
+  validate(bloodDemonArtPatchSchema),
+  updateBloodDemonArt,
+);
+router.delete("/blood-demon-arts/:id", deleteBloodDemonArt);
+
 // TECHNIQUES
-router.post("/techniques", createTechnique);
-router.patch("/techniques/:id", updateTechnique);
+router.post("/techniques", validate(techniqueSchema), createTechnique);
+router.patch(
+  "/techniques/:id",
+  validate(techniquePatchSchema),
+  updateTechnique,
+);
 router.delete("/techniques/:id", deleteTechnique);
 
-// GET (all collections)
+// GET routes
 router.get("/:collection", getAll);
 router.get("/:collection/:id", getById);
 
