@@ -173,3 +173,164 @@ export async function createSlayer(req, res) {
     });
   }
 }
+
+// PUT to update an existing Slayer
+export async function updateSlayer(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
+
+  // 1. Make sure the body is an object
+  if (
+    !updates ||
+    typeof updates !== "object" ||
+    Array.isArray(updates)
+  ) {
+    return res.status(400).json({
+      message: "Request body must be a JSON object"
+    });
+  }
+
+  // 2. Define which fields can be updated
+  const allowedFields = [
+    "name",
+    "rank",
+    "breathing_style_ids",
+    "technique_ids",
+    "related_character_ids",
+    "description",
+    "stats",
+    "image"
+  ];
+
+  const fields = Object.keys(updates);
+
+  if (fields.length === 0) {
+    return res.status(400).json({
+      message: "No fields provided for updating"
+    });
+  }
+
+  // 3. Reject fields that should not be updated
+  const invalidFields = fields.filter(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (invalidFields.length > 0) {
+    return res.status(400).json({
+      message: "Invalid fields",
+      fields: invalidFields
+    });
+  }
+
+  // 4. Validate the supplied values
+  const isStringArray = (value) =>
+    Array.isArray(value) &&
+    value.every((item) => typeof item === "string");
+
+  const arrayFields = [
+    "breathing_style_ids",
+    "technique_ids",
+    "related_character_ids"
+  ];
+
+  for (const field of fields) {
+    const value = updates[field];
+
+    if (
+      arrayFields.includes(field) &&
+      !isStringArray(value)
+    ) {
+      return res.status(400).json({
+        message: `${field} must be an array of strings`
+      });
+    }
+
+    if (
+      ["name", "description"].includes(field) &&
+      (typeof value !== "string" ||
+        (field === "name" && !value.trim()))
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      ["rank", "image"].includes(field) &&
+      value !== null &&
+      typeof value !== "string"
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      field === "stats" &&
+      (
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value)
+      )
+    ) {
+      return res.status(400).json({
+        message: "stats must be a JSON object"
+      });
+    }
+  }
+
+  // 5. Build the SQL UPDATE query
+  const setClause = fields
+    .map((field, index) => {
+      const placeholder = `$${index + 1}`;
+
+      return field === "stats"
+        ? `${field} = ${placeholder}::jsonb`
+        : `${field} = ${placeholder}`;
+    })
+    .join(", ");
+
+  const values = fields.map((field) => {
+    if (field === "stats") {
+      return JSON.stringify(updates[field]);
+    }
+
+    if (field === "name") {
+      return updates[field].trim();
+    }
+
+    return updates[field];
+  });
+
+  values.push(id);
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE slayers
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+      `,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Slayer not found"
+      });
+    }
+
+    return res.json({
+      message: "Slayer updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error updating Slayer:", error);
+
+    return res.status(500).json({
+      message: "Failed to update Slayer"
+    });
+  }
+}
