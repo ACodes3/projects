@@ -660,3 +660,299 @@ export async function deleteDemon(req, res) {
     });
   }
 }
+
+// BREATHING STYLES
+// POST a new Breathing Style
+export async function createBreathingStyle(req, res) {
+  const {
+    id,
+    name,
+    derived_from_id = null,
+    user_ids = [],
+    technique_ids = [],
+    description = "",
+    theme = {},
+    image = null
+  } = req.body ?? {};
+
+  const isStringArray = (value) =>
+    Array.isArray(value) &&
+    value.every((item) => typeof item === "string");
+
+  if (
+    typeof id !== "string" ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    (derived_from_id !== null &&
+      typeof derived_from_id !== "string") ||
+    !isStringArray(user_ids) ||
+    !isStringArray(technique_ids) ||
+    typeof description !== "string" ||
+    !theme ||
+    typeof theme !== "object" ||
+    Array.isArray(theme) ||
+    (image !== null && typeof image !== "string")
+  ) {
+    return res.status(400).json({
+      message: "Invalid Breathing Style data"
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO breathing_styles (
+        id,
+        name,
+        derived_from_id,
+        user_ids,
+        technique_ids,
+        description,
+        theme,
+        image
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7::jsonb, $8
+      )
+      RETURNING *
+      `,
+      [
+        id,
+        name.trim(),
+        derived_from_id,
+        user_ids,
+        technique_ids,
+        description,
+        JSON.stringify(theme),
+        image
+      ]
+    );
+
+    return res.status(201).json({
+      message: "Breathing Style created successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "A Breathing Style with this ID already exists"
+      });
+    }
+
+    if (error.code === "23503") {
+      return res.status(400).json({
+        message: "The parent Breathing Style does not exist"
+      });
+    }
+
+    console.error("Error creating Breathing Style:", error);
+
+    return res.status(500).json({
+      message: "Failed to create Breathing Style"
+    });
+  }
+}
+
+
+// PUT to update an existing Breathing Style
+export async function updateBreathingStyle(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (
+    !updates ||
+    typeof updates !== "object" ||
+    Array.isArray(updates)
+  ) {
+    return res.status(400).json({
+      message: "Request body must be a JSON object"
+    });
+  }
+
+  const allowedFields = [
+    "name",
+    "derived_from_id",
+    "user_ids",
+    "technique_ids",
+    "description",
+    "theme",
+    "image"
+  ];
+
+  const fields = Object.keys(updates);
+
+  if (fields.length === 0) {
+    return res.status(400).json({
+      message: "No fields provided for updating"
+    });
+  }
+
+  const invalidFields = fields.filter(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (invalidFields.length > 0) {
+    return res.status(400).json({
+      message: "Invalid fields",
+      fields: invalidFields
+    });
+  }
+
+  const isStringArray = (value) =>
+    Array.isArray(value) &&
+    value.every((item) => typeof item === "string");
+
+  for (const field of fields) {
+    const value = updates[field];
+
+    if (
+      ["user_ids", "technique_ids"].includes(field) &&
+      !isStringArray(value)
+    ) {
+      return res.status(400).json({
+        message: `${field} must be an array of strings`
+      });
+    }
+
+    if (
+      ["name", "description"].includes(field) &&
+      (typeof value !== "string" ||
+        (field === "name" && !value.trim()))
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      ["derived_from_id", "image"].includes(field) &&
+      value !== null &&
+      typeof value !== "string"
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      field === "theme" &&
+      (
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value)
+      )
+    ) {
+      return res.status(400).json({
+        message: "theme must be a JSON object"
+      });
+    }
+  }
+
+  // Prevent a style from deriving from itself
+  if (updates.derived_from_id === id) {
+    return res.status(400).json({
+      message: "A Breathing Style cannot derive from itself"
+    });
+  }
+
+  const setClause = fields
+    .map((field, index) =>
+      field === "theme"
+        ? `${field} = $${index + 1}::jsonb`
+        : `${field} = $${index + 1}`
+    )
+    .join(", ");
+
+  const values = fields.map((field) => {
+    if (field === "theme") {
+      return JSON.stringify(updates[field]);
+    }
+
+    if (field === "name") {
+      return updates[field].trim();
+    }
+
+    return updates[field];
+  });
+
+  values.push(id);
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE breathing_styles
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+      `,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Breathing Style not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Breathing Style updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23503") {
+      return res.status(400).json({
+        message: "The parent Breathing Style does not exist"
+      });
+    }
+
+    console.error("Error updating Breathing Style:", error);
+
+    return res.status(500).json({
+      message: "Failed to update Breathing Style"
+    });
+  }
+}
+
+// DELETE a Breathing Style by ID
+export async function deleteBreathingStyle(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      DELETE FROM breathing_styles
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Breathing Style not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Breathing Style deleted successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23503") {
+      return res.status(409).json({
+        message:
+          "Cannot delete this Breathing Style because another style depends on it"
+      });
+    }
+
+    console.error("Error deleting Breathing Style:", error);
+
+    return res.status(500).json({
+      message: "Failed to delete Breathing Style"
+    });
+  }
+}

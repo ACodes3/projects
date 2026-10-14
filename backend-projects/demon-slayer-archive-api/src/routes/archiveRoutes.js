@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 
 import {
@@ -9,7 +8,10 @@ import {
   deleteSlayer,
   createDemon,
   updateDemon,
-  deleteDemon
+  deleteDemon,
+  createBreathingStyle,
+  updateBreathingStyle,
+  deleteBreathingStyle,
 } from "../controllers/archiveController.js";
 
 const router = Router();
@@ -23,6 +25,14 @@ router.delete("/slayers/:id", deleteSlayer);
 router.post("/demons", createDemon);
 router.patch("/demons/:id", updateDemon);
 router.delete("/demons/:id", deleteDemon);
+
+// BREATHING STYLES
+
+router.post("/breathing-styles", createBreathingStyle);
+
+router.patch("/breathing-styles/:id", updateBreathingStyle);
+
+router.delete("/breathing-styles/:id", deleteBreathingStyle);
 
 // GET (all collections)
 router.get("/:collection", getAll);
