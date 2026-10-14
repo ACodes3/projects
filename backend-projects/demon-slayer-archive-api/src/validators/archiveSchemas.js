@@ -1,12 +1,11 @@
 
 import { z } from "zod";
 
-// Common validation rules
-const slug = z.string()
-  .regex(
-    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-    "Must be a lowercase slug, e.g. tanjiro-kamado"
-  );
+// COMMON VALIDATION
+const slug = z.string().regex(
+  /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  "ID must be a lowercase slug, e.g. tanjiro-kamado"
+);
 
 const name = z.string().trim().min(1).max(150);
 
@@ -14,14 +13,14 @@ const description = z.string().max(10000);
 
 const idArray = z.array(slug);
 
-const optionalImage = z.string().nullable();
+const image = z.string().nullable();
 
 const jsonObject = z.record(
   z.string(),
   z.unknown()
 );
 
-// Slayer
+// SLAYERS
 export const slayerSchema = z.strictObject({
   id: slug,
   name,
@@ -31,10 +30,10 @@ export const slayerSchema = z.strictObject({
   related_character_ids: idArray.default([]),
   description: description.default(""),
   stats: jsonObject.default({}),
-  image: optionalImage.default(null)
+  image: image.default(null)
 });
 
-// Demon
+// DEMONS
 export const demonSchema = z.strictObject({
   id: slug,
   name,
@@ -44,10 +43,10 @@ export const demonSchema = z.strictObject({
   related_character_ids: idArray.default([]),
   description: description.default(""),
   stats: jsonObject.default({}),
-  image: optionalImage.default(null)
+  image: image.default(null)
 });
 
-// Breathing Style
+// BREATHING STYLES
 export const breathingStyleSchema = z.strictObject({
   id: slug,
   name,
@@ -56,10 +55,10 @@ export const breathingStyleSchema = z.strictObject({
   technique_ids: idArray.default([]),
   description: description.default(""),
   theme: jsonObject.default({}),
-  image: optionalImage.default(null)
+  image: image.default(null)
 });
 
-// Blood Demon Art
+// BLOOD DEMON ARTS
 export const bloodDemonArtSchema = z.strictObject({
   id: slug,
   name,
@@ -67,10 +66,10 @@ export const bloodDemonArtSchema = z.strictObject({
   ability_ids: idArray.default([]),
   description: description.default(""),
   theme: jsonObject.default({}),
-  image: optionalImage.default(null)
+  image: image.default(null)
 });
 
-// Technique
+// TECHNIQUES
 export const techniqueSchema = z.strictObject({
   id: slug,
   name,
@@ -83,9 +82,10 @@ export const techniqueSchema = z.strictObject({
   description: description.default("")
 });
 
-// PATCH: all fields optional, but ID cannot change
-function patchSchema(schema) {
-  return schema.omit({ id: true })
+// PATCH VALIDATION
+function createPatchSchema(schema) {
+  return schema
+    .omit({ id: true })
     .partial()
     .refine(
       (data) => Object.keys(data).length > 0,
@@ -94,16 +94,16 @@ function patchSchema(schema) {
 }
 
 export const slayerPatchSchema =
-  patchSchema(slayerSchema);
+  createPatchSchema(slayerSchema);
 
 export const demonPatchSchema =
-  patchSchema(demonSchema);
+  createPatchSchema(demonSchema);
 
 export const breathingStylePatchSchema =
-  patchSchema(breathingStyleSchema);
+  createPatchSchema(breathingStyleSchema);
 
 export const bloodDemonArtPatchSchema =
-  patchSchema(bloodDemonArtSchema);
+  createPatchSchema(bloodDemonArtSchema);
 
 export const techniquePatchSchema =
-  patchSchema(techniqueSchema);
+  createPatchSchema(techniqueSchema);
