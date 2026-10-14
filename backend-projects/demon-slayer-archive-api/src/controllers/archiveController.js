@@ -1240,3 +1240,328 @@ export async function deleteBloodDemonArt(req, res) {
     });
   }
 }
+
+// TECHNIQUES
+// Validation function to check if a technique's parent exists in the database
+async function validateTechniqueParent(category, parentId, client) {
+  const table =
+    category === "breathing"
+      ? "breathing_styles"
+      : "blood_demon_arts";
+
+  const result = await client.query(
+    `SELECT id FROM ${table} WHERE id = $1`,
+    [parentId]
+  );
+
+  return result.rows.length > 0;
+}
+
+// POST a new Technique
+export async function createTechnique(req, res) {
+  const {
+    id,
+    name,
+    category,
+    parent_id,
+    user_ids = [],
+    description = ""
+  } = req.body ?? {};
+
+  const validCategory =
+    category === "breathing" ||
+    category === "blood-demon-art";
+
+  if (
+    typeof id !== "string" ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    !validCategory ||
+    typeof parent_id !== "string" ||
+    !parent_id.trim() ||
+    !Array.isArray(user_ids) ||
+    !user_ids.every((user) => typeof user === "string") ||
+    typeof description !== "string"
+  ) {
+    return res.status(400).json({
+      message: "Invalid Technique data"
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const parentExists = await validateTechniqueParent(
+      category,
+      parent_id,
+      client
+    );
+
+    if (!parentExists) {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        message: "The specified parent does not exist"
+      });
+    }
+
+    const result = await client.query(
+      `
+      INSERT INTO techniques (
+        id,
+        name,
+        category,
+        parent_id,
+        user_ids,
+        description
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+      `,
+      [
+        id,
+        name.trim(),
+        category,
+        parent_id,
+        user_ids,
+        description
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return res.status(201).json({
+      message: "Technique created successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "A Technique with this ID already exists"
+      });
+    }
+
+    console.error("Error creating Technique:", error);
+
+    return res.status(500).json({
+      message: "Failed to create Technique"
+    });
+
+  } finally {
+    client.release();
+  }
+}
+
+// PUT to update an existing Technique
+export async function updateTechnique(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (
+    !updates ||
+    typeof updates !== "object" ||
+    Array.isArray(updates)
+  ) {
+    return res.status(400).json({
+      message: "Request body must be a JSON object"
+    });
+  }
+
+  const allowedFields = [
+    "name",
+    "category",
+    "parent_id",
+    "user_ids",
+    "description"
+  ];
+
+  const fields = Object.keys(updates);
+
+  if (fields.length === 0) {
+    return res.status(400).json({
+      message: "No fields provided for updating"
+    });
+  }
+
+  const invalidFields = fields.filter(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (invalidFields.length > 0) {
+    return res.status(400).json({
+      message: "Invalid fields",
+      fields: invalidFields
+    });
+  }
+
+  for (const field of fields) {
+    const value = updates[field];
+
+    if (
+      field === "name" &&
+      (typeof value !== "string" || !value.trim())
+    ) {
+      return res.status(400).json({
+        message: "name must be a non-empty string"
+      });
+    }
+
+    if (
+      ["parent_id", "description"].includes(field) &&
+      (typeof value !== "string" ||
+        (field === "parent_id" && !value.trim()))
+    ) {
+      return res.status(400).json({
+        message: `Invalid value for ${field}`
+      });
+    }
+
+    if (
+      field === "category" &&
+      !["breathing", "blood-demon-art"].includes(value)
+    ) {
+      return res.status(400).json({
+        message: "Invalid category"
+      });
+    }
+
+    if (
+      field === "user_ids" &&
+      (
+        !Array.isArray(value) ||
+        !value.every((user) => typeof user === "string")
+      )
+    ) {
+      return res.status(400).json({
+        message: "user_ids must be an array of strings"
+      });
+    }
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Get existing category and parent
+    const existing = await client.query(
+      `
+      SELECT category, parent_id
+      FROM techniques
+      WHERE id = $1
+      FOR UPDATE
+      `,
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        message: "Technique not found"
+      });
+    }
+
+    const category =
+      updates.category ?? existing.rows[0].category;
+
+    const parentId =
+      updates.parent_id ?? existing.rows[0].parent_id;
+
+    const parentExists = await validateTechniqueParent(
+      category,
+      parentId,
+      client
+    );
+
+    if (!parentExists) {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        message: "The specified parent does not exist"
+      });
+    }
+
+    const setClause = fields
+      .map((field, index) => `${field} = $${index + 1}`)
+      .join(", ");
+
+    const values = fields.map((field) =>
+      field === "name"
+        ? updates[field].trim()
+        : updates[field]
+    );
+
+    values.push(id);
+
+    const result = await client.query(
+      `
+      UPDATE techniques
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+      `,
+      values
+    );
+
+    await client.query("COMMIT");
+
+    return res.status(200).json({
+      message: "Technique updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    console.error("Error updating Technique:", error);
+
+    return res.status(500).json({
+      message: "Failed to update Technique"
+    });
+
+  } finally {
+    client.release();
+  }
+}
+
+
+// DELETE a Technique by ID
+export async function deleteTechnique(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      DELETE FROM techniques
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Technique not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Technique deleted successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error deleting Technique:", error);
+
+    return res.status(500).json({
+      message: "Failed to delete Technique"
+    });
+  }
+}
