@@ -956,3 +956,287 @@ export async function deleteBreathingStyle(req, res) {
     });
   }
 }
+
+// BLOOD DEMON ARTS
+// POST a new Blood Demon Art
+export async function createBloodDemonArt(req, res) {
+  const {
+    id,
+    name,
+    user_id = null,
+    ability_ids = [],
+    description = "",
+    theme = {},
+    image = null
+  } = req.body ?? {};
+
+  const isStringArray = (value) =>
+    Array.isArray(value) &&
+    value.every((item) => typeof item === "string");
+
+  const validTheme =
+    theme !== null &&
+    typeof theme === "object" &&
+    !Array.isArray(theme);
+
+  if (
+    typeof id !== "string" ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    (user_id !== null && typeof user_id !== "string") ||
+    !isStringArray(ability_ids) ||
+    typeof description !== "string" ||
+    !validTheme ||
+    (image !== null && typeof image !== "string")
+  ) {
+    return res.status(400).json({
+      message: "Invalid Blood Demon Art data"
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO blood_demon_arts (
+        id,
+        name,
+        user_id,
+        ability_ids,
+        description,
+        theme,
+        image
+      )
+      VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)
+      RETURNING *
+      `,
+      [
+        id,
+        name.trim(),
+        user_id,
+        ability_ids,
+        description,
+        JSON.stringify(theme),
+        image
+      ]
+    );
+
+    return res.status(201).json({
+      message: "Blood Demon Art created successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "A Blood Demon Art with this ID already exists"
+      });
+    }
+
+    if (error.code === "23503") {
+      return res.status(400).json({
+        message: "The specified Demon does not exist"
+      });
+    }
+
+    console.error("Error creating Blood Demon Art:", error);
+
+    return res.status(500).json({
+      message: "Failed to create Blood Demon Art"
+    });
+  }
+}
+
+
+// PUT to update an existing Blood Demon Art
+export async function updateBloodDemonArt(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (
+    !updates ||
+    typeof updates !== "object" ||
+    Array.isArray(updates)
+  ) {
+    return res.status(400).json({
+      message: "Request body must be a JSON object"
+    });
+  }
+
+  const allowedFields = [
+    "name",
+    "user_id",
+    "ability_ids",
+    "description",
+    "theme",
+    "image"
+  ];
+
+  const fields = Object.keys(updates);
+
+  if (fields.length === 0) {
+    return res.status(400).json({
+      message: "No fields provided for updating"
+    });
+  }
+
+  const invalidFields = fields.filter(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (invalidFields.length > 0) {
+    return res.status(400).json({
+      message: "Invalid fields",
+      fields: invalidFields
+    });
+  }
+
+  for (const field of fields) {
+    const value = updates[field];
+
+    if (
+      field === "name" &&
+      (typeof value !== "string" || !value.trim())
+    ) {
+      return res.status(400).json({
+        message: "name must be a non-empty string"
+      });
+    }
+
+    if (
+      field === "description" &&
+      typeof value !== "string"
+    ) {
+      return res.status(400).json({
+        message: "description must be a string"
+      });
+    }
+
+    if (
+      ["user_id", "image"].includes(field) &&
+      value !== null &&
+      typeof value !== "string"
+    ) {
+      return res.status(400).json({
+        message: `${field} must be a string or null`
+      });
+    }
+
+    if (
+      field === "ability_ids" &&
+      (
+        !Array.isArray(value) ||
+        !value.every((item) => typeof item === "string")
+      )
+    ) {
+      return res.status(400).json({
+        message: "ability_ids must be an array of strings"
+      });
+    }
+
+    if (
+      field === "theme" &&
+      (
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value)
+      )
+    ) {
+      return res.status(400).json({
+        message: "theme must be a JSON object"
+      });
+    }
+  }
+
+  const setClause = fields
+    .map((field, index) =>
+      field === "theme"
+        ? `${field} = $${index + 1}::jsonb`
+        : `${field} = $${index + 1}`
+    )
+    .join(", ");
+
+  const values = fields.map((field) => {
+    if (field === "theme") {
+      return JSON.stringify(updates[field]);
+    }
+
+    if (field === "name") {
+      return updates[field].trim();
+    }
+
+    return updates[field];
+  });
+
+  values.push(id);
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE blood_demon_arts
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+      `,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Blood Demon Art not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Blood Demon Art updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    if (error.code === "23503") {
+      return res.status(400).json({
+        message: "The specified Demon does not exist"
+      });
+    }
+
+    console.error("Error updating Blood Demon Art:", error);
+
+    return res.status(500).json({
+      message: "Failed to update Blood Demon Art"
+    });
+  }
+}
+
+// DELETE a Blood Demon Art by ID
+export async function deleteBloodDemonArt(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      DELETE FROM blood_demon_arts
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Blood Demon Art not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Blood Demon Art deleted successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error deleting Blood Demon Art:", error);
+
+    return res.status(500).json({
+      message: "Failed to delete Blood Demon Art"
+    });
+  }
+}

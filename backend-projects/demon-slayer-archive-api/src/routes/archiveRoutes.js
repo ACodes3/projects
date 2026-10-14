@@ -12,6 +12,9 @@ import {
   createBreathingStyle,
   updateBreathingStyle,
   deleteBreathingStyle,
+  createBloodDemonArt,
+  updateBloodDemonArt,
+  deleteBloodDemonArt,
 } from "../controllers/archiveController.js";
 
 const router = Router();
@@ -21,17 +24,19 @@ router.post("/slayers", createSlayer);
 router.patch("/slayers/:id", updateSlayer);
 router.delete("/slayers/:id", deleteSlayer);
 
+// BLOOD DEMON ARTS
+router.post("/blood-demon-arts", createBloodDemonArt);
+router.patch("/blood-demon-arts/:id", updateBloodDemonArt);
+router.delete("/blood-demon-arts/:id", deleteBloodDemonArt);
+
 // DEMONS
 router.post("/demons", createDemon);
 router.patch("/demons/:id", updateDemon);
 router.delete("/demons/:id", deleteDemon);
 
 // BREATHING STYLES
-
 router.post("/breathing-styles", createBreathingStyle);
-
 router.patch("/breathing-styles/:id", updateBreathingStyle);
-
 router.delete("/breathing-styles/:id", deleteBreathingStyle);
 
 // GET (all collections)
