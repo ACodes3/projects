@@ -1,7 +1,10 @@
 
 import { z } from "zod";
 
+// ==========================================
 // COMMON VALIDATION
+// ==========================================
+
 const slug = z.string().regex(
   /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
   "ID must be a lowercase slug, e.g. tanjiro-kamado"
@@ -20,7 +23,10 @@ const jsonObject = z.record(
   z.unknown()
 );
 
+// ==========================================
 // SLAYERS
+// ==========================================
+
 export const slayerSchema = z.strictObject({
   id: slug,
   name,
@@ -30,10 +36,13 @@ export const slayerSchema = z.strictObject({
   related_character_ids: idArray.default([]),
   description: description.default(""),
   stats: jsonObject.default({}),
-  image: image.default(null)
+  image: image.default(null),
 });
 
+// ==========================================
 // DEMONS
+// ==========================================
+
 export const demonSchema = z.strictObject({
   id: slug,
   name,
@@ -43,10 +52,13 @@ export const demonSchema = z.strictObject({
   related_character_ids: idArray.default([]),
   description: description.default(""),
   stats: jsonObject.default({}),
-  image: image.default(null)
+  image: image.default(null),
 });
 
+// ==========================================
 // BREATHING STYLES
+// ==========================================
+
 export const breathingStyleSchema = z.strictObject({
   id: slug,
   name,
@@ -55,10 +67,13 @@ export const breathingStyleSchema = z.strictObject({
   technique_ids: idArray.default([]),
   description: description.default(""),
   theme: jsonObject.default({}),
-  image: image.default(null)
+  image: image.default(null),
 });
 
+// ==========================================
 // BLOOD DEMON ARTS
+// ==========================================
+
 export const bloodDemonArtSchema = z.strictObject({
   id: slug,
   name,
@@ -66,32 +81,60 @@ export const bloodDemonArtSchema = z.strictObject({
   ability_ids: idArray.default([]),
   description: description.default(""),
   theme: jsonObject.default({}),
-  image: image.default(null)
+  image: image.default(null),
 });
 
+// ==========================================
 // TECHNIQUES
+// ==========================================
+
 export const techniqueSchema = z.strictObject({
   id: slug,
   name,
   category: z.enum([
     "breathing",
-    "blood-demon-art"
+    "blood-demon-art",
   ]),
   parent_id: slug,
   user_ids: idArray.default([]),
-  description: description.default("")
+  description: description.default(""),
 });
 
+// ==========================================
 // PATCH VALIDATION
+// ==========================================
+
+// PATCH should only update fields supplied by the client.
+// Default values belong to POST requests, not PATCH requests.
+
 function createPatchSchema(schema) {
-  return schema
-    .omit({ id: true })
-    .partial()
-    .refine(
-      (data) => Object.keys(data).length > 0,
-      "At least one field must be provided"
-    );
+  const fields = schema.omit({ id: true }).shape;
+
+  const patchFields = Object.fromEntries(
+    Object.entries(fields).map(([key, field]) => {
+      const fieldWithoutDefault =
+        typeof field.removeDefault === "function"
+          ? field.removeDefault()
+          : field;
+
+      return [
+        key,
+        fieldWithoutDefault.optional(),
+      ];
+    })
+  );
+
+  return z.strictObject(patchFields).refine(
+    (data) => Object.keys(data).length > 0,
+    {
+      message: "At least one field must be provided",
+    }
+  );
 }
+
+// ==========================================
+// PATCH SCHEMAS
+// ==========================================
 
 export const slayerPatchSchema =
   createPatchSchema(slayerSchema);
