@@ -1,5 +1,7 @@
 
 import "dotenv/config";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/docs/swagger.js";
 
 import express from "express";
 import cors from "cors";
@@ -86,6 +88,16 @@ app.get("/", (req, res) => {
     environment: process.env.NODE_ENV || "development"
   });
 });
+
+// ==========================================
+// API DOCUMENTATION
+// ==========================================
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // ==========================================
 // API RATE LIMITING
