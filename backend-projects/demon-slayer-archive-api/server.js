@@ -1,24 +1,39 @@
 
-import "dotenv/config";
 import app from "./app.js";
 import pool from "./src/config/db.js";
+import env from "./src/config/env.js";
+import logger from "./src/config/logger.js";
 
-const PORT = process.env.PORT || 5000;
+// ==========================================
+// SERVER CONFIGURATION
+// ==========================================
+
+const PORT = env.PORT;
+
+// ==========================================
+// START SERVER
+// ==========================================
 
 async function startServer() {
   try {
+    // Verify PostgreSQL connectivity.
     await pool.query("SELECT 1");
 
-    console.log("PostgreSQL connected successfully!");
+    logger.info("PostgreSQL connected successfully");
 
     app.listen(PORT, () => {
-      console.log(
+      logger.info(
         `Demon Slayer API running on http://localhost:${PORT}`
       );
     });
   } catch (error) {
-    console.error("Database connection failed:", error.message);
-    process.exit(1);
+    logger.error("Database connection failed", {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    await pool.end();
+    process.exitCode = 1;
   }
 }
 
