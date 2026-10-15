@@ -1,6 +1,6 @@
 
-import "dotenv/config";
 import pg from "pg";
+import env from "./env.js";
 
 const { Pool } = pg;
 
@@ -8,14 +8,16 @@ const { Pool } = pg;
 // DATABASE CONFIGURATION
 // ==========================================
 
-const isTestEnvironment = process.env.NODE_ENV === "test";
+const isTestEnvironment = env.NODE_ENV === "test";
 
-// Use a separate database for automated tests.
 const database = isTestEnvironment
-  ? process.env.TEST_DB_NAME
-  : process.env.DB_NAME;
+  ? env.TEST_DB_NAME
+  : env.DB_NAME;
 
-// Never allow tests to run against the regular database.
+// ==========================================
+// TEST DATABASE SAFETY
+// ==========================================
+
 if (isTestEnvironment) {
   if (!database) {
     throw new Error(
@@ -23,7 +25,7 @@ if (isTestEnvironment) {
     );
   }
 
-  if (database === process.env.DB_NAME) {
+  if (database === env.DB_NAME) {
     throw new Error(
       "The test database must be different from DB_NAME"
     );
@@ -36,12 +38,16 @@ if (isTestEnvironment) {
   }
 }
 
+// ==========================================
+// POSTGRESQL CONNECTION POOL
+// ==========================================
+
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 5432),
+  host: env.DB_HOST,
+  port: env.DB_PORT,
   database,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  user: env.DB_USER,
+  password: env.DB_PASSWORD,
 });
 
 export default pool;

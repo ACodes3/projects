@@ -1,27 +1,27 @@
 
-import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
+
+import env from "./src/config/env.js";
+
+import archiveRoutes from "./src/routes/archiveRoutes.js";
 import swaggerSpec from "./src/docs/swagger.js";
 
 import requestLogger from "./src/middleware/requestLogger.js";
 
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-
-import archiveRoutes from "./src/routes/archiveRoutes.js";
-
 import {
   apiLimiter,
-  writeLimiter
+  writeLimiter,
 } from "./src/middleware/rateLimiter.js";
 
 import {
-  notFound
+  notFound,
 } from "./src/middleware/notFound.js";
 
 import {
-  errorHandler
+  errorHandler,
 } from "./src/middleware/errorHandler.js";
 
 const app = express();
@@ -38,16 +38,19 @@ app.use(helmet());
 
 app.use(requestLogger);
 
-// Allowed browser origins
-const allowedOrigins = (
-  process.env.CLIENT_ORIGIN || "http://localhost:5173"
-)
+// ==========================================
+// CORS
+// ==========================================
+
+const allowedOrigins = env.CLIENT_ORIGIN
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin(origin, callback) {
+      // Allow non-browser clients without Origin headers.
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -57,6 +60,7 @@ app.use(
       );
 
       error.status = 403;
+
       return callback(error);
     },
 
@@ -65,13 +69,13 @@ app.use(
       "POST",
       "PATCH",
       "DELETE",
-      "OPTIONS"
+      "OPTIONS",
     ],
 
     allowedHeaders: [
       "Content-Type",
-      "Authorization"
-    ]
+      "Authorization",
+    ],
   })
 );
 
@@ -81,7 +85,7 @@ app.use(
 
 app.use(
   express.json({
-    limit: "100kb"
+    limit: "100kb",
   })
 );
 
@@ -93,12 +97,12 @@ app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Demon Slayer Archive API is running!",
-    environment: process.env.NODE_ENV || "development"
+    environment: env.NODE_ENV,
   });
 });
 
 // ==========================================
-// API DOCUMENTATION
+// SWAGGER DOCUMENTATION
 // ==========================================
 
 app.use(
@@ -108,13 +112,13 @@ app.use(
 );
 
 // ==========================================
-// API RATE LIMITING
+// RATE LIMITING
 // ==========================================
 
-// Applies to all API requests
+// General API requests.
 app.use("/api", apiLimiter);
 
-// Applies only to write methods
+// Stricter limit for database write operations.
 app.use("/api", (req, res, next) => {
   if (
     ["POST", "PATCH", "DELETE"].includes(req.method)
@@ -132,10 +136,14 @@ app.use("/api", (req, res, next) => {
 app.use("/api", archiveRoutes);
 
 // ==========================================
-// ERROR HANDLING
+// 404 HANDLING
 // ==========================================
 
 app.use(notFound);
+
+// ==========================================
+// CENTRALIZED ERROR HANDLING
+// ==========================================
 
 app.use(errorHandler);
 
