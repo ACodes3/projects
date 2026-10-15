@@ -1,6 +1,7 @@
 
 import pool from "../config/db.js";
 import AppError from "../utils/AppError.js";
+import { listQuerySchema } from "../validators/querySchemas.js";
 
 // ==========================================
 // COLLECTION CONFIGURATION
@@ -317,17 +318,153 @@ export async function getAll(req, res) {
   const table = collections[req.params.collection];
 
   if (!table) {
+    throw new AppError("Collection not found", 404);
+  }
+
+  // Validate query parameters before building the SQL statement.
+  const parsed = listQuerySchema.safeParse(req.query);
+
+  if (!parsed.success) {
+    const details = parsed.error.issues
+      .map((issue) =>
+        `${issue.path.join(".") || "query"}: ${issue.message}`
+      )
+      .join("; ");
+
     throw new AppError(
-      "Collection not found",
-      404
+      `Invalid query parameters: ${details}`,
+      400
     );
   }
 
-  const result = await pool.query(
-    `SELECT * FROM ${table} ORDER BY name ASC`
+  const {
+    page,
+    limit,
+    search,
+    sort,
+    order,
+    rank,
+  } = parsed.data;
+
+  // Only slayers and demons have a rank column.
+  if (
+    (sort === "rank" || rank !== undefined) &&
+    !["slayers", "demons"].includes(table)
+  ) {
+    throw new AppError(
+      "The rank filter and rank sorting are only available for slayers and demons",
+      400
+    );
+  }
+
+  const offset = (page - 1) * limit;
+
+  if (
+    !Number.isSafeInteger(offset) ||
+    offset > 2147483647
+  ) {
+    throw new AppError(
+      "Page number is too large",
+      400
+    );
+  }
+
+  const conditions = [];
+  const values = [];
+
+  // ==========================================
+  // SEARCH BY NAME
+  // ==========================================
+
+  if (search) {
+    // Literal substring search, case-insensitive.
+    // % and _ are treated as normal characters.
+    values.push(search);
+
+    conditions.push(
+      `POSITION(LOWER($${values.length}) IN LOWER(name)) > 0`
+    );
+  }
+
+  // ==========================================
+  // FILTER BY RANK
+  // ==========================================
+
+  if (rank !== undefined) {
+    values.push(rank);
+    conditions.push(`rank = $${values.length}`);
+  }
+
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
+
+  // ==========================================
+  // SAFE SORTING
+  // ==========================================
+
+  // SQL column names cannot be parameterized.
+  // Therefore, only backend-approved names are used.
+  const sortColumns = {
+    id: "id",
+    name: "name",
+    rank: "rank",
+  };
+
+  const sortColumn = sortColumns[sort];
+  const sortDirection = order.toUpperCase();
+
+  // ==========================================
+  // COUNT MATCHING RECORDS
+  // ==========================================
+
+  const countResult = await pool.query(
+    `
+    SELECT COUNT(*)::integer AS total
+    FROM ${table}
+    ${whereClause}
+    `,
+    values
   );
 
-  return res.status(200).json(result.rows);
+  const total = countResult.rows[0].total;
+
+  // ==========================================
+  // PAGINATED RESULTS
+  // ==========================================
+
+  const recordsResult = await pool.query(
+    `
+    SELECT *
+    FROM ${table}
+    ${whereClause}
+    ORDER BY
+      ${sortColumn} ${sortDirection} NULLS LAST,
+      id ASC
+    LIMIT $${values.length + 1}
+    OFFSET $${values.length + 2}
+    `,
+    [...values, limit, offset]
+  );
+
+  const totalPages = Math.ceil(total / limit);
+
+  // ==========================================
+  // RESPONSE
+  // ==========================================
+
+  return res.status(200).json({
+    data: recordsResult.rows,
+
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1 && totalPages > 0,
+    },
+  });
 }
 
 // ==========================================
@@ -416,7 +553,11 @@ export async function createBreathingStyle(req, res) {
     );
   }
 
-  return createRecord(req, res, configs.breathingStyles);
+  return createRecord(
+    req,
+    res,
+    configs.breathingStyles
+  );
 }
 
 // PATCH /api/breathing-styles/:id
