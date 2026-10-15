@@ -3,6 +3,8 @@ import "dotenv/config";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/docs/swagger.js";
 
+import requestLogger from "./src/middleware/requestLogger.js";
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -29,6 +31,12 @@ const app = express();
 // ==========================================
 
 app.use(helmet());
+
+// ==========================================
+// REQUEST LOGGING
+// ==========================================
+
+app.use(requestLogger);
 
 // Allowed browser origins
 const allowedOrigins = (
