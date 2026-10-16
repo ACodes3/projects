@@ -1,47 +1,37 @@
 # Projects Repository
 
-A comprehensive collection of my programming projects, organized by technology and domain for easy navigation and searching.
+A collection of my published programming projects, organized by development area for easy browsing. This repository showcases work across backend development, frontend development, databases, DevOps, and full-stack applications.
 
 ## Repository Structure
 
-This repository contains various projects organized into the following categories:
+The following project categories are currently available in this repository:
 
-### [ai-ml/](ai-ml/)
-Artificial Intelligence and Machine Learning projects, experiments, and implementations.
+| Directory | Description |
+| --- | --- |
+| [backend-projects/](backend-projects/) | Server-side applications, APIs, and backend services. |
+| [database/](database/) | Database schemas, SQL scripts, and database-focused projects. |
+| [devops/](devops/) | Deployment, infrastructure, automation, and DevOps-related work. |
+| [frontend-projects/](frontend-projects/) | User interfaces and client-side web applications. |
+| [fullstack-projects/](fullstack-projects/) | Applications combining frontend and backend technologies. |
 
-### [assembly-hardware/](assembly-hardware/)
-Low-level programming, assembly language, and hardware-related projects.
-
-### [backend-projects/](backend-projects/)
-Server-side and backend application projects.
-
-### [devops/](devops/)
-DevOps, deployment, infrastructure, and automation projects.
-
-### [frontend-projects/](frontend-projects/)
-Client-side and frontend application projects.
-
-### [fullstack-projects/](fullstack-projects/)
-Full-stack applications combining frontend and backend technologies.
-
-### [mobile-apps/](mobile-apps/)
-Mobile application projects for iOS, Android, and cross-platform development.
+Some projects include their own README with setup instructions, technology details, and usage notes.
 
 ## Purpose
 
-This repository serves as a portfolio and archive of my programming work across different technologies, languages, and paradigms. Each folder is organized to allow quick browsing and searching for specific project types or technologies.
+This repository serves as a portfolio and archive of my published programming work. Projects are grouped by development area so you can quickly explore the code and find examples relevant to a particular technology or topic.
 
 ## Navigation
 
-To find a specific project:
-1. Identify the technology domain (AI/ML, backend, frontend, etc.)
-2. Navigate to the corresponding folder
-3. Browse or search within that category
+1. Choose a category from the table above.
+2. Open a project directory to explore its source code.
+3. Check the project's README, when available, for instructions and additional details.
 
-## GitHub & Project Migration
+## GitHub
 
-Feel free to check out my previous projects on my [GitHub profile](https://github.com/ACodes3/). Please note that older projects on GitHub will be deleted soon, as I'm consolidating and maintaining only my most recent and polished work in this repository. This collection represents my current active projects and will continue to grow with my latest work.
+You can also find my work on my [GitHub profile](https://github.com/ACodes3/).
+
+This repository is updated as new projects are completed and published. Planned or unpublished projects are not listed here.
 
 ---
 
-Feel free to explore and review any of the projects!
+Thanks for visiting and exploring my projects!
