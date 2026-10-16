@@ -15,20 +15,12 @@
   background:
     radial-gradient(
       circle at 61% 46%,
-      color-mix(
-        in srgb,
-        var(--breathing-primary) 18%,
-        transparent
-      ),
+      color-mix(in srgb, var(--breathing-primary) 18%, transparent),
       transparent 30%
     ),
     radial-gradient(
       circle at 82% 76%,
-      color-mix(
-        in srgb,
-        var(--breathing-secondary) 24%,
-        transparent
-      ),
+      color-mix(in srgb, var(--breathing-secondary) 24%, transparent),
       transparent 34%
     ),
     radial-gradient(
@@ -36,13 +28,7 @@
       rgba(71, 84, 180, 0.18),
       transparent 37%
     ),
-    linear-gradient(
-      118deg,
-      #111b42 0%,
-      #111936 29%,
-      #0d142d 58%,
-      #090e20 100%
-    );
+    linear-gradient(118deg, #111b42 0%, #111936 29%, #0d142d 58%, #090e20 100%);
 }
 
 /* =========================================
@@ -61,11 +47,7 @@
   background:
     radial-gradient(
       ellipse at 58% 84%,
-      color-mix(
-        in srgb,
-        var(--breathing-primary) 11%,
-        transparent
-      ),
+      color-mix(in srgb, var(--breathing-primary) 11%, transparent),
       transparent 36%
     ),
     radial-gradient(
@@ -86,26 +68,15 @@
 
   opacity: 0.42;
 
-  background-image:
-    radial-gradient(
-      circle,
-      color-mix(
-        in srgb,
-        var(--breathing-primary) 42%,
-        transparent
-      ) 1px,
-      transparent 1px
-    );
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--breathing-primary) 42%, transparent) 1px,
+    transparent 1px
+  );
 
-  background-size:
-    66px 66px;
+  background-size: 66px 66px;
 
-  mask-image:
-    radial-gradient(
-      circle at 62% 50%,
-      black,
-      transparent 65%
-    );
+  mask-image: radial-gradient(circle at 62% 50%, black, transparent 65%);
 }
 
 /* =========================================
@@ -125,16 +96,11 @@
 
   gap: 28px;
 
-  padding:
-    0
-    56px;
+  padding: 0 56px;
 
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 
-  background:
-    rgba(7, 12, 30, 0.12);
+  background: rgba(7, 12, 30, 0.12);
 }
 
 .breathing-selector__label {
@@ -163,15 +129,11 @@
 
   border-radius: 50%;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 
-  background:
-    rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .breathing-selector__styles {
@@ -189,14 +151,11 @@
 .breathing-selector__button {
   position: relative;
 
-  padding:
-    10px
-    11px;
+  padding: 10px 11px;
 
   border: 0;
 
-  color:
-    rgba(187, 199, 227, 0.34);
+  color: rgba(187, 199, 227, 0.34);
 
   background: transparent;
 
@@ -228,14 +187,11 @@
   left: 50%;
   bottom: 1px;
 
-  transform:
-    translateX(-50%);
+  transform: translateX(-50%);
 
-  background:
-    var(--breathing-primary);
+  background: var(--breathing-primary);
 
-  transition:
-    width 0.2s ease;
+  transition: width 0.2s ease;
 }
 
 .breathing-selector__button:hover {
@@ -245,13 +201,8 @@
 .breathing-selector__button.active {
   color: #ffffff;
 
-  text-shadow:
-    0 0 18px
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 45%,
-      transparent
-    );
+  text-shadow: 0 0 18px
+    color-mix(in srgb, var(--breathing-primary) 45%, transparent);
 }
 
 .breathing-selector__button.active::after {
@@ -265,8 +216,7 @@
 .breathing-showcase__main {
   width: min(1460px, 100%);
 
-  min-height:
-    calc(100vh - 154px);
+  min-height: calc(100vh - 154px);
 
   margin: 0 auto;
 
@@ -281,10 +231,7 @@
 
   gap: 38px;
 
-  padding:
-    42px
-    58px
-    40px;
+  padding: 42px 58px 40px;
 }
 
 /* =========================================
@@ -308,8 +255,7 @@
 
   margin-bottom: 16px;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
   font-size: 9px;
 
@@ -324,16 +270,10 @@
   width: 34px;
   height: 1px;
 
-  background:
-    var(--breathing-primary);
+  background: var(--breathing-primary);
 
-  box-shadow:
-    0 0 8px
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 70%,
-      transparent
-    );
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--breathing-primary) 70%, transparent);
 }
 
 .breathing-heading {
@@ -343,16 +283,9 @@
 .breathing-heading h1 {
   margin: 0;
 
-  font-family:
-    "Orbitron",
-    sans-serif;
+  font-family: "Orbitron", sans-serif;
 
-  font-size:
-    clamp(
-      50px,
-      5vw,
-      78px
-    );
+  font-size: clamp(50px, 5vw, 78px);
 
   line-height: 0.88;
 
@@ -364,9 +297,7 @@
 
   color: #ffffff;
 
-  text-shadow:
-    0 0 28px
-    rgba(255, 255, 255, 0.06);
+  text-shadow: 0 0 28px rgba(255, 255, 255, 0.06);
 }
 
 .breathing-heading > span {
@@ -406,8 +337,7 @@
 
   display: grid;
 
-  grid-template-columns:
-    repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 
   gap: 10px;
 
@@ -423,13 +353,9 @@
 
   gap: 11px;
 
-  padding:
-    0
-    11px;
+  padding: 0 11px;
 
-  border-left:
-    1px solid
-    rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .breathing-stat__icon {
@@ -444,23 +370,12 @@
 
   border-radius: 50%;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 10%,
-      transparent
-    );
+  background: color-mix(in srgb, var(--breathing-primary) 10%, transparent);
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 22%,
-      transparent
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 22%, transparent);
 }
 
 .breathing-stat strong {
@@ -498,31 +413,23 @@
 
   margin-top: 32px;
 
-  padding:
-    19px
-    20px;
+  padding: 19px 20px;
 
   position: relative;
 
   overflow: hidden;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 
-  background:
-    linear-gradient(
-      120deg,
-      rgba(17, 27, 58, 0.76),
-      rgba(16, 23, 49, 0.72)
-    );
+  background: linear-gradient(
+    120deg,
+    rgba(17, 27, 58, 0.76),
+    rgba(16, 23, 49, 0.72)
+  );
 
-  backdrop-filter:
-    blur(10px);
+  backdrop-filter: blur(10px);
 
-  box-shadow:
-    0 22px 48px
-    rgba(0, 0, 0, 0.17);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.17);
 }
 
 .breathing-users-panel::before {
@@ -538,15 +445,9 @@
 
   border-radius: 50%;
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 12%,
-      transparent
-    );
+  background: color-mix(in srgb, var(--breathing-primary) 12%, transparent);
 
-  filter:
-    blur(24px);
+  filter: blur(24px);
 }
 
 .breathing-users-panel__header {
@@ -571,23 +472,12 @@
 
   border-radius: 50%;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 10%,
-      transparent
-    );
+  background: color-mix(in srgb, var(--breathing-primary) 10%, transparent);
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 32%,
-      transparent
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 32%, transparent);
 }
 
 .breathing-users-panel__header span {
@@ -621,8 +511,7 @@
 
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 8px;
 
@@ -643,18 +532,13 @@
 
   gap: 9px;
 
-  padding:
-    5px
-    9px;
+  padding: 5px 9px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 
   color: #aebbd2;
 
-  background:
-    rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.025);
 
   text-align: left;
 
@@ -669,19 +553,13 @@
 .breathing-user:hover {
   color: #ffffff;
 
-  border-color:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 32%,
-      transparent
-    );
+  border-color: color-mix(in srgb, var(--breathing-primary) 32%, transparent);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 7%,
-      rgba(255, 255, 255, 0.02)
-    );
+  background: color-mix(
+    in srgb,
+    var(--breathing-primary) 7%,
+    rgba(255, 255, 255, 0.02)
+  );
 }
 
 .breathing-user__avatar {
@@ -698,11 +576,9 @@
 
   border-radius: 50%;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
-  background:
-    rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .breathing-user__avatar img {
@@ -784,21 +660,11 @@
 
   border-radius: 50%;
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 24%,
-      transparent
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 24%, transparent);
 
-  box-shadow:
-    0 0 80px
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 10%,
-      transparent
-    );
+  box-shadow: 0 0 80px
+    color-mix(in srgb, var(--breathing-primary) 10%, transparent);
 }
 
 .breathing-visual__middle-ring {
@@ -809,19 +675,10 @@
 
   border-radius: 50%;
 
-  border:
-    1px dashed
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 35%,
-      transparent
-    );
+  border: 1px dashed
+    color-mix(in srgb, var(--breathing-primary) 35%, transparent);
 
-  animation:
-    breathing-spin
-    28s
-    linear
-    infinite;
+  animation: breathing-spin 28s linear infinite;
 }
 
 .breathing-visual__core {
@@ -838,38 +695,18 @@
 
   border-radius: 50%;
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 34%,
-      transparent
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 34%, transparent);
 
-  background:
-    radial-gradient(
-      circle,
-      color-mix(
-        in srgb,
-        var(--breathing-primary) 16%,
-        rgba(8, 14, 31, 0.84)
-      ),
-      rgba(8, 14, 31, 0.9)
-    );
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--breathing-primary) 16%, rgba(8, 14, 31, 0.84)),
+    rgba(8, 14, 31, 0.9)
+  );
 
   box-shadow:
-    inset 0 0 45px
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 9%,
-      transparent
-    ),
-    0 0 55px
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 13%,
-      transparent
-    );
+    inset 0 0 45px color-mix(in srgb, var(--breathing-primary) 9%, transparent),
+    0 0 55px color-mix(in srgb, var(--breathing-primary) 13%, transparent);
 }
 
 .breathing-visual__core-glow {
@@ -880,15 +717,9 @@
 
   border-radius: 50%;
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 20%,
-      transparent
-    );
+  background: color-mix(in srgb, var(--breathing-primary) 20%, transparent);
 
-  filter:
-    blur(45px);
+  filter: blur(45px);
 }
 
 .breathing-visual__image {
@@ -913,18 +744,11 @@
 
   z-index: 2;
 
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
-  filter:
-    drop-shadow(
-      0 0 18px
-      color-mix(
-        in srgb,
-        var(--breathing-primary) 45%,
-        transparent
-      )
-    );
+  filter: drop-shadow(
+    0 0 18px color-mix(in srgb, var(--breathing-primary) 45%, transparent)
+  );
 }
 
 .breathing-visual__orbit {
@@ -932,16 +756,10 @@
 
   border-radius: 50%;
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 18%,
-      transparent
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 18%, transparent);
 
-  transform:
-    rotate(58deg);
+  transform: rotate(58deg);
 }
 
 .breathing-visual__orbit--one {
@@ -953,8 +771,7 @@
   width: 445px;
   height: 180px;
 
-  transform:
-    rotate(-46deg);
+  transform: rotate(-46deg);
 }
 
 .breathing-visual__label {
@@ -993,13 +810,11 @@
 
 @keyframes breathing-spin {
   from {
-    transform:
-      rotate(0deg);
+    transform: rotate(0deg);
   }
 
   to {
-    transform:
-      rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
@@ -1047,18 +862,13 @@
 
   gap: 10px;
 
-  padding:
-    0
-    11px;
+  padding: 0 11px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 
   color: #aebbd2;
 
-  background:
-    rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.025);
 
   text-align: left;
 
@@ -1072,29 +882,21 @@
 }
 
 .style-technique:hover {
-  transform:
-    translateX(3px);
+  transform: translateX(3px);
 
   color: #ffffff;
 
-  border-color:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 34%,
-      transparent
-    );
+  border-color: color-mix(in srgb, var(--breathing-primary) 34%, transparent);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 7%,
-      rgba(255, 255, 255, 0.02)
-    );
+  background: color-mix(
+    in srgb,
+    var(--breathing-primary) 7%,
+    rgba(255, 255, 255, 0.02)
+  );
 }
 
 .style-technique__number {
-  color:
-    var(--breathing-primary);
+  color: var(--breathing-primary);
 
   font-size: 8px;
 
@@ -1167,26 +969,14 @@
 
   gap: 9px;
 
-  padding:
-    0
-    11px;
+  padding: 0 11px;
 
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 17%,
-      rgba(255, 255, 255, 0.04)
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--breathing-primary) 17%, rgba(255, 255, 255, 0.04));
 
   color: #c4cde0;
 
-  background:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 5%,
-      transparent
-    );
+  background: color-mix(in srgb, var(--breathing-primary) 5%, transparent);
 
   font-size: 9px;
 
@@ -1204,12 +994,7 @@
 .breathing-origin:hover {
   color: #ffffff;
 
-  border-color:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 40%,
-      transparent
-    );
+  border-color: color-mix(in srgb, var(--breathing-primary) 40%, transparent);
 }
 
 .breathing-origin--root {
@@ -1233,18 +1018,13 @@
 
   gap: 7px;
 
-  padding:
-    0
-    10px;
+  padding: 0 10px;
 
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 
   color: #9cabc3;
 
-  background:
-    rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.025);
 
   font-size: 8px;
 
@@ -1256,12 +1036,7 @@
 .breathing-derived-list button:hover {
   color: #ffffff;
 
-  border-color:
-    color-mix(
-      in srgb,
-      var(--breathing-primary) 35%,
-      transparent
-    );
+  border-color: color-mix(in srgb, var(--breathing-primary) 35%, transparent);
 }
 
 /* =========================================
@@ -1288,8 +1063,7 @@
 
   color: #bec9df;
 
-  background:
-    rgba(255, 255, 255, 0.018);
+  background: rgba(255, 255, 255, 0.018);
 
   cursor: pointer;
 
@@ -1301,8 +1075,7 @@
 .breathing-nav:hover {
   color: #ffffff;
 
-  background:
-    rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .breathing-nav--left {
@@ -1323,14 +1096,11 @@
       minmax(420px, 1fr)
       minmax(350px, 0.8fr);
 
-    padding:
-      40px
-      42px;
+    padding: 40px 42px;
   }
 
   .breathing-details {
-    grid-column:
-      1 / -1;
+    grid-column: 1 / -1;
 
     display: grid;
 
@@ -1344,8 +1114,7 @@
   .breathing-details__techniques {
     display: grid;
 
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .breathing-details__lineage {
@@ -1361,14 +1130,11 @@
 
     gap: 12px;
 
-    padding:
-      16px
-      24px;
+    padding: 16px 24px;
   }
 
   .breathing-selector__styles {
-    justify-content:
-      flex-start;
+    justify-content: flex-start;
 
     overflow-x: auto;
   }
@@ -1376,10 +1142,7 @@
   .breathing-showcase__main {
     grid-template-columns: 1fr;
 
-    padding:
-      30px
-      26px
-      50px;
+    padding: 30px 26px 50px;
   }
 
   .breathing-visual {
@@ -1446,5 +1209,134 @@
 
   .breathing-visual__label {
     bottom: 24px;
+  }
+}
+
+/* =========================================
+   SEARCHABLE BREATHING STYLE DROPDOWN
+========================================= */
+
+.breathing-selector {
+  position: relative;
+  z-index: 20;
+}
+
+.breathing-dropdown {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 360px);
+  min-width: 0;
+}
+
+.breathing-dropdown__trigger {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fff;
+  background: #192441;
+  border: 1px solid #354363;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.breathing-dropdown__trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breathing-dropdown__trigger svg {
+  flex-shrink: 0;
+  color: var(--breathing-primary);
+}
+
+.breathing-dropdown__trigger:focus-visible,
+.breathing-dropdown__option:focus-visible {
+  outline: 2px solid var(--breathing-primary);
+  outline-offset: 2px;
+}
+
+.breathing-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+  z-index: 100;
+  background: #131d37;
+  border: 1px solid #354363;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.breathing-dropdown__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  color: var(--breathing-primary);
+  border-bottom: 1px solid #354363;
+}
+
+.breathing-dropdown__search svg {
+  flex-shrink: 0;
+}
+
+.breathing-dropdown__search input {
+  min-width: 0;
+  width: 100%;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 12px;
+}
+
+.breathing-dropdown__search input::placeholder {
+  color: #8295bd;
+}
+
+.breathing-dropdown__options {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.breathing-dropdown__option {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  color: #a3b4d4;
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.breathing-dropdown__option:hover,
+.breathing-dropdown__option.active {
+  color: #fff;
+  background: #263d65;
+}
+
+.breathing-dropdown__empty {
+  margin: 0;
+  padding: 14px 18px;
+  color: #8295bd;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .breathing-dropdown {
+    justify-self: stretch;
+    width: 100%;
   }
 }
