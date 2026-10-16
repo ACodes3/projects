@@ -1,0 +1,55 @@
+[
+  {
+    "id": "destructive-death",
+    "name": "Destructive Death",
+    "type": "blood-demon-art",
+    "userId": "akaza",
+    "abilityIds": [
+      "compass-needle",
+      "air-type",
+      "disorder",
+      "annihilation-type",
+      "blue-silver-chaotic-afterglow"
+    ],
+    "description": "Akaza's martial-arts-based Blood Demon Art. It enhances his close-range combat with destructive shockwaves and powerful attacks.",
+    "theme": {
+      "primary": "#ec4899",
+      "secondary": "#2563eb"
+    },
+    "image": "/images/blood-arts/destructive-death.png"
+  },
+  {
+    "id": "cryokinesis",
+    "name": "Cryokinesis",
+    "type": "blood-demon-art",
+    "userId": "doma",
+    "abilityIds": [
+      "frozen-lotuses",
+      "barren-hanging-garden",
+      "freezing-clouds",
+      "cold-white-princesses",
+      "rime-water-lily-bodhisattva"
+    ],
+    "description": "Doma's Blood Demon Art allows him to create and manipulate extremely cold ice through his blood and flesh.",
+    "theme": {
+      "primary": "#67e8f9",
+      "secondary": "#a78bfa"
+    },
+    "image": "/images/blood-arts/cryokinesis.png"
+  },
+  {
+    "id": "exploding-blood",
+    "name": "Exploding Blood",
+    "type": "blood-demon-art",
+    "userId": "nezuko-kamado",
+    "abilityIds": [
+      "exploding-blood-ignition"
+    ],
+    "description": "Nezuko can ignite her blood into supernatural flames that are especially effective against demons and demonic abilities.",
+    "theme": {
+      "primary": "#fb7185",
+      "secondary": "#be123c"
+    },
+    "image": "/images/blood-arts/exploding-blood.png"
+  }
+]
