@@ -1,37 +1,85 @@
 import axios from "axios";
 
-const DATA_PATHS = {
-  slayers: "/data/slayers.json",
-  demons: "/data/demons.json",
-  breathingStyles: "/data/breathingStyles.json",
-  bloodDemonArts: "/data/bloodDemonArts.json",
-  techniques: "/data/techniques.json"
+const api = axios.create({
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api",
+});
+
+// ==========================================
+// CONVERT API DATA TO FRONTEND FORMAT
+// ==========================================
+
+const toCamelCase = (key) => {
+  return key.replace(
+    /_([a-z])/g,
+    (_, letter) => letter.toUpperCase()
+  );
 };
 
+const normalizeData = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(normalizeData);
+  }
+
+  if (
+    value !== null &&
+    typeof value === "object"
+  ) {
+    return Object.fromEntries(
+      Object.entries(value).map(
+        ([key, item]) => [
+          toCamelCase(key),
+          normalizeData(item),
+        ]
+      )
+    );
+  }
+
+  return value;
+};
+
+// ==========================================
+// COLLECTION REQUEST
+// ==========================================
+
+const getCollection = async (endpoint) => {
+  const response = await api.get(endpoint, {
+    params: {
+      limit: 100,
+    },
+  });
+
+  return normalizeData(response.data.data);
+};
+
+// ==========================================
+// COLLECTIONS
+// ==========================================
+
 export const getSlayers = async () => {
-  const response = await axios.get(DATA_PATHS.slayers);
-  return response.data;
+  return getCollection("/slayers");
 };
 
 export const getDemons = async () => {
-  const response = await axios.get(DATA_PATHS.demons);
-  return response.data;
+  return getCollection("/demons");
 };
 
 export const getBreathingStyles = async () => {
-  const response = await axios.get(DATA_PATHS.breathingStyles);
-  return response.data;
+  return getCollection("/breathing-styles");
 };
 
 export const getBloodDemonArts = async () => {
-  const response = await axios.get(DATA_PATHS.bloodDemonArts);
-  return response.data;
+  return getCollection("/blood-demon-arts");
 };
 
 export const getTechniques = async () => {
-  const response = await axios.get(DATA_PATHS.techniques);
-  return response.data;
+  return getCollection("/techniques");
 };
+
+// ==========================================
+// ALL DATA
+// ==========================================
 
 export const getAllData = async () => {
   const [
@@ -39,13 +87,13 @@ export const getAllData = async () => {
     demons,
     breathingStyles,
     bloodDemonArts,
-    techniques
+    techniques,
   ] = await Promise.all([
     getSlayers(),
     getDemons(),
     getBreathingStyles(),
     getBloodDemonArts(),
-    getTechniques()
+    getTechniques(),
   ]);
 
   return {
@@ -53,36 +101,50 @@ export const getAllData = async () => {
     demons,
     breathingStyles,
     bloodDemonArts,
-    techniques
+    techniques,
   };
 };
 
-export const getSlayerById = async (id) => {
-  const slayers = await getSlayers();
+// ==========================================
+// GET ONE BY ID
+// ==========================================
 
-  return slayers.find((slayer) => slayer.id === id) || null;
+const getById = async (endpoint, id) => {
+  try {
+    const response = await api.get(
+      `${endpoint}/${id}`
+    );
+
+    return normalizeData(response.data);
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
+};
+
+export const getSlayerById = async (id) => {
+  return getById("/slayers", id);
 };
 
 export const getDemonById = async (id) => {
-  const demons = await getDemons();
-
-  return demons.find((demon) => demon.id === id) || null;
+  return getById("/demons", id);
 };
 
-export const getBreathingStyleById = async (id) => {
-  const styles = await getBreathingStyles();
-
-  return styles.find((style) => style.id === id) || null;
+export const getBreathingStyleById = async (
+  id
+) => {
+  return getById("/breathing-styles", id);
 };
 
-export const getBloodDemonArtById = async (id) => {
-  const arts = await getBloodDemonArts();
-
-  return arts.find((art) => art.id === id) || null;
+export const getBloodDemonArtById = async (
+  id
+) => {
+  return getById("/blood-demon-arts", id);
 };
 
 export const getTechniqueById = async (id) => {
-  const techniques = await getTechniques();
-
-  return techniques.find((technique) => technique.id === id) || null;
+  return getById("/techniques", id);
 };
