@@ -59,11 +59,4 @@ CREATE TABLE IF NOT EXISTS techniques (
   description TEXT NOT NULL DEFAULT ''
 );
 
-
-CREATE UNIQUE INDEX uq_users_username_lower
-ON users (LOWER(username));
-
-CREATE UNIQUE INDEX uq_users_email_lower
-ON users (LOWER(email));
-
 COMMIT;
