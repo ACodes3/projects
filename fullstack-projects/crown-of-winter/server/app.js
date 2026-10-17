@@ -10,6 +10,7 @@ import authRoutes from "./src/routes/authRoutes.js";
 import worldRoutes from "./src/routes/worldRoutes.js";
 import invitationRoutes from "./src/routes/invitationRoutes.js";
 import characterRoutes from "./src/routes/characterRoutes.js";
+import accessRoutes from "./src/routes/accessRoutes.js";
 
 const app = express();
 
@@ -64,6 +65,12 @@ app.use("/api", invitationRoutes);
 // -----------------------------------------
 
 app.use("/api/worlds", characterRoutes);
+
+// -----------------------------------------
+// Character-based authorization
+// -----------------------------------------
+
+app.use("/api/worlds", accessRoutes);
 
 // -----------------------------------------
 // Handle unknown routes
