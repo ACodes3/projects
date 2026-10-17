@@ -9,10 +9,14 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./src/routes/authRoutes.js";
 import worldRoutes from "./src/routes/worldRoutes.js";
 import invitationRoutes from "./src/routes/invitationRoutes.js";
+import characterRoutes from "./src/routes/characterRoutes.js";
 
 const app = express();
 
+// -----------------------------------------
 // Security middleware
+// -----------------------------------------
+
 app.use(helmet());
 
 app.use(
@@ -25,7 +29,10 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
+// -----------------------------------------
 // Health check
+// -----------------------------------------
+
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
     success: true,
@@ -34,12 +41,34 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// API routes
+// -----------------------------------------
+// Authentication routes
+// -----------------------------------------
+
 app.use("/api/auth", authRoutes);
+
+// -----------------------------------------
+// World routes
+// -----------------------------------------
+
 app.use("/api/worlds", worldRoutes);
+
+// -----------------------------------------
+// Imperial invitations
+// -----------------------------------------
+
 app.use("/api", invitationRoutes);
 
-// Unknown routes
+// -----------------------------------------
+// Character assignments
+// -----------------------------------------
+
+app.use("/api/worlds", characterRoutes);
+
+// -----------------------------------------
+// Handle unknown routes
+// -----------------------------------------
+
 app.use((req, res) => {
   return res.status(404).json({
     success: false,
@@ -47,7 +76,10 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// -----------------------------------------
+// Centralized error handler
+// -----------------------------------------
+
 app.use((error, req, res, next) => {
   console.error("Unhandled API error:", error);
 
