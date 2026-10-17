@@ -36,14 +36,16 @@ const createdUserIds = new Set();
 const createdWorldIds = new Set();
 
 let databaseVerified = false;
+
 let founderAgent;
 let outsiderAgent;
+
 let founderId;
 let worldId;
 let tsaritsaId;
 
 // -----------------------------------------
-// Database safety
+// Verify test database
 // -----------------------------------------
 
 async function verifyTestDatabase() {
@@ -68,7 +70,7 @@ async function verifyTestDatabase() {
 }
 
 // -----------------------------------------
-// Test helpers
+// Helpers
 // -----------------------------------------
 
 async function registerTestUser(account) {
@@ -78,10 +80,11 @@ async function registerTestUser(account) {
 
   expect(response.status).toBe(201);
 
-  const id = response.body.data.user.id;
-  createdUserIds.add(id);
+  const userId = response.body.data.user.id;
 
-  return id;
+  createdUserIds.add(userId);
+
+  return userId;
 }
 
 async function loginTestUser(account) {
@@ -107,12 +110,12 @@ beforeAll(async () => {
   await verifyTestDatabase();
 
   founderId = await registerTestUser(founderAccount);
+
   await registerTestUser(outsiderAccount);
 
   founderAgent = await loginTestUser(founderAccount);
   outsiderAgent = await loginTestUser(outsiderAccount);
 
-  // Create our main test world.
   const response = await founderAgent
     .post("/api/worlds")
     .send({
@@ -138,20 +141,47 @@ afterAll(async () => {
   await verifyTestDatabase();
 
   // Delete only worlds created by this test file.
-  // World-related records are removed via cascades.
+  // Sovereign cleanup is permitted within this
+  // transaction by the test-only trigger setting.
   if (createdWorldIds.size > 0) {
-    await pool.query(
-      `
-      DELETE FROM worlds
-      WHERE id = ANY($1::uuid[])
-        AND created_by = $2
-      `,
-      [[...createdWorldIds], founderId]
-    );
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `
+        SELECT set_config(
+          'crown.world_deletion',
+          'authorized',
+          true
+        )
+        `
+      );
+
+      await client.query(
+        `
+        DELETE FROM worlds
+        WHERE id = ANY($1::uuid[])
+          AND created_by = $2
+        `,
+        [[...createdWorldIds], founderId]
+      );
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
-  // Delete only test-created user accounts.
+  // Delete only accounts created by this suite.
+  // Associated sessions are removed by cascades.
   if (createdUserIds.size > 0) {
+    await verifyTestDatabase();
+
     await pool.query(
       `
       DELETE FROM users
@@ -167,7 +197,6 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("World & Sovereign Integration", () => {
-
   it("creates a world successfully", async () => {
     const result = await pool.query(
       `
@@ -293,6 +322,7 @@ describe("World & Sovereign Integration", () => {
     expect(response.status).toBe(201);
 
     const secondWorld = response.body.data.world;
+
     createdWorldIds.add(secondWorld.id);
 
     expect(secondWorld.id).not.toBe(worldId);
@@ -301,7 +331,8 @@ describe("World & Sovereign Integration", () => {
   });
 
   it("lists worlds belonging to the founder", async () => {
-    const response = await founderAgent.get("/api/worlds");
+    const response = await founderAgent
+      .get("/api/worlds");
 
     expect(response.status).toBe(200);
 
@@ -338,5 +369,4 @@ describe("World & Sovereign Integration", () => {
 
     expect(invalidMode.status).toBe(400);
   });
-
 });

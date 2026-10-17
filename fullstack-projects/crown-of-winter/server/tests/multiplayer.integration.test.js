@@ -49,6 +49,7 @@ let outsiderAgent;
 
 let sovereignUserId;
 let friendUserId;
+
 let worldId;
 let membershipId;
 let dottoreCharacterId;
@@ -91,6 +92,7 @@ async function registerTestUser(account) {
   expect(response.status).toBe(201);
 
   const userId = response.body.data.user.id;
+
   createdUserIds.add(userId);
 
   return userId;
@@ -140,17 +142,18 @@ beforeAll(async () => {
     outsiderAccount
   );
 
-  // Create a multiplayer world.
-  const worldResponse = await sovereignAgent
+  // Create the multiplayer world.
+  const response = await sovereignAgent
     .post("/api/worlds")
     .send({
       name: "Imperial Multiplayer Test",
       mode: "multiplayer",
     });
 
-  expect(worldResponse.status).toBe(201);
+  expect(response.status).toBe(201);
 
-  worldId = worldResponse.body.data.world.id;
+  worldId = response.body.data.world.id;
+
   createdWorldIds.add(worldId);
 
   // Find Dottore's character definition.
@@ -178,19 +181,46 @@ afterAll(async () => {
   await verifyTestDatabase();
 
   // Delete only worlds created by this suite.
+  // The transaction-local setting allows the
+  // test-only world cleanup to proceed.
   if (createdWorldIds.size > 0) {
-    await pool.query(
-      `
-      DELETE FROM worlds
-      WHERE id = ANY($1::uuid[])
-        AND created_by = $2
-      `,
-      [[...createdWorldIds], sovereignUserId]
-    );
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `
+        SELECT set_config(
+          'crown.world_deletion',
+          'authorized',
+          true
+        )
+        `
+      );
+
+      await client.query(
+        `
+        DELETE FROM worlds
+        WHERE id = ANY($1::uuid[])
+          AND created_by = $2
+        `,
+        [[...createdWorldIds], sovereignUserId]
+      );
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
-  // Delete only accounts created by this suite.
+  // Remove only accounts created by this suite.
   if (createdUserIds.size > 0) {
+    await verifyTestDatabase();
+
     await pool.query(
       `
       DELETE FROM users
@@ -206,11 +236,9 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("Multiplayer Integration", () => {
-
   it("creates a world with the Tsaritsa", async () => {
-    const response = await sovereignAgent.get(
-      `/api/worlds/${worldId}/me/permissions`
-    );
+    const response = await sovereignAgent
+      .get(`/api/worlds/${worldId}/me/permissions`);
 
     expect(response.status).toBe(200);
 
@@ -266,8 +294,7 @@ describe("Multiplayer Integration", () => {
 
     expect(response.status).toBe(200);
 
-    const invitations =
-      response.body.data.invitations;
+    const invitations = response.body.data.invitations;
 
     expect(
       invitations.some(
@@ -290,6 +317,7 @@ describe("Multiplayer Integration", () => {
       .post(`/api/invitations/${membershipId}/accept`);
 
     expect(response.status).toBe(200);
+
     expect(response.body.data.membership.status)
       .toBe("active");
 
@@ -308,7 +336,7 @@ describe("Multiplayer Integration", () => {
     expect(result.rows[0].status).toBe("active");
   });
 
-  it("denies sovereign access to a player without a character", async () => {
+  it("denies sovereign access without a character", async () => {
     const response = await friendAgent
       .get(`/api/worlds/${worldId}/sovereign/verify`);
 
@@ -418,8 +446,7 @@ describe("Multiplayer Integration", () => {
 
     expect(response.status).toBe(200);
 
-    const { character, permissions } =
-      response.body.data;
+    const { character, permissions } = response.body.data;
 
     expect(character.slug).toBe("dottore");
     expect(character.isSovereign).toBe(false);
@@ -436,7 +463,9 @@ describe("Multiplayer Integration", () => {
     expect(permissions).toContain("operations.view");
 
     expect(permissions).not.toContain("roles.assign");
-    expect(permissions).not.toContain("world.members.invite");
+    expect(permissions).not.toContain(
+      "world.members.invite"
+    );
   });
 
   it("denies Dottore Sovereign-only access", async () => {
@@ -444,6 +473,7 @@ describe("Multiplayer Integration", () => {
       .get(`/api/worlds/${worldId}/sovereign/verify`);
 
     expect(response.status).toBe(403);
+
     expect(response.body.message)
       .toBe("Sovereign authority required.");
   });
@@ -462,5 +492,4 @@ describe("Multiplayer Integration", () => {
 
     expect(response.status).toBe(404);
   });
-
 });
