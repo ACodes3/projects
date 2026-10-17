@@ -226,4 +226,12 @@ CREATE INDEX idx_audit_logs_user_created
 CREATE INDEX idx_audit_logs_action
     ON audit_logs(action);
 
+    
+CREATE UNIQUE INDEX uq_users_username_lower
+ON users (LOWER(username));
+
+CREATE UNIQUE INDEX uq_users_email_lower
+ON users (LOWER(email));
+
+
 COMMIT;
