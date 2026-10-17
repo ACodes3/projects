@@ -1,4 +1,3 @@
-
 import {
   describe,
   it,
@@ -12,6 +11,11 @@ import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
+
+import {
+  getAdminPool,
+  verifyAdminDatabase,
+} from "./helpers/adminPool.js";
 
 import {
   getWorldAuditLogs,
@@ -245,15 +249,19 @@ afterAll(async () => {
   if (!databaseVerified) return;
 
   await verifyTestDatabase();
+  await verifyAdminDatabase();
+
+  const admin = getAdminPool();
 
   if (createdWorldIds.size > 0) {
-    const client = await pool.connect();
+    const client = await admin.connect();
 
     try {
       await client.query("BEGIN");
 
-      // Temporary test-only cleanup bypass.
-      // Not suitable for production authorization.
+      // Temporary test cleanup bypass.
+      // This is not a secure authorization mechanism;
+      // it must be replaced in the database triggers.
       await client.query(
         `
         SELECT set_config(
@@ -270,10 +278,7 @@ afterAll(async () => {
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [
-          [...createdWorldIds],
-          founderId,
-        ]
+        [[...createdWorldIds], founderId]
       );
 
       await client.query("COMMIT");
@@ -286,9 +291,7 @@ afterAll(async () => {
   }
 
   if (createdUserIds.size > 0) {
-    await verifyTestDatabase();
-
-    await pool.query(
+    await admin.query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])

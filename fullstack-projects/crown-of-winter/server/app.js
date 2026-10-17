@@ -11,6 +11,11 @@ import worldRoutes from "./src/routes/worldRoutes.js";
 import invitationRoutes from "./src/routes/invitationRoutes.js";
 import characterRoutes from "./src/routes/characterRoutes.js";
 import accessRoutes from "./src/routes/accessRoutes.js";
+import auditRoutes from "./src/routes/auditRoutes.js";
+
+import {
+  csrfProtection,
+} from "./src/middleware/csrfProtection.js";
 
 const app = express();
 
@@ -29,6 +34,18 @@ app.use(
 
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
+
+// -----------------------------------------
+// CSRF Origin Protection
+// -----------------------------------------
+// Checks POST, PUT, PATCH and DELETE requests.
+//
+// Our React frontend must send requests from
+// the origin configured in CLIENT_URL.
+//
+// GET, HEAD and OPTIONS requests are unaffected.
+
+app.use("/api", csrfProtection);
 
 // -----------------------------------------
 // Health check
@@ -71,6 +88,12 @@ app.use("/api/worlds", characterRoutes);
 // -----------------------------------------
 
 app.use("/api/worlds", accessRoutes);
+
+// -----------------------------------------
+// Imperial audit history
+// -----------------------------------------
+
+app.use("/api/worlds", auditRoutes);
 
 // -----------------------------------------
 // Handle unknown routes

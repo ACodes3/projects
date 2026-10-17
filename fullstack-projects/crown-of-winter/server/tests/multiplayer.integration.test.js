@@ -1,4 +1,3 @@
-
 import {
   describe,
   it,
@@ -12,6 +11,7 @@ import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
@@ -180,15 +180,19 @@ afterAll(async () => {
 
   await verifyTestDatabase();
 
+  // All destructive cleanup uses the separate admin connection.
+  await verifyAdminDatabase();
+  const admin = getAdminPool();
+
   // Delete only worlds created by this suite.
-  // The transaction-local setting allows the
-  // test-only world cleanup to proceed.
   if (createdWorldIds.size > 0) {
-    const client = await pool.connect();
+    const client = await admin.connect();
 
     try {
       await client.query("BEGIN");
 
+      // Temporary test-only bypass used by the existing
+      // Sovereign triggers. We will remove this separately.
       await client.query(
         `
         SELECT set_config(
@@ -217,11 +221,11 @@ afterAll(async () => {
     }
   }
 
-  // Remove only accounts created by this suite.
+  // Delete only accounts created by this suite.
   if (createdUserIds.size > 0) {
-    await verifyTestDatabase();
+    await verifyAdminDatabase();
 
-    await pool.query(
+    await admin.query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
