@@ -1,8 +1,9 @@
-
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+
+import authRoutes from "./src/routes/authRoutes.js";
 
 const app = express();
 
@@ -14,7 +15,7 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 // Parse incoming JSON
@@ -31,6 +32,8 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use("/api/auth", authRoutes);
 
 // Handle unknown routes
 app.use((req, res) => {
