@@ -1,5 +1,6 @@
 
 import { Router } from "express";
+
 import { authenticate } from "../middleware/authenticate.js";
 
 import {
@@ -11,13 +12,36 @@ import {
 
 const router = Router();
 
-// All routes require authentication.
-router.use(authenticate);
+// -----------------------------------------
+// World invitations (Sovereign only)
+// -----------------------------------------
 
-router.post("/worlds/:worldId/invitations", invite);
-router.get("/worlds/:worldId/members", members);
+router.post(
+  "/worlds/:worldId/invitations",
+  authenticate,
+  invite
+);
 
-router.get("/invitations", myInvitations);
-router.post("/invitations/:membershipId/accept", accept);
+router.get(
+  "/worlds/:worldId/members",
+  authenticate,
+  members
+);
+
+// -----------------------------------------
+// Player invitations
+// -----------------------------------------
+
+router.get(
+  "/invitations",
+  authenticate,
+  myInvitations
+);
+
+router.post(
+  "/invitations/:membershipId/accept",
+  authenticate,
+  accept
+);
 
 export default router;
