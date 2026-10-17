@@ -1,8 +1,8 @@
 -- Crown of Winter — database schema backup
 -- PostgreSQL 15+
 -- Run on an EMPTY crown-of-winter database.
--- This reproduces the tables and constraints created through Step 2.11.
--- Gameplay and audit-log tables have not been created yet.
+-- This reproduces the tables and constraints created through Step 2.12.
+-- Gameplay tables have not been created yet.
 
 BEGIN;
 
@@ -196,5 +196,34 @@ $$;
 CREATE TRIGGER trg_validate_sovereign_role
 BEFORE INSERT OR UPDATE ON world_character_roles
 FOR EACH ROW EXECUTE FUNCTION validate_sovereign_role();
+
+-- Audit trail for authentication and world administration
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    world_id UUID,
+    user_id UUID,
+    world_character_id UUID,
+    action VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(100),
+    resource_id UUID,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ip_address INET,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_audit_world FOREIGN KEY (world_id)
+        REFERENCES worlds(id) ON DELETE SET NULL,
+    CONSTRAINT fk_audit_user FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_audit_character FOREIGN KEY (world_character_id)
+        REFERENCES world_characters(id) ON DELETE SET NULL,
+    CONSTRAINT chk_audit_action CHECK (LENGTH(TRIM(action)) > 0),
+    CONSTRAINT chk_audit_details_object CHECK (jsonb_typeof(details) = 'object')
+);
+
+CREATE INDEX idx_audit_logs_world_created
+    ON audit_logs(world_id, created_at DESC);
+CREATE INDEX idx_audit_logs_user_created
+    ON audit_logs(user_id, created_at DESC);
+CREATE INDEX idx_audit_logs_action
+    ON audit_logs(action);
 
 COMMIT;
