@@ -1,0 +1,1236 @@
+/* =========================================
+   CROWN OF WINTER — PROJECT: GNOSES
+========================================= */
+
+.gnoses-page {
+  width: 100%;
+  min-height: 100%;
+
+  padding: 22px 28px 32px;
+
+  color: #dceef7;
+
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      rgba(92, 157, 204, 0.08),
+      transparent 31%
+    ),
+    radial-gradient(
+      circle at 74% 18%,
+      rgba(109, 91, 171, 0.045),
+      transparent 27%
+    ),
+    linear-gradient(
+      145deg,
+      #071522,
+      #050f1a 60%,
+      #07131f
+    );
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.gnoses-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 15px;
+  padding-bottom: 14px;
+
+  border-bottom:
+    1px solid rgba(165, 216, 238, 0.13);
+}
+
+.gnoses-page__eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #82b6ca;
+
+  font-size: 8px;
+
+  letter-spacing: 0.22em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-page__header h1 {
+  margin: 0;
+
+  color: #f1f8fc;
+
+  font-size: 27px;
+  font-weight: 400;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-page__header p {
+  max-width: 650px;
+
+  margin: 6px 0 0;
+
+  color: #7894a1;
+
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   PROJECT STATUS
+========================================= */
+
+.gnoses-page__status {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 150px;
+
+  padding: 10px 13px;
+
+  border:
+    1px solid rgba(151, 211, 236, 0.17);
+
+  background:
+    rgba(8, 24, 39, 0.58);
+}
+
+.gnoses-page__status svg {
+  color: #9ce3fb;
+}
+
+.gnoses-page__status > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.gnoses-page__status span {
+  color: #6d91a0;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-page__status strong {
+  color: #e3f5fb;
+
+  font-size: 8px;
+  font-weight: 400;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   SUMMARY
+========================================= */
+
+.gnoses-page__summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.gnoses-page__summary article {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 62px;
+
+  padding: 11px 13px;
+
+  border:
+    1px solid rgba(150, 207, 231, 0.13);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 33, 50, 0.76),
+      rgba(6, 18, 30, 0.86)
+    );
+}
+
+.gnoses-page__summary article > svg {
+  flex-shrink: 0;
+
+  color: #91daf3;
+}
+
+.gnoses-page__summary article > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.gnoses-page__summary span {
+  color: #668897;
+
+  font-size: 6px;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-page__summary strong {
+  color: #e4f3f9;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  letter-spacing: 0.04em;
+}
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.gnoses-page__command {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    315px;
+
+  gap: 12px;
+}
+
+/* =========================================
+   GNOSIS CHAMBER
+========================================= */
+
+.gnoses-chamber {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(9, 27, 43, 0.9),
+      rgba(4, 15, 26, 0.96)
+    );
+}
+
+.gnoses-chamber__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  min-height: 54px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.09);
+}
+
+.gnoses-chamber__header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.gnoses-chamber__header span {
+  color: #628898;
+
+  font-size: 6px;
+
+  letter-spacing: 0.17em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-chamber__header h2 {
+  margin: 0;
+
+  color: #dcecf3;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.gnoses-chamber__header > svg {
+  color: #9adff7;
+}
+
+/* =========================================
+   CHAMBER STAGE
+========================================= */
+
+.gnoses-chamber__stage {
+  position: relative;
+
+  min-height: 555px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(89, 177, 217, 0.13),
+      rgba(45, 86, 128, 0.05) 34%,
+      transparent 57%
+    ),
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(76, 120, 172, 0.11),
+      transparent 48%
+    ),
+    linear-gradient(
+      180deg,
+      #040c15,
+      #02070c
+    );
+}
+
+.gnoses-chamber__stage::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.5),
+      transparent 20%,
+      transparent 80%,
+      rgba(0, 0, 0, 0.5)
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.25),
+      transparent 30%,
+      transparent 76%,
+      rgba(0, 0, 0, 0.35)
+    );
+}
+
+/* =========================================
+   OUTER RING
+========================================= */
+
+.gnoses-chamber__ring {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  width: 420px;
+  height: 420px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border:
+    1px solid rgba(153, 216, 241, 0.16);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 40px rgba(89, 181, 221, 0.05),
+    inset 0 0 40px rgba(97, 188, 227, 0.04);
+}
+
+.gnoses-chamber__ring::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 35px;
+
+  border:
+    1px dashed rgba(149, 210, 235, 0.1);
+
+  border-radius: 50%;
+}
+
+.gnoses-chamber__ring::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 92px;
+
+  border:
+    1px solid rgba(149, 210, 235, 0.08);
+
+  border-radius: 50%;
+}
+
+/* =========================================
+   CENTRAL CORE
+========================================= */
+
+.gnoses-chamber__core {
+  position: absolute;
+
+  z-index: 4;
+
+  top: 50%;
+  left: 50%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 145px;
+  height: 145px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border:
+    1px solid rgba(177, 231, 252, 0.27);
+
+  border-radius: 50%;
+
+  color: #b6ebfc;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(102, 198, 236, 0.15),
+      rgba(14, 44, 65, 0.18) 52%,
+      rgba(5, 17, 28, 0.78) 72%
+    );
+
+  box-shadow:
+    0 0 35px rgba(88, 193, 233, 0.1),
+    inset 0 0 25px rgba(142, 219, 248, 0.05);
+}
+
+.gnoses-chamber__core::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 12px;
+
+  border:
+    1px solid rgba(169, 226, 248, 0.09);
+
+  border-radius: 50%;
+}
+
+.gnoses-chamber__core > span {
+  margin-top: 8px;
+
+  color: #789eae;
+
+  font-size: 6px;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   GNOSIS NODES
+========================================= */
+
+.gnosis-node {
+  position: absolute;
+
+  z-index: 6;
+
+  width: 78px;
+  height: 92px;
+
+  padding: 0;
+
+  transform:
+    translate(-50%, -50%);
+
+  border: 0;
+
+  outline: none;
+
+  background: transparent;
+
+  font-family: inherit;
+
+  cursor: pointer;
+}
+
+/* seven-point placement */
+
+.gnosis-node--1 {
+  left: 50%;
+  top: 14%;
+}
+
+.gnosis-node--2 {
+  left: 76%;
+  top: 28%;
+}
+
+.gnosis-node--3 {
+  left: 82%;
+  top: 59%;
+}
+
+.gnosis-node--4 {
+  left: 65%;
+  top: 82%;
+}
+
+.gnosis-node--5 {
+  left: 35%;
+  top: 82%;
+}
+
+.gnosis-node--6 {
+  left: 18%;
+  top: 59%;
+}
+
+.gnosis-node--7 {
+  left: 24%;
+  top: 28%;
+}
+
+/* =========================================
+   NODE OUTER
+========================================= */
+
+.gnosis-node__outer {
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  display: grid;
+  place-items: center;
+
+  width: 64px;
+  height: 64px;
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+
+  border:
+    1px solid rgba(152, 215, 241, 0.23);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(21, 54, 78, 0.96),
+      rgba(7, 22, 36, 0.98)
+    );
+
+  box-shadow:
+    0 7px 18px rgba(0, 0, 0, 0.4),
+    inset 0 0 13px rgba(119, 208, 243, 0.04);
+
+  transition:
+    transform 0.22s,
+    border-color 0.22s,
+    box-shadow 0.22s,
+    background 0.22s;
+}
+
+/* =========================================
+   NODE INNER
+========================================= */
+
+.gnosis-node__inner {
+  display: grid;
+  place-items: center;
+
+  width: 41px;
+  height: 41px;
+
+  transform:
+    rotate(-45deg);
+
+  border-radius: 50%;
+
+  color: #9de4fb;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(132, 217, 249, 0.2),
+      rgba(64, 128, 158, 0.06) 55%,
+      transparent 72%
+    );
+
+  filter:
+    drop-shadow(
+      0 0 5px rgba(116, 214, 249, 0.23)
+    );
+}
+
+/* =========================================
+   NODE LABEL
+========================================= */
+
+.gnosis-node__label {
+  position: absolute;
+
+  top: 70px;
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  white-space: nowrap;
+
+  color: #648795;
+
+  font-size: 6px;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+
+  transition: color 0.2s;
+}
+
+/* =========================================
+   NODE HOVER
+========================================= */
+
+.gnosis-node:hover .gnosis-node__outer {
+  transform:
+    translateX(-50%)
+    rotate(45deg)
+    scale(1.08);
+
+  border-color:
+    rgba(176, 232, 253, 0.48);
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    0 0 17px rgba(102, 206, 246, 0.09);
+}
+
+.gnosis-node:hover .gnosis-node__label {
+  color: #c3e6f2;
+}
+
+/* =========================================
+   SELECTED NODE
+========================================= */
+
+.gnosis-node--selected .gnosis-node__outer {
+  transform:
+    translateX(-50%)
+    rotate(45deg)
+    scale(1.12);
+
+  border-color:
+    rgba(198, 241, 255, 0.82);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(39, 90, 118, 0.98),
+      rgba(12, 37, 56, 0.98)
+    );
+
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(107, 214, 251, 0.18),
+    inset 0 0 15px rgba(153, 228, 253, 0.06);
+}
+
+.gnosis-node--selected .gnosis-node__inner {
+  color: #e0f9ff;
+
+  filter:
+    drop-shadow(
+      0 0 8px rgba(147, 230, 255, 0.68)
+    );
+}
+
+.gnosis-node--selected .gnosis-node__label {
+  color: #e1f5fb;
+}
+
+/* =========================================
+   DOSSIER
+========================================= */
+
+.gnosis-dossier {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(151, 209, 233, 0.14);
+
+  background:
+    linear-gradient(
+      155deg,
+      rgba(11, 31, 47, 0.94),
+      rgba(5, 16, 27, 0.97)
+    );
+}
+
+/* =========================================
+   DOSSIER HEADER
+========================================= */
+
+.gnosis-dossier__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 58px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.09);
+}
+
+.gnosis-dossier__header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.gnosis-dossier__header span {
+  color: #628898;
+
+  font-size: 6px;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__header h2 {
+  margin: 0;
+
+  color: #e0eff5;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__header > svg {
+  color: #9adcf5;
+}
+
+/* =========================================
+   ARTIFACT DISPLAY
+========================================= */
+
+.gnosis-dossier__artifact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 24px 14px 20px;
+
+  text-align: center;
+
+  border-bottom:
+    1px solid rgba(151, 207, 230, 0.08);
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(91, 177, 215, 0.09),
+      transparent 45%
+    );
+}
+
+.gnosis-dossier__artifact-ring {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 130px;
+  height: 130px;
+
+  border:
+    1px solid rgba(169, 226, 249, 0.21);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 30px rgba(90, 186, 227, 0.06);
+}
+
+.gnosis-dossier__artifact-ring::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 9px;
+
+  border:
+    1px dashed rgba(158, 218, 241, 0.09);
+
+  border-radius: 50%;
+}
+
+.gnosis-dossier__artifact-inner {
+  display: grid;
+  place-items: center;
+
+  width: 88px;
+  height: 88px;
+
+  border:
+    1px solid rgba(164, 223, 247, 0.1);
+
+  border-radius: 50%;
+
+  color: #b6ecfc;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(105, 196, 233, 0.17),
+      rgba(13, 41, 61, 0.13) 60%,
+      transparent 72%
+    );
+
+  filter:
+    drop-shadow(
+      0 0 10px rgba(106, 211, 248, 0.12)
+    );
+}
+
+.gnosis-dossier__artifact > span {
+  margin-top: 14px;
+
+  color: #7295a4;
+
+  font-size: 6px;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__artifact h3 {
+  margin: 5px 0 0;
+
+  color: #eff9fc;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  letter-spacing: 0.07em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__artifact small {
+  margin-top: 4px;
+
+  color: #627f8c;
+
+  font-size: 6px;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+.gnosis-dossier__progress {
+  padding: 15px 14px 0;
+}
+
+.gnosis-dossier__progress > div:first-child {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.gnosis-dossier__progress span {
+  color: #678896;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__progress strong {
+  color: #e7f7fb;
+
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.gnosis-dossier__bar {
+  height: 4px;
+
+  margin-top: 7px;
+
+  overflow: hidden;
+
+  background:
+    rgba(110, 152, 171, 0.14);
+}
+
+.gnosis-dossier__bar > span {
+  display: block;
+
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4c9fc4,
+      #b7efff
+    );
+
+  box-shadow:
+    0 0 8px rgba(111, 210, 249, 0.27);
+}
+
+/* =========================================
+   STATS
+========================================= */
+
+.gnosis-dossier__stats {
+  display: grid;
+
+  gap: 6px;
+
+  padding: 14px 14px 0;
+}
+
+.gnosis-dossier__stats > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 38px;
+
+  padding: 0 9px;
+
+  border:
+    1px solid rgba(141, 198, 221, 0.09);
+
+  background:
+    rgba(5, 18, 30, 0.42);
+}
+
+.gnosis-dossier__stats span {
+  color: #62818f;
+
+  font-size: 6px;
+
+  letter-spacing: 0.11em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__stats strong {
+  color: #d4e8ef;
+
+  font-size: 7px;
+  font-weight: 400;
+
+  letter-spacing: 0.07em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.gnosis-dossier__description {
+  padding: 15px 14px 0;
+}
+
+.gnosis-dossier__description > span {
+  color: #7299a8;
+
+  font-size: 6px;
+
+  letter-spacing: 0.15em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__description p {
+  margin: 7px 0 0;
+
+  color: #758d98;
+
+  font-size: 7px;
+
+  line-height: 1.7;
+}
+
+/* =========================================
+   DIRECTIVE
+========================================= */
+
+.gnosis-dossier__directive {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  margin: 15px 14px 0;
+  padding: 11px;
+
+  border:
+    1px solid rgba(147, 204, 228, 0.1);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 34, 51, 0.55),
+      rgba(5, 18, 30, 0.54)
+    );
+}
+
+.gnosis-dossier__directive > svg {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: #8ed2ea;
+}
+
+.gnosis-dossier__directive > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.gnosis-dossier__directive span {
+  color: #7298a7;
+
+  font-size: 6px;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.gnosis-dossier__directive p {
+  margin: 0;
+
+  color: #748d98;
+
+  font-size: 7px;
+
+  line-height: 1.6;
+}
+
+/* =========================================
+   BUTTON
+========================================= */
+
+.gnosis-dossier__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  min-height: 43px;
+
+  margin-top: auto;
+  padding: 0 14px;
+
+  border: 0;
+  border-top:
+    1px solid rgba(151, 207, 230, 0.09);
+
+  background: transparent;
+
+  color: #84b3c4;
+
+  font-family: inherit;
+
+  font-size: 7px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.gnosis-dossier__button:hover {
+  color: #dcf5ff;
+
+  background:
+    rgba(78, 163, 199, 0.04);
+}
+
+/* =========================================
+   SMALL DESKTOP
+========================================= */
+
+@media (max-width: 1250px) {
+  .gnoses-page {
+    padding: 18px;
+  }
+
+  .gnoses-page__command {
+    grid-template-columns:
+      minmax(0, 1fr)
+      285px;
+  }
+
+  .gnoses-chamber__ring {
+    width: 390px;
+    height: 390px;
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+  .gnoses-page__header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .gnoses-page__summary {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .gnoses-page__command {
+    grid-template-columns: 1fr;
+  }
+
+  .gnoses-chamber__stage {
+    min-height: 520px;
+  }
+
+  .gnosis-dossier__button {
+    margin-top: 18px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .gnoses-page {
+    padding: 12px;
+  }
+
+  .gnoses-page__header h1 {
+    font-size: 22px;
+  }
+
+  .gnoses-page__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .gnoses-chamber__stage {
+    min-height: 430px;
+  }
+
+  .gnoses-chamber__ring {
+    width: 300px;
+    height: 300px;
+  }
+
+  .gnoses-chamber__core {
+    width: 110px;
+    height: 110px;
+  }
+
+  .gnosis-node {
+    width: 58px;
+    height: 72px;
+  }
+
+  .gnosis-node__outer {
+    width: 48px;
+    height: 48px;
+  }
+
+  .gnosis-node__inner {
+    width: 31px;
+    height: 31px;
+  }
+
+  .gnosis-node__inner svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .gnosis-node__label {
+    top: 54px;
+  }
+}
