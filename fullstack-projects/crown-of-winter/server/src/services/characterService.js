@@ -1,5 +1,6 @@
 
 import { pool } from "../db/pool.js";
+import { createAuditLog } from "./auditService.js";
 
 export class CharacterError extends Error {
   constructor(message, status = 400) {
@@ -15,8 +16,10 @@ export function isUuid(value) {
   );
 }
 
-// Verify that the authenticated user controls
-// the Tsaritsa in the requested world.
+// -----------------------------------------
+// Verify Sovereign authority
+// -----------------------------------------
+
 async function requireSovereign(db, worldId, userId) {
   const result = await db.query(
     `
@@ -57,7 +60,7 @@ async function requireSovereign(db, worldId, userId) {
 }
 
 // -----------------------------------------
-// List characters and their assignment status
+// List characters and assignment status
 // -----------------------------------------
 
 export async function getWorldCharacters(worldId, userId) {
@@ -105,7 +108,7 @@ export async function getWorldCharacters(worldId, userId) {
 }
 
 // -----------------------------------------
-// List active assignments
+// List active character assignments
 // -----------------------------------------
 
 export async function getWorldAssignments(worldId, userId) {
@@ -161,7 +164,7 @@ export async function getWorldAssignments(worldId, userId) {
 }
 
 // -----------------------------------------
-// Assign a character and grant initial roles
+// Assign character and initial roles
 // -----------------------------------------
 
 export async function assignCharacter({
@@ -171,6 +174,10 @@ export async function assignCharacter({
   characterId,
   roleCodes,
 }) {
+  // -------------------------------------
+  // 1. Validate input
+  // -------------------------------------
+
   if (
     !isUuid(worldId) ||
     !isUuid(membershipId) ||
@@ -208,7 +215,10 @@ export async function assignCharacter({
   try {
     await client.query("BEGIN");
 
-    // Serialize assignments inside this world.
+    // -------------------------------------
+    // 2. Lock the world
+    // -------------------------------------
+
     const worldResult = await client.query(
       `
       SELECT id
@@ -220,8 +230,15 @@ export async function assignCharacter({
     );
 
     if (worldResult.rowCount === 0) {
-      throw new CharacterError("World not found.", 404);
+      throw new CharacterError(
+        "World not found.",
+        404
+      );
     }
+
+    // -------------------------------------
+    // 3. Verify Sovereign authority
+    // -------------------------------------
 
     const sovereignId = await requireSovereign(
       client,
@@ -229,7 +246,10 @@ export async function assignCharacter({
       actorId
     );
 
-    // Only active members can receive characters.
+    // -------------------------------------
+    // 4. Verify the receiving member
+    // -------------------------------------
+
     const memberResult = await client.query(
       `
       SELECT id, user_id
@@ -248,13 +268,18 @@ export async function assignCharacter({
       );
     }
 
-    // The sovereign's own character is protected.
-    if (memberResult.rows[0].user_id === actorId) {
+    const targetUserId = memberResult.rows[0].user_id;
+
+    if (targetUserId === actorId) {
       throw new CharacterError(
         "The Sovereign's assignment is protected.",
         403
       );
     }
+
+    // -------------------------------------
+    // 5. Verify the character
+    // -------------------------------------
 
     const characterResult = await client.query(
       `
@@ -283,7 +308,10 @@ export async function assignCharacter({
       );
     }
 
-    // Validate every requested role.
+    // -------------------------------------
+    // 6. Validate requested roles
+    // -------------------------------------
+
     const rolesResult = await client.query(
       `
       SELECT id, code
@@ -299,6 +327,10 @@ export async function assignCharacter({
         "One or more roles do not exist."
       );
     }
+
+    // -------------------------------------
+    // 7. Check the member's assignment
+    // -------------------------------------
 
     const existingMemberAssignment = await client.query(
       `
@@ -317,8 +349,10 @@ export async function assignCharacter({
       );
     }
 
-    // Create the character instance if it does not
-    // already exist in this world.
+    // -------------------------------------
+    // 8. Find or create world character
+    // -------------------------------------
+
     const worldCharacterResult = await client.query(
       `
       INSERT INTO world_characters (
@@ -327,7 +361,8 @@ export async function assignCharacter({
       )
       VALUES ($1, $2)
       ON CONFLICT (world_id, character_id)
-      DO UPDATE SET character_id = EXCLUDED.character_id
+      DO UPDATE
+        SET character_id = EXCLUDED.character_id
       RETURNING id
       `,
       [worldId, characterId]
@@ -335,6 +370,10 @@ export async function assignCharacter({
 
     const worldCharacterId =
       worldCharacterResult.rows[0].id;
+
+    // -------------------------------------
+    // 9. Check character availability
+    // -------------------------------------
 
     const existingCharacterAssignment = await client.query(
       `
@@ -353,7 +392,10 @@ export async function assignCharacter({
       );
     }
 
-    // Assign the character to the player.
+    // -------------------------------------
+    // 10. Assign character
+    // -------------------------------------
+
     const assignmentResult = await client.query(
       `
       INSERT INTO character_assignments (
@@ -373,9 +415,19 @@ export async function assignCharacter({
       ]
     );
 
-    // Grant the requested roles to the character.
+    const assignmentId = assignmentResult.rows[0].id;
+
+    // -------------------------------------
+    // 11. Grant requested roles
+    // -------------------------------------
+    // Track only roles actually inserted.
+    // Existing roles are not counted as newly
+    // granted because of ON CONFLICT DO NOTHING.
+
+    const grantedRoles = [];
+
     for (const role of rolesResult.rows) {
-      await client.query(
+      const roleInsertResult = await client.query(
         `
         INSERT INTO world_character_roles (
           world_id,
@@ -386,6 +438,7 @@ export async function assignCharacter({
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (world_character_id, role_id)
         DO NOTHING
+        RETURNING id
         `,
         [
           worldId,
@@ -394,12 +447,73 @@ export async function assignCharacter({
           sovereignId,
         ]
       );
+
+      if (roleInsertResult.rowCount === 1) {
+        grantedRoles.push(role.code);
+      }
     }
+
+    // -------------------------------------
+    // 12. Audit character assignment
+    // -------------------------------------
+
+    await createAuditLog({
+      client,
+      worldId,
+      userId: actorId,
+      worldCharacterId: sovereignId,
+      action: "character.assigned",
+      resourceType: "character_assignment",
+      resourceId: assignmentId,
+      details: {
+        assignment_id: assignmentId,
+        membership_id: membershipId,
+        assigned_user_id: targetUserId,
+        character_id: characterId,
+        world_character_id: worldCharacterId,
+        character_name: character.name,
+        character_slug: character.slug,
+        assigned_by_character_id: sovereignId,
+        requested_roles: uniqueRoles,
+      },
+    });
+
+    // -------------------------------------
+    // 13. Audit newly granted roles
+    // -------------------------------------
+    // Only create this event if a role was
+    // actually added to the world character.
+
+    if (grantedRoles.length > 0) {
+      await createAuditLog({
+        client,
+        worldId,
+        userId: actorId,
+        worldCharacterId: sovereignId,
+        action: "character.roles.assigned",
+        resourceType: "world_character",
+        resourceId: worldCharacterId,
+        details: {
+          assignment_id: assignmentId,
+          membership_id: membershipId,
+          assigned_user_id: targetUserId,
+          character_id: characterId,
+          world_character_id: worldCharacterId,
+          character_slug: character.slug,
+          roles: grantedRoles,
+          assigned_by_character_id: sovereignId,
+        },
+      });
+    }
+
+    // -------------------------------------
+    // 14. Commit all changes
+    // -------------------------------------
 
     await client.query("COMMIT");
 
     return {
-      assignment_id: assignmentResult.rows[0].id,
+      assignment_id: assignmentId,
       assigned_at: assignmentResult.rows[0].assigned_at,
       membership_id: membershipId,
       world_character_id: worldCharacterId,

@@ -1,5 +1,6 @@
 
 import { pool } from "../db/pool.js";
+import { createAuditLog } from "./auditService.js";
 
 // -----------------------------------------
 // Create a new world
@@ -27,24 +28,37 @@ export async function createWorld({ userId, name, mode }) {
   try {
     await client.query("BEGIN");
 
+    // -------------------------------------
     // 1. Create world
+    // -------------------------------------
+
     const worldResult = await client.query(
       `
       INSERT INTO worlds (name, mode, created_by)
       VALUES ($1, $2, $3)
       RETURNING
-        id, name, mode, created_by, created_at
+        id,
+        name,
+        mode,
+        created_by,
+        created_at
       `,
       [cleanName, mode, userId]
     );
 
     const world = worldResult.rows[0];
 
-    // 2. Add founder as an active world member
+    // -------------------------------------
+    // 2. Add founder as an active member
+    // -------------------------------------
+
     const memberResult = await client.query(
       `
       INSERT INTO world_members (
-        world_id, user_id, status, joined_at
+        world_id,
+        user_id,
+        status,
+        joined_at
       )
       VALUES ($1, $2, 'active', NOW())
       RETURNING id
@@ -54,11 +68,15 @@ export async function createWorld({ userId, name, mode }) {
 
     const memberId = memberResult.rows[0].id;
 
+    // -------------------------------------
     // 3. Create the world's unique Tsaritsa
+    // -------------------------------------
+
     const characterResult = await client.query(
       `
       INSERT INTO world_characters (
-        world_id, character_id
+        world_id,
+        character_id
       )
       SELECT $1, id
       FROM characters
@@ -75,7 +93,10 @@ export async function createWorld({ userId, name, mode }) {
 
     const tsaritsaId = characterResult.rows[0].id;
 
+    // -------------------------------------
     // 4. Assign the Tsaritsa to the founder
+    // -------------------------------------
+
     await client.query(
       `
       INSERT INTO character_assignments (
@@ -88,7 +109,10 @@ export async function createWorld({ userId, name, mode }) {
       [world.id, tsaritsaId, memberId]
     );
 
-    // 5. Grant Sovereign role to the Tsaritsa
+    // -------------------------------------
+    // 5. Grant the Sovereign role
+    // -------------------------------------
+
     const roleResult = await client.query(
       `
       INSERT INTO world_character_roles (
@@ -107,6 +131,36 @@ export async function createWorld({ userId, name, mode }) {
     if (roleResult.rowCount !== 1) {
       throw new Error("Sovereign role not found.");
     }
+
+    // -------------------------------------
+    // 6. Record world creation in audit logs
+    // -------------------------------------
+    // Uses the SAME PostgreSQL transaction.
+    //
+    // If the audit insert fails, world creation
+    // also rolls back, preventing an unlogged
+    // world from being created.
+
+    await createAuditLog({
+      client,
+      worldId: world.id,
+      userId,
+      worldCharacterId: tsaritsaId,
+      action: "world.created",
+      resourceType: "world",
+      resourceId: world.id,
+      details: {
+        name: world.name,
+        mode: world.mode,
+        founder_id: userId,
+        sovereign_character: "tsaritsa",
+        sovereign_role: "SOVEREIGN",
+      },
+    });
+
+    // -------------------------------------
+    // 7. Commit transaction
+    // -------------------------------------
 
     await client.query("COMMIT");
 
