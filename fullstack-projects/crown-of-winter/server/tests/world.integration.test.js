@@ -13,6 +13,11 @@ import { randomUUID } from "node:crypto";
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
 
+import {
+  getAdminPool,
+  verifyAdminDatabase,
+} from "./helpers/adminPool.js";
+
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
@@ -132,7 +137,7 @@ beforeAll(async () => {
 });
 
 // -----------------------------------------
-// Cleanup
+// Cleanup using the admin connection
 // -----------------------------------------
 
 afterAll(async () => {
@@ -140,14 +145,27 @@ afterAll(async () => {
 
   await verifyTestDatabase();
 
-  // Delete only worlds created by this test file.
-  // Sovereign cleanup is permitted within this
-  // transaction by the test-only trigger setting.
+  // Verify the actual database used by
+  // the privileged cleanup connection.
+  await verifyAdminDatabase();
+
+  const admin = getAdminPool();
+
+  // -------------------------------------
+  // Delete only worlds created here
+  // -------------------------------------
+
   if (createdWorldIds.size > 0) {
-    const client = await pool.connect();
+    const client = await admin.connect();
 
     try {
       await client.query("BEGIN");
+
+      // Temporary cleanup bypass.
+      // This must be replaced before production.
+      //
+      // Only the test administration connection
+      // uses this setting in this test file.
 
       await client.query(
         `
@@ -165,7 +183,10 @@ afterAll(async () => {
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [[...createdWorldIds], founderId]
+        [
+          [...createdWorldIds],
+          founderId,
+        ]
       );
 
       await client.query("COMMIT");
@@ -177,12 +198,14 @@ afterAll(async () => {
     }
   }
 
-  // Delete only accounts created by this suite.
-  // Associated sessions are removed by cascades.
-  if (createdUserIds.size > 0) {
-    await verifyTestDatabase();
+  // -------------------------------------
+  // Delete only accounts created here
+  // -------------------------------------
 
-    await pool.query(
+  if (createdUserIds.size > 0) {
+    await verifyAdminDatabase();
+
+    await admin.query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
@@ -197,6 +220,7 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("World & Sovereign Integration", () => {
+
   it("creates a world successfully", async () => {
     const result = await pool.query(
       `
@@ -369,4 +393,5 @@ describe("World & Sovereign Integration", () => {
 
     expect(invalidMode.status).toBe(400);
   });
+
 });

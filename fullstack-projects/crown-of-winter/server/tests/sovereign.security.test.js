@@ -1,4 +1,3 @@
-
 import {
   describe,
   it,
@@ -12,6 +11,10 @@ import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
+import {
+  getAdminPool,
+  verifyAdminDatabase,
+} from "./helpers/adminPool.js";
 
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
@@ -245,9 +248,13 @@ afterAll(async () => {
   if (!databaseVerified) return;
 
   await verifyTestDatabase();
+  await verifyAdminDatabase();
 
+  const admin = getAdminPool();
+
+  // Delete only worlds created by this test suite.
   if (createdWorldIds.size > 0) {
-    const client = await pool.connect();
+    const client = await admin.connect();
 
     try {
       await client.query("BEGIN");
@@ -282,10 +289,9 @@ afterAll(async () => {
     }
   }
 
+  // Delete only user accounts created by this suite.
   if (createdUserIds.size > 0) {
-    await verifyTestDatabase();
-
-    await pool.query(
+    await admin.query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
