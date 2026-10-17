@@ -8,13 +8,11 @@ import cookieParser from "cookie-parser";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import worldRoutes from "./src/routes/worldRoutes.js";
+import invitationRoutes from "./src/routes/invitationRoutes.js";
 
 const app = express();
 
-// -----------------------------------------
 // Security middleware
-// -----------------------------------------
-
 app.use(helmet());
 
 app.use(
@@ -24,16 +22,10 @@ app.use(
   })
 );
 
-// Parse JSON request bodies
 app.use(express.json({ limit: "100kb" }));
-
-// Parse cookies
 app.use(cookieParser());
 
-// -----------------------------------------
 // Health check
-// -----------------------------------------
-
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
     success: true,
@@ -42,22 +34,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// -----------------------------------------
-// Authentication routes
-// -----------------------------------------
-
+// API routes
 app.use("/api/auth", authRoutes);
-
-// -----------------------------------------
-// World routes
-// -----------------------------------------
-
 app.use("/api/worlds", worldRoutes);
+app.use("/api", invitationRoutes);
 
-// -----------------------------------------
-// Handle unknown routes
-// -----------------------------------------
-
+// Unknown routes
 app.use((req, res) => {
   return res.status(404).json({
     success: false,
@@ -65,10 +47,7 @@ app.use((req, res) => {
   });
 });
 
-// -----------------------------------------
-// Centralized error handler
-// -----------------------------------------
-
+// Error handler
 app.use((error, req, res, next) => {
   console.error("Unhandled API error:", error);
 
