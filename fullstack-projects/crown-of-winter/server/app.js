@@ -7,13 +7,16 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
 import authRoutes from "./src/routes/authRoutes.js";
+import worldRoutes from "./src/routes/worldRoutes.js";
 
 const app = express();
 
-// Security headers
+// -----------------------------------------
+// Security middleware
+// -----------------------------------------
+
 app.use(helmet());
 
-// CORS configuration
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
@@ -44,6 +47,12 @@ app.get("/api/health", (req, res) => {
 // -----------------------------------------
 
 app.use("/api/auth", authRoutes);
+
+// -----------------------------------------
+// World routes
+// -----------------------------------------
+
+app.use("/api/worlds", worldRoutes);
 
 // -----------------------------------------
 // Handle unknown routes
