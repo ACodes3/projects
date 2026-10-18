@@ -1,0 +1,375 @@
+.start-page {
+  position: relative;
+
+  display: flex;
+  align-items: stretch;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  background:
+    url('/images/forge-start.png')
+    center center / cover
+    no-repeat;
+
+  color: #f2f4f5;
+}
+
+/* =========================================
+   DARK OVERLAY
+========================================= */
+
+.start-page__overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(7, 9, 10, 0.94) 0%,
+      rgba(7, 9, 10, 0.84) 28%,
+      rgba(7, 9, 10, 0.48) 58%,
+      rgba(7, 9, 10, 0.28) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(7, 9, 10, 0.3) 0%,
+      rgba(7, 9, 10, 0.16) 45%,
+      rgba(7, 9, 10, 0.72) 100%
+    );
+}
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.start-page__content {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  padding: 70px 8%;
+}
+
+/* =========================================
+   INTRO
+========================================= */
+
+.start-page__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  width: 100%;
+  max-width: 610px;
+}
+
+/* =========================================
+   EYEBROW
+========================================= */
+
+.start-page__eyebrow {
+  margin-bottom: 18px;
+
+  color: #d9ff77;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================
+   TITLE
+========================================= */
+
+.start-page__title {
+  max-width: 580px;
+
+  margin: 0;
+
+  color: #f3f5f6;
+
+  font-size: clamp(
+    52px,
+    6vw,
+    92px
+  );
+
+  font-weight: 700;
+
+  letter-spacing: -0.055em;
+
+  line-height: 0.96;
+}
+
+.start-page__title span {
+  color: #d9ff77;
+}
+
+/* =========================================
+   LEAD TEXT
+========================================= */
+
+.start-page__lead {
+  max-width: 520px;
+
+  margin: 28px 0 0;
+
+  color: #d7dbdd;
+
+  font-size: 18px;
+  font-weight: 500;
+
+  line-height: 1.55;
+}
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.start-page__description {
+  max-width: 430px;
+
+  margin: 12px 0 0;
+
+  color: #8f979d;
+
+  font-size: 13px;
+
+  line-height: 1.65;
+}
+
+/* =========================================
+   ENTER BUTTON
+========================================= */
+
+.start-page__enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 15px;
+
+  min-height: 54px;
+
+  margin-top: 34px;
+
+  padding: 0 10px 0 22px;
+
+  border:
+    1px solid rgba(
+      217,
+      255,
+      119,
+      0.3
+    );
+
+  border-radius: 8px;
+
+  background:
+    rgba(
+      11,
+      14,
+      15,
+      0.78
+    );
+
+  color: #f2f4f5;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(10px);
+}
+
+.start-page__enter:hover {
+  border-color:
+    rgba(
+      217,
+      255,
+      119,
+      0.6
+    );
+
+  background:
+    rgba(
+      11,
+      14,
+      15,
+      0.92
+    );
+
+  color: #d9ff77;
+}
+
+.start-page__enter:focus-visible {
+  outline:
+    2px solid rgba(
+      217,
+      255,
+      119,
+      0.45
+    );
+
+  outline-offset: 4px;
+}
+
+/* =========================================
+   BUTTON ICON
+========================================= */
+
+.start-page__enter-icon {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+
+  border-radius: 6px;
+
+  background: #d9ff77;
+
+  color: #101214;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 850px) {
+  .start-page {
+    background-position:
+      60% center;
+  }
+
+  .start-page__content {
+    padding:
+      60px
+      32px;
+  }
+
+  .start-page__intro {
+    max-width: 520px;
+  }
+
+  .start-page__lead {
+    font-size: 16px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+  .start-page {
+    background-position:
+      65% center;
+  }
+
+  .start-page__overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(7, 9, 10, 0.46) 0%,
+        rgba(7, 9, 10, 0.58) 42%,
+        rgba(7, 9, 10, 0.95) 100%
+      );
+  }
+
+  .start-page__content {
+    align-items: flex-end;
+
+    padding:
+      40px
+      20px
+      54px;
+  }
+
+  .start-page__title {
+    font-size:
+      clamp(
+        46px,
+        14vw,
+        66px
+      );
+  }
+
+  .start-page__lead {
+    max-width: 420px;
+
+    margin-top: 22px;
+
+    font-size: 15px;
+  }
+
+  .start-page__description {
+    font-size: 12px;
+  }
+
+  .start-page__enter {
+    margin-top: 28px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 430px) {
+  .start-page {
+    background-position:
+      68% center;
+  }
+
+  .start-page__content {
+    padding:
+      32px
+      16px
+      38px;
+  }
+
+  .start-page__eyebrow {
+    margin-bottom: 14px;
+
+    font-size: 10px;
+  }
+
+  .start-page__title {
+    font-size: 44px;
+  }
+
+  .start-page__lead {
+    font-size: 14px;
+  }
+
+  .start-page__enter {
+    width: 100%;
+    max-width: 220px;
+
+    justify-content: space-between;
+  }
+}
