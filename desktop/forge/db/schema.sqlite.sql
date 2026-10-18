@@ -114,8 +114,20 @@ CREATE TABLE exercises (
             equipment IN (
                 'Bodyweight',
                 'Dumbbells',
+                'Barbell',
+                'EZ Bar',
+                'Kettlebell',
+                'Cable',
+                'Machine',
+                'Smith Machine',
                 'Resistance Band',
-                'Mini Band'
+                'Mini Band',
+                'Pull-Up Bar',
+                'Bench',
+                'Medicine Ball',
+                'Suspension Trainer',
+                'Cardio Machine',
+                'Other'
             )
         ),
 
