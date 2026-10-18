@@ -1,4 +1,4 @@
-import pool from "../config/db.js";
+import db from "../config/sqlite.js";
 
 // ============================================================
 // CONSTANTS
@@ -89,320 +89,116 @@ function validateNutritionPayload(body) {
 //
 // Optional:
 // GET /api/nutrition?date=2026-10-11
-// ============================================================
 
-export async function getNutritionEntries(req, res) {
+const columns = `id, entry_date, meal, name, calories, protein_g, carbs_g, fat_g, created_at, updated_at`;
+function values(b) {
+  return [
+    b.date,
+    b.meal,
+    b.name.trim(),
+    Number(b.calories),
+    Number(b.protein),
+    Number(b.carbs),
+    Number(b.fat),
+  ];
+}
+function validId(s) {
+  const n = Number(s);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+function fail(res, error, message) {
+  console.error(message, error);
+  return res.status(500).json({ success: false, message });
+}
+
+export function getNutritionEntries(req, res) {
   try {
-    const userId = req.user.id;
     const { date } = req.query;
-
-    // --------------------------------------------------------
-    // OPTIONAL DATE FILTER
-    // --------------------------------------------------------
-
-    if (date !== undefined && !isValidDateString(date)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date.",
-      });
-    }
-
-    // IMPORTANT:
-    // Return entry_date as YYYY-MM-DD text.
-    // This prevents timezone-related date shifts.
-
-    let query = `
-      SELECT
-        id,
-        entry_date::text AS entry_date,
-        meal,
-        name,
-        calories,
-        protein_g,
-        carbs_g,
-        fat_g,
-        created_at,
-        updated_at
-      FROM public.nutrition_entries
-      WHERE user_id = $1
-    `;
-
-    const values = [userId];
-
-    if (date) {
-      query += `
-        AND entry_date = $2
-      `;
-
-      values.push(date);
-    }
-
-    // --------------------------------------------------------
-    // MEALS FOLLOW FRONTEND ORDER
-    // --------------------------------------------------------
-
-    query += `
-      ORDER BY
-        entry_date DESC,
-
-        CASE meal
-          WHEN 'Breakfast' THEN 1
-          WHEN 'Lunch' THEN 2
-          WHEN 'Snacks' THEN 3
-          WHEN 'Dinner' THEN 4
-          ELSE 5
-        END,
-
-        created_at ASC
-    `;
-
-    const result = await pool.query(query, values);
-
-    return res.status(200).json({
-      success: true,
-      count: result.rows.length,
-      entries: result.rows,
-    });
+    if (date !== undefined && !isValidDateString(date))
+      return res.status(400).json({ success: false, message: "Invalid date." });
+    const sql = `SELECT ${columns} FROM nutrition_entries WHERE user_id = ? ${date ? "AND entry_date = ?" : ""}
+   ORDER BY entry_date DESC, CASE meal WHEN 'Breakfast' THEN 1 WHEN 'Lunch' THEN 2 WHEN 'Snacks' THEN 3 WHEN 'Dinner' THEN 4 ELSE 5 END, created_at ASC`;
+    const entries = db
+      .prepare(sql)
+      .all(...(date ? [req.user.id, date] : [req.user.id]));
+    return res.json({ success: true, count: entries.length, entries });
   } catch (error) {
-    console.error("Failed to fetch nutrition entries:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch nutrition entries.",
-    });
+    return fail(res, error, "Failed to fetch nutrition entries.");
   }
 }
-
-// ============================================================
-// CREATE NUTRITION ENTRY
-//
-// POST /api/nutrition
-// ============================================================
-
-export async function createNutritionEntry(req, res) {
+export function createNutritionEntry(req, res) {
   const validationError = validateNutritionPayload(req.body);
-
-  if (validationError) {
-    return res.status(400).json({
-      success: false,
-      message: validationError,
-    });
-  }
-
+  if (validationError)
+    return res.status(400).json({ success: false, message: validationError });
   try {
-    const userId = req.user.id;
-
-    const { date, meal, name, calories, protein, carbs, fat } = req.body;
-
-    const result = await pool.query(
-      `
-        INSERT INTO public.nutrition_entries (
-          user_id,
-          entry_date,
-          meal,
-          name,
-          calories,
-          protein_g,
-          carbs_g,
-          fat_g
-        )
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8
-        )
-        RETURNING
-          id,
-          entry_date::text AS entry_date,
-          meal,
-          name,
-          calories,
-          protein_g,
-          carbs_g,
-          fat_g,
-          created_at,
-          updated_at
-      `,
-      [
-        userId,
-        date,
-        meal,
-        name.trim(),
-        Number(calories),
-        Number(protein),
-        Number(carbs),
-        Number(fat),
-      ],
-    );
-
-    return res.status(201).json({
-      success: true,
-      message: "Nutrition entry created successfully.",
-      entry: result.rows[0],
-    });
+    const entry = db
+      .prepare(
+        `INSERT INTO nutrition_entries (user_id,entry_date,meal,name,calories,protein_g,carbs_g,fat_g)
+   VALUES (?,?,?,?,?,?,?,?) RETURNING ${columns}`,
+      )
+      .get(req.user.id, ...values(req.body));
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Nutrition entry created successfully.",
+        entry,
+      });
   } catch (error) {
-    console.error("Failed to create nutrition entry:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create nutrition entry.",
-    });
+    return fail(res, error, "Failed to create nutrition entry.");
   }
 }
-
-// ============================================================
-// UPDATE NUTRITION ENTRY
-//
-// PUT /api/nutrition/:id
-// ============================================================
-
-export async function updateNutritionEntry(req, res) {
-  const entryId = Number(req.params.id);
-
-  // ----------------------------------------------------------
-  // VALIDATE ID
-  // ----------------------------------------------------------
-
-  if (!Number.isInteger(entryId) || entryId <= 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid nutrition entry ID.",
-    });
-  }
-
+export function updateNutritionEntry(req, res) {
+  const id = validId(req.params.id);
+  if (!id)
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid nutrition entry ID." });
   const validationError = validateNutritionPayload(req.body);
-
-  if (validationError) {
-    return res.status(400).json({
-      success: false,
-      message: validationError,
-    });
-  }
-
+  if (validationError)
+    return res.status(400).json({ success: false, message: validationError });
   try {
-    const userId = req.user.id;
-
-    const { date, meal, name, calories, protein, carbs, fat } = req.body;
-
-    const result = await pool.query(
-      `
-        UPDATE public.nutrition_entries
-        SET
-          entry_date = $1,
-          meal = $2,
-          name = $3,
-          calories = $4,
-          protein_g = $5,
-          carbs_g = $6,
-          fat_g = $7
-        WHERE id = $8
-          AND user_id = $9
-        RETURNING
-          id,
-          entry_date::text AS entry_date,
-          meal,
-          name,
-          calories,
-          protein_g,
-          carbs_g,
-          fat_g,
-          created_at,
-          updated_at
-      `,
-      [
-        date,
-        meal,
-        name.trim(),
-        Number(calories),
-        Number(protein),
-        Number(carbs),
-        Number(fat),
-        entryId,
-        userId,
-      ],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Nutrition entry not found.",
-      });
-    }
-
-    return res.status(200).json({
+    const entry = db
+      .prepare(
+        `UPDATE nutrition_entries SET entry_date=?,meal=?,name=?,calories=?,protein_g=?,carbs_g=?,fat_g=?
+   WHERE id=? AND user_id=? RETURNING ${columns}`,
+      )
+      .get(...values(req.body), id, req.user.id);
+    if (!entry)
+      return res
+        .status(404)
+        .json({ success: false, message: "Nutrition entry not found." });
+    return res.json({
       success: true,
       message: "Nutrition entry updated successfully.",
-      entry: result.rows[0],
+      entry,
     });
   } catch (error) {
-    console.error("Failed to update nutrition entry:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update nutrition entry.",
-    });
+    return fail(res, error, "Failed to update nutrition entry.");
   }
 }
-
-// ============================================================
-// DELETE NUTRITION ENTRY
-//
-// DELETE /api/nutrition/:id
-// ============================================================
-
-export async function deleteNutritionEntry(req, res) {
+export function deleteNutritionEntry(req, res) {
+  const id = validId(req.params.id);
+  if (!id)
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid nutrition entry ID." });
   try {
-    const userId = req.user.id;
-    const entryId = Number(req.params.id);
-
-    // --------------------------------------------------------
-    // VALIDATE ID
-    // --------------------------------------------------------
-
-    if (!Number.isInteger(entryId) || entryId <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid nutrition entry ID.",
-      });
-    }
-
-    const result = await pool.query(
-      `
-        DELETE FROM public.nutrition_entries
-        WHERE id = $1
-          AND user_id = $2
-        RETURNING
-          id,
-          entry_date::text AS entry_date,
-          meal,
-          name
-      `,
-      [entryId, userId],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Nutrition entry not found.",
-      });
-    }
-
-    return res.status(200).json({
+    const entry = db
+      .prepare(
+        "DELETE FROM nutrition_entries WHERE id=? AND user_id=? RETURNING id, entry_date, meal, name",
+      )
+      .get(id, req.user.id);
+    if (!entry)
+      return res
+        .status(404)
+        .json({ success: false, message: "Nutrition entry not found." });
+    return res.json({
       success: true,
       message: "Nutrition entry deleted successfully.",
-      entry: result.rows[0],
+      entry,
     });
   } catch (error) {
-    console.error("Failed to delete nutrition entry:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to delete nutrition entry.",
-    });
+    return fail(res, error, "Failed to delete nutrition entry.");
   }
 }

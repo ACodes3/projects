@@ -1,46 +1,22 @@
-import pool from '../config/db.js';
 
+import db from '../config/sqlite.js';
 
 // ============================================================
-// SINGLE-USER CONTEXT
-//
-// This version of FORGE intentionally has no authentication.
-//
-// The application uses one seeded database user as the owner
-// of all user-specific data.
-//
-// Every protected route receives:
-//
-// req.user = {
-//   id,
-//   email,
-// }
-//
-// This keeps the controllers structured in a way that could
-// support authentication in a larger future version without
-// changing all database queries.
+// DEVELOPMENT USER — SQLITE
 // ============================================================
 
-export async function devUser(
-  req,
-  res,
-  next,
-) {
+export function devUser(req, res, next) {
   try {
-    const result = await pool.query(
-      `
-        SELECT
-          id,
-          email
-        FROM public.users
-        WHERE email = $1
+    const user = db
+      .prepare(`
+        SELECT id, email
+        FROM users
+        WHERE email = ?
         LIMIT 1
-      `,
-      ['demo@forge.local'],
-    );
+      `)
+      .get('demo@forge.local');
 
-
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(500).json({
         success: false,
         message:
@@ -48,25 +24,18 @@ export async function devUser(
       });
     }
 
-
     req.user = {
-      id: result.rows[0].id,
-      email: result.rows[0].email,
+      id: user.id,
+      email: user.email,
     };
-
 
     next();
   } catch (error) {
-    console.error(
-      'Failed to load FORGE user:',
-      error,
-    );
+    console.error('Failed to load FORGE user:', error);
 
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message:
-        'Failed to load FORGE user.',
+      message: 'Failed to load FORGE user.',
     });
   }
 }
