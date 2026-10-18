@@ -105,4 +105,67 @@ describe("FORGE Exercise API", () => {
 
     expect(response.status).toBe(400);
   });
+
+  // NEW: Verify every supported equipment category.
+  it("accepts all 16 equipment categories", async () => {
+    const equipmentTypes = [
+      "Bodyweight",
+      "Dumbbells",
+      "Barbell",
+      "EZ Bar",
+      "Kettlebell",
+      "Cable",
+      "Machine",
+      "Smith Machine",
+      "Resistance Band",
+      "Mini Band",
+      "Pull-Up Bar",
+      "Bench",
+      "Medicine Ball",
+      "Suspension Trainer",
+      "Cardio Machine",
+      "Other",
+    ];
+
+    const createdIds = [];
+
+    for (const equipment of equipmentTypes) {
+      const response = await request(app)
+        .post("/api/exercises")
+        .send({
+          name: `Test Exercise - ${equipment}`,
+          muscle: "Chest",
+          secondaryMuscles: ["Triceps"],
+          equipment,
+          type: "Compound",
+        });
+
+      expect(
+        response.status,
+        `Failed for equipment: ${equipment}`
+      ).toBe(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.exercise.equipment).toBe(equipment);
+      expect(response.body.exercise.is_active).toBe(true);
+
+      createdIds.push(response.body.exercise.id);
+    }
+
+    expect(new Set(createdIds).size).toBe(16);
+
+    const response = await request(app).get("/api/exercises");
+
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(16);
+    expect(response.body.exercises).toHaveLength(16);
+
+    for (const equipment of equipmentTypes) {
+      expect(
+        response.body.exercises.some(
+          (exercise) => exercise.equipment === equipment
+        )
+      ).toBe(true);
+    }
+  });
 });
