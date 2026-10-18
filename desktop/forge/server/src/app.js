@@ -8,24 +8,19 @@ import progressRoutes from './routes/progressRoutes.js';
 import restDayRoutes from './routes/restDayRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
-import backupRoutes from "./routes/backupRoutes.js";
+import backupRoutes from './routes/backupRoutes.js';
 
 const app = express();
-
 
 // ============================================================
 // MIDDLEWARE
 // ============================================================
 
-app.use(
-  cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-  }),
-);
-
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
-
 
 // ============================================================
 // HEALTH CHECK
@@ -35,30 +30,26 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'FORGE API is running.',
+    // Present only when launched by Electron. This is for process
+    // identification, NOT a security/authentication credential.
+    ...(process.env.FORGE_INSTANCE_ID
+      ? { instanceId: process.env.FORGE_INSTANCE_ID }
+      : {}),
   });
 });
-
 
 // ============================================================
 // API ROUTES
 // ============================================================
 
 app.use('/api/exercises', exerciseRoutes);
-
 app.use('/api/workouts', workoutRoutes);
-
 app.use('/api/nutrition', nutritionRoutes);
-
 app.use('/api/progress', progressRoutes);
-
 app.use('/api/rest-days', restDayRoutes);
-
 app.use('/api/profile', profileRoutes);
-
 app.use('/api/dashboard', dashboardRoutes);
-
-app.use("/api/backup", backupRoutes);
-
+app.use('/api/backup', backupRoutes);
 
 // ============================================================
 // 404
@@ -70,6 +61,5 @@ app.use((req, res) => {
     message: 'Route not found.',
   });
 });
-
 
 export default app;
