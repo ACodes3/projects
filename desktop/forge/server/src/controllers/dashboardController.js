@@ -1,33 +1,20 @@
-import pool from '../config/db.js';
-
-
-// ============================================================
-// HELPERS
-// ============================================================
+import db from "../config/sqlite.js";
 
 function isValidDateString(value) {
-  if (
-    typeof value !== 'string'
-    || !/^\d{4}-\d{2}-\d{2}$/.test(value)
-  ) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
 
-  const [year, month, day] = value
-    .split('-')
-    .map(Number);
+  const [year, month, day] = value.split("-").map(Number);
 
-  const date = new Date(
-    Date.UTC(year, month - 1, day),
-  );
+  const date = new Date(Date.UTC(year, month - 1, day));
 
   return (
-    date.getUTCFullYear() === year
-    && date.getUTCMonth() === month - 1
-    && date.getUTCDate() === day
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
   );
 }
-
 
 function toNumber(value) {
   if (value === null || value === undefined) {
@@ -36,7 +23,6 @@ function toNumber(value) {
 
   return Number(value);
 }
-
 
 // ============================================================
 // DAILY SCORE
@@ -67,96 +53,69 @@ function calculateDailyScore({
   goals,
   mealCount,
 }) {
-  const trainingScore =
-    hasWorkout || hasRestDay
-      ? 40
-      : 0;
-
+  const trainingScore = hasWorkout || hasRestDay ? 40 : 0;
 
   const configuredGoals = [];
 
   if (goals.calories !== null) {
-    configuredGoals.push('calories');
+    configuredGoals.push("calories");
   }
 
   if (goals.protein !== null) {
-    configuredGoals.push('protein');
+    configuredGoals.push("protein");
   }
 
   if (goals.carbs !== null) {
-    configuredGoals.push('carbs');
+    configuredGoals.push("carbs");
   }
 
   if (goals.fat !== null) {
-    configuredGoals.push('fat');
+    configuredGoals.push("fat");
   }
 
-
   let nutritionScore = 0;
-
 
   // ----------------------------------------------------------
   // NO GOALS CONFIGURED
   // ----------------------------------------------------------
 
   if (configuredGoals.length === 0) {
-    nutritionScore = Math.min(
-      60,
-      mealCount * 15,
-    );
+    nutritionScore = Math.min(60, mealCount * 15);
   } else {
-    const pointsPerGoal =
-      60 / configuredGoals.length;
-
+    const pointsPerGoal = 60 / configuredGoals.length;
 
     for (const goalName of configuredGoals) {
       const target = goals[goalName];
 
-      const actual =
-        nutritionTotals[goalName];
-
+      const actual = nutritionTotals[goalName];
 
       // ------------------------------------------------------
       // PROTEIN = MINIMUM TARGET
       // ------------------------------------------------------
 
-      if (goalName === 'protein') {
-        const ratio = Math.min(
-          1,
-          actual / target,
-        );
+      if (goalName === "protein") {
+        const ratio = Math.min(1, actual / target);
 
-        nutritionScore +=
-          pointsPerGoal * ratio;
+        nutritionScore += pointsPerGoal * ratio;
 
         continue;
       }
-
 
       // ------------------------------------------------------
       // CALORIES / CARBS / FAT = CLOSENESS
       // ------------------------------------------------------
 
-      const difference =
-        Math.abs(actual - target);
+      const difference = Math.abs(actual - target);
 
-      const ratio = Math.max(
-        0,
-        1 - difference / target,
-      );
+      const ratio = Math.max(0, 1 - difference / target);
 
-      nutritionScore +=
-        pointsPerGoal * ratio;
+      nutritionScore += pointsPerGoal * ratio;
     }
   }
 
+  nutritionScore = Math.round(nutritionScore);
 
-  nutritionScore =
-    Math.round(nutritionScore);
-
-  const total =
-    trainingScore + nutritionScore;
-
+  const total = trainingScore + nutritionScore;
 
   return {
     total,
@@ -165,549 +124,144 @@ function calculateDailyScore({
   };
 }
 
-
-// ============================================================
-// GET DASHBOARD
-//
-// GET /api/dashboard
-//
-// Optional:
-// GET /api/dashboard?date=2026-10-11
-// ============================================================
-
-export async function getDashboard(
-  req,
-  res,
-) {
+export function getDashboard(req, res) {
   try {
     const userId = req.user.id;
-
     let { date } = req.query;
-
-
-    // --------------------------------------------------------
-    // DEFAULT TO POSTGRES CURRENT_DATE
-    // --------------------------------------------------------
-
     if (date === undefined) {
-      const dateResult = await pool.query(
-        `
-          SELECT
-            CURRENT_DATE::text AS date
-        `,
-      );
-
-      date = dateResult.rows[0].date;
+      const now = new Date();
+      date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     }
-
-
-    if (!isValidDateString(date)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid dashboard date.',
-      });
-    }
-
-
-    // ========================================================
-    // PROFILE
-    // ========================================================
-
-    const profileResult = await pool.query(
-      `
-        SELECT
-          name,
-          training_focus,
-          height_cm,
-          bio
-        FROM public.profiles
-        WHERE user_id = $1
-        LIMIT 1
-      `,
-      [userId],
-    );
-
-
-    const profileRow =
-      profileResult.rows[0] || null;
-
-
+    if (!isValidDateString(date))
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid dashboard date." });
+    const profileRow = db
+      .prepare(
+        "SELECT name,training_focus,height_cm,bio FROM profiles WHERE user_id=?",
+      )
+      .get(userId);
     const profile = profileRow
       ? {
           name: profileRow.name,
-
-          trainingFocus:
-            profileRow.training_focus,
-
-          height:
-            profileRow.height_cm === null
-              ? null
-              : Number(profileRow.height_cm),
-
+          trainingFocus: profileRow.training_focus,
+          height: profileRow.height_cm,
           bio: profileRow.bio,
         }
-      : {
-          name: null,
-          trainingFocus: null,
-          height: null,
-          bio: null,
-        };
-
-
-    // ========================================================
-    // NUTRITION GOALS
-    // ========================================================
-
-    const goalsResult = await pool.query(
-      `
-        SELECT
-          calories,
-          protein_g,
-          carbs_g,
-          fat_g
-        FROM public.nutrition_goals
-        WHERE user_id = $1
-        LIMIT 1
-      `,
-      [userId],
-    );
-
-
-    const goalsRow =
-      goalsResult.rows[0] || null;
-
-
+      : { name: null, trainingFocus: null, height: null, bio: null };
+    const goalsRow = db
+      .prepare(
+        "SELECT calories,protein_g,carbs_g,fat_g FROM nutrition_goals WHERE user_id=?",
+      )
+      .get(userId);
     const goals = {
-      calories:
-        goalsRow?.calories ?? null,
-
-      protein:
-        goalsRow?.protein_g === null
-        || goalsRow?.protein_g === undefined
-          ? null
-          : Number(goalsRow.protein_g),
-
-      carbs:
-        goalsRow?.carbs_g === null
-        || goalsRow?.carbs_g === undefined
-          ? null
-          : Number(goalsRow.carbs_g),
-
-      fat:
-        goalsRow?.fat_g === null
-        || goalsRow?.fat_g === undefined
-          ? null
-          : Number(goalsRow.fat_g),
+      calories: goalsRow?.calories ?? null,
+      protein: goalsRow?.protein_g ?? null,
+      carbs: goalsRow?.carbs_g ?? null,
+      fat: goalsRow?.fat_g ?? null,
     };
-
-
-    // ========================================================
-    // NUTRITION TOTALS FOR SELECTED DATE
-    // ========================================================
-
-    const nutritionResult =
-      await pool.query(
-        `
-          SELECT
-            COALESCE(
-              SUM(calories),
-              0
-            ) AS calories,
-
-            COALESCE(
-              SUM(protein_g),
-              0
-            ) AS protein,
-
-            COALESCE(
-              SUM(carbs_g),
-              0
-            ) AS carbs,
-
-            COALESCE(
-              SUM(fat_g),
-              0
-            ) AS fat,
-
-            COUNT(
-              DISTINCT meal
-            ) AS meal_count
-          FROM public.nutrition_entries
-          WHERE user_id = $1
-            AND entry_date = $2
-        `,
-        [
-          userId,
-          date,
-        ],
-      );
-
-
-    const nutritionRow =
-      nutritionResult.rows[0];
-
-
+    const total = db
+      .prepare(
+        `SELECT COALESCE(SUM(calories),0) AS calories,COALESCE(SUM(protein_g),0) AS protein,
+ COALESCE(SUM(carbs_g),0) AS carbs,COALESCE(SUM(fat_g),0) AS fat,COUNT(DISTINCT meal) AS meal_count
+ FROM nutrition_entries WHERE user_id=? AND entry_date=?`,
+      )
+      .get(userId, date);
     const nutritionTotals = {
-      calories:
-        toNumber(nutritionRow.calories),
-
-      protein:
-        toNumber(nutritionRow.protein),
-
-      carbs:
-        toNumber(nutritionRow.carbs),
-
-      fat:
-        toNumber(nutritionRow.fat),
+      calories: toNumber(total.calories),
+      protein: toNumber(total.protein),
+      carbs: toNumber(total.carbs),
+      fat: toNumber(total.fat),
     };
-
-
-    const mealCount = Number(
-      nutritionRow.meal_count,
-    );
-
-
-    // ========================================================
-    // WORKOUT STATUS FOR SELECTED DATE
-    // ========================================================
-
-    const dayWorkoutResult =
-      await pool.query(
-        `
-          SELECT
-            id,
-            name,
-            workout_date
-          FROM public.workouts
-          WHERE user_id = $1
-            AND workout_date = $2
-          ORDER BY created_at DESC
-        `,
-        [
-          userId,
-          date,
-        ],
-      );
-
-
-    const dayWorkouts =
-      dayWorkoutResult.rows;
-
-
-    const hasWorkout =
-      dayWorkouts.length > 0;
-
-
-    // ========================================================
-    // REST DAY STATUS
-    // ========================================================
-
-    const restDayResult =
-      await pool.query(
-        `
-          SELECT
-            id,
-            rest_date,
-            note
-          FROM public.rest_days
-          WHERE user_id = $1
-            AND rest_date = $2
-          LIMIT 1
-        `,
-        [
-          userId,
-          date,
-        ],
-      );
-
-
+    const mealCount = Number(total.meal_count);
+    const dayWorkouts = db
+      .prepare(
+        "SELECT id,name,workout_date FROM workouts WHERE user_id=? AND workout_date=? ORDER BY created_at DESC",
+      )
+      .all(userId, date);
     const restDay =
-      restDayResult.rows[0] || null;
-
-
-    const hasRestDay =
-      restDay !== null;
-
-
-    // ========================================================
-    // DAILY SCORE
-    // ========================================================
-
-    const score =
-      calculateDailyScore({
-        hasWorkout,
-        hasRestDay,
-        nutritionTotals,
-        goals,
-        mealCount,
-      });
-
-
-    // ========================================================
-    // LATEST WORKOUT
-    // ========================================================
-
-    const latestWorkoutResult =
-      await pool.query(
-        `
-          SELECT
-            id,
-            name,
-            workout_date,
-            youtube_url,
-            notes,
-            created_at
-          FROM public.workouts
-          WHERE user_id = $1
-          ORDER BY
-            workout_date DESC,
-            created_at DESC
-          LIMIT 1
-        `,
-        [userId],
-      );
-
-
+      db
+        .prepare(
+          "SELECT id,rest_date,note FROM rest_days WHERE user_id=? AND rest_date=?",
+        )
+        .get(userId, date) ?? null;
+    const hasWorkout = dayWorkouts.length > 0,
+      hasRestDay = restDay !== null;
+    const score = calculateDailyScore({
+      hasWorkout,
+      hasRestDay,
+      nutritionTotals,
+      goals,
+      mealCount,
+    });
+    const latest = db
+      .prepare(
+        "SELECT id,name,workout_date,youtube_url,notes,created_at FROM workouts WHERE user_id=? ORDER BY workout_date DESC,created_at DESC LIMIT 1",
+      )
+      .get(userId);
     let latestWorkout = null;
-
-
-    if (
-      latestWorkoutResult.rows.length > 0
-    ) {
-      const workout =
-        latestWorkoutResult.rows[0];
-
-
-      // ------------------------------------------------------
-      // EXERCISE / SET SUMMARY
-      // ------------------------------------------------------
-
-      const summaryResult =
-        await pool.query(
-          `
-            SELECT
-              COUNT(
-                DISTINCT we.id
-              ) AS exercise_count,
-
-              COUNT(
-                ws.id
-              ) FILTER (
-                WHERE
-                  we.tracking_mode = 'reps'
-              ) AS rep_set_count,
-
-              COUNT(
-                ws.id
-              ) FILTER (
-                WHERE
-                  we.tracking_mode = 'time'
-              ) AS interval_count,
-
-              COALESCE(
-                SUM(
-                  ws.weight_kg
-                  * ws.reps
-                )
-                FILTER (
-                  WHERE
-                    we.tracking_mode = 'reps'
-                    AND ws.reps IS NOT NULL
-                ),
-                0
-              ) AS rep_volume,
-
-              COALESCE(
-                SUM(
-                  ws.duration_seconds
-                )
-                FILTER (
-                  WHERE
-                    we.tracking_mode = 'time'
-                    AND ws.duration_seconds
-                      IS NOT NULL
-                ),
-                0
-              ) AS time_under_tension
-            FROM public.workout_exercises we
-
-            LEFT JOIN public.workout_sets ws
-              ON ws.workout_exercise_id =
-                we.id
-
-            WHERE we.workout_id = $1
-          `,
-          [workout.id],
-        );
-
-
-      const summary =
-        summaryResult.rows[0];
-
-
+    if (latest) {
+      const summary = db
+        .prepare(
+          `SELECT COUNT(DISTINCT we.id) AS exercise_count,
+   COUNT(CASE WHEN we.tracking_mode='reps' THEN ws.id END) AS rep_set_count,
+   COUNT(CASE WHEN we.tracking_mode='time' THEN ws.id END) AS interval_count,
+   COALESCE(SUM(CASE WHEN we.tracking_mode='reps' AND ws.reps IS NOT NULL THEN ws.weight_kg*ws.reps END),0) AS rep_volume,
+   COALESCE(SUM(CASE WHEN we.tracking_mode='time' THEN ws.duration_seconds END),0) AS time_under_tension
+   FROM workout_exercises we LEFT JOIN workout_sets ws ON ws.workout_exercise_id=we.id WHERE we.workout_id=?`,
+        )
+        .get(latest.id);
       latestWorkout = {
-        id: workout.id,
-        name: workout.name,
-        date: workout.workout_date,
-
-        youtubeUrl:
-          workout.youtube_url,
-
-        notes: workout.notes,
-
-        exerciseCount: Number(
-          summary.exercise_count,
-        ),
-
-        repSetCount: Number(
-          summary.rep_set_count,
-        ),
-
-        intervalCount: Number(
-          summary.interval_count,
-        ),
-
-        repVolume: Number(
-          summary.rep_volume,
-        ),
-
-        timeUnderTensionSeconds:
-          Number(
-            summary.time_under_tension,
-          ),
+        id: latest.id,
+        name: latest.name,
+        date: latest.workout_date,
+        youtubeUrl: latest.youtube_url,
+        notes: latest.notes,
+        exerciseCount: Number(summary.exercise_count),
+        repSetCount: Number(summary.rep_set_count),
+        intervalCount: Number(summary.interval_count),
+        repVolume: Number(summary.rep_volume),
+        timeUnderTensionSeconds: Number(summary.time_under_tension),
       };
     }
-
-
-    // ========================================================
-    // RECENT ACTIVITY
-    //
-    // Workouts + intentional rest days.
-    // ========================================================
-
-    const recentActivityResult =
-      await pool.query(
-        `
-          SELECT
-            activity_date,
-            activity_type,
-            title,
-            activity_id
-          FROM (
-            SELECT
-              workout_date
-                AS activity_date,
-
-              'workout'
-                AS activity_type,
-
-              name
-                AS title,
-
-              id
-                AS activity_id,
-
-              created_at
-            FROM public.workouts
-            WHERE user_id = $1
-
-
-            UNION ALL
-
-
-            SELECT
-              rest_date
-                AS activity_date,
-
-              'rest'
-                AS activity_type,
-
-              COALESCE(
-                note,
-                'Rest Day'
-              ) AS title,
-
-              id
-                AS activity_id,
-
-              created_at
-            FROM public.rest_days
-            WHERE user_id = $1
-          ) AS activity
-
-          ORDER BY
-            activity_date DESC,
-            created_at DESC
-
-          LIMIT 8
-        `,
-        [userId],
-      );
-
-
-    const recentActivity =
-      recentActivityResult.rows.map(
-        (row) => ({
-          id: row.activity_id,
-          type: row.activity_type,
-          date: row.activity_date,
-          title: row.title,
-        }),
-      );
-
-
-    // ========================================================
-    // RESPONSE
-    // ========================================================
-
-    res.status(200).json({
+    const recentActivity = db
+      .prepare(
+        `SELECT activity_date,activity_type,title,activity_id FROM (
+  SELECT workout_date AS activity_date,'workout' AS activity_type,name AS title,id AS activity_id,created_at FROM workouts WHERE user_id=?
+  UNION ALL
+  SELECT rest_date AS activity_date,'rest' AS activity_type,COALESCE(note,'Rest Day') AS title,id AS activity_id,created_at FROM rest_days WHERE user_id=?
+ ) AS activity ORDER BY activity_date DESC,created_at DESC LIMIT 8`,
+      )
+      .all(userId, userId)
+      .map((row) => ({
+        id: row.activity_id,
+        type: row.activity_type,
+        date: row.activity_date,
+        title: row.title,
+      }));
+    return res.json({
       success: true,
-
       dashboard: {
         date,
-
         profile,
-
         score,
-
         training: {
           hasWorkout,
           hasRestDay,
-
           workouts: dayWorkouts,
-
-          restDay:
-            restDay === null
-              ? null
-              : {
-                  id: restDay.id,
-                  date:
-                    restDay.rest_date,
-                  note: restDay.note,
-                },
+          restDay: restDay
+            ? { id: restDay.id, date: restDay.rest_date, note: restDay.note }
+            : null,
         },
-
-        nutrition: {
-          totals: nutritionTotals,
-          goals,
-          mealCount,
-        },
-
+        nutrition: { totals: nutritionTotals, goals, mealCount },
         latestWorkout,
-
         recentActivity,
       },
     });
   } catch (error) {
-    console.error(
-      'Failed to fetch dashboard:',
-      error,
-    );
-
-    res.status(500).json({
-      success: false,
-      message:
-        'Failed to fetch dashboard.',
-    });
+    console.error("Failed to fetch dashboard:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch dashboard." });
   }
 }

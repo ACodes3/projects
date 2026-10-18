@@ -1,47 +1,37 @@
-import pool from '../config/db.js';
-
+import db from "../config/sqlite.js";
 
 // ============================================================
 // HELPERS
 // ============================================================
 
 function isValidDateString(value) {
-  if (
-    typeof value !== 'string'
-    || !/^\d{4}-\d{2}-\d{2}$/.test(value)
-  ) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
 
-  const [year, month, day] = value
-    .split('-')
-    .map(Number);
+  const [year, month, day] = value.split("-").map(Number);
 
-  const date = new Date(
-    Date.UTC(year, month - 1, day),
-  );
+  const date = new Date(Date.UTC(year, month - 1, day));
 
   return (
-    date.getUTCFullYear() === year
-    && date.getUTCMonth() === month - 1
-    && date.getUTCDate() === day
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
   );
 }
 
-
 function normalizeOptionalText(value) {
   if (
-    value === undefined
-    || value === null
-    || typeof value !== 'string'
-    || value.trim() === ''
+    value === undefined ||
+    value === null ||
+    typeof value !== "string" ||
+    value.trim() === ""
   ) {
     return null;
   }
 
   return value.trim();
 }
-
 
 // ============================================================
 // GET REST DAYS
@@ -50,380 +40,126 @@ function normalizeOptionalText(value) {
 //
 // Optional:
 // GET /api/rest-days?date=2026-10-11
-// ============================================================
 
-export async function getRestDays(
-  req,
-  res,
-) {
+function format(row) {
+  return {
+    id: row.id,
+    date: row.rest_date,
+    note: row.note,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+export function getRestDays(req, res) {
   try {
-    const userId = req.user.id;
-
     const { date } = req.query;
-
-
-    // --------------------------------------------------------
-    // OPTIONAL DATE FILTER
-    // --------------------------------------------------------
-
-    if (
-      date !== undefined
-      && !isValidDateString(date)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid date.',
-      });
-    }
-
-
-    let query = `
-      SELECT
-        id,
-        rest_date::text AS rest_date,
-        note,
-        created_at,
-        updated_at
-      FROM public.rest_days
-      WHERE user_id = $1
-    `;
-
-    const values = [userId];
-
-
-    if (date) {
-      query += `
-        AND rest_date = $2
-      `;
-
-      values.push(date);
-    }
-
-
-    query += `
-      ORDER BY rest_date DESC
-    `;
-
-
-    const result = await pool.query(
-      query,
-      values,
-    );
-
-
-    const restDays = result.rows.map(
-      (row) => ({
-        id: row.id,
-        date: row.rest_date,
-        note: row.note,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      }),
-    );
-
-
-    res.status(200).json({
+    if (date !== undefined && !isValidDateString(date))
+      return res.status(400).json({ success: false, message: "Invalid date." });
+    const rows = db
+      .prepare(
+        `SELECT id,rest_date,note,created_at,updated_at FROM rest_days WHERE user_id=? ${date ? "AND rest_date=?" : ""} ORDER BY rest_date DESC`,
+      )
+      .all(...(date ? [req.user.id, date] : [req.user.id]));
+    return res.json({
       success: true,
-      count: restDays.length,
-      restDays,
+      count: rows.length,
+      restDays: rows.map(format),
     });
   } catch (error) {
-    console.error(
-      'Failed to fetch rest days:',
-      error,
-    );
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch rest days.',
-    });
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch rest days." });
   }
 }
-
-
-// ============================================================
-// CREATE REST DAY
-//
-// POST /api/rest-days
-//
-// Body:
-// {
-//   "date": "2026-10-11",
-//   "note": "Recovery day"
-// }
-// ============================================================
-
-export async function createRestDay(
-  req,
-  res,
-) {
-  const { date, note } = req.body;
-
-
-  // ----------------------------------------------------------
-  // VALIDATE DATE
-  // ----------------------------------------------------------
-
-  if (!isValidDateString(date)) {
-    return res.status(400).json({
-      success: false,
-      message: 'A valid rest date is required.',
-    });
-  }
-
-
-  if (
-    note !== undefined
-    && note !== null
-    && typeof note !== 'string'
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: 'Rest day note must be text.',
-    });
-  }
-
-
-  const userId = req.user.id;
-
-  const client = await pool.connect();
-
+export function createRestDay(req, res) {
+  const { date, note } = req.body ?? {};
+  if (!isValidDateString(date))
+    return res
+      .status(400)
+      .json({ success: false, message: "A valid rest date is required." });
+  if (note != null && typeof note !== "string")
+    return res
+      .status(400)
+      .json({ success: false, message: "Rest day note must be text." });
   try {
-    await client.query('BEGIN');
-
-
-    // --------------------------------------------------------
-    // DON'T ALLOW FUTURE REST DAYS
-    //
-    // Uses PostgreSQL CURRENT_DATE so we avoid JS timezone
-    // issues when comparing DATE values.
-    // --------------------------------------------------------
-
-    const futureCheck = await client.query(
-      `
-        SELECT $1::date > CURRENT_DATE AS is_future
-      `,
-      [date],
-    );
-
-
-    if (futureCheck.rows[0].is_future) {
-      const error = new Error(
-        'A future date cannot be marked as a rest day.',
-      );
-
-      error.statusCode = 400;
-
-      throw error;
-    }
-
-
-    // --------------------------------------------------------
-    // DON'T ALLOW REST DAY ON A WORKOUT DAY
-    // --------------------------------------------------------
-
-    const workoutResult =
-      await client.query(
-        `
-          SELECT id
-          FROM public.workouts
-          WHERE user_id = $1
-            AND workout_date = $2
-          LIMIT 1
-        `,
-        [
-          userId,
-          date,
-        ],
-      );
-
-
-    if (workoutResult.rows.length > 0) {
-      const error = new Error(
-        'This date already contains a workout and cannot be marked as a rest day.',
-      );
-
-      error.statusCode = 409;
-
-      throw error;
-    }
-
-
-    // --------------------------------------------------------
-    // CREATE REST DAY
-    // --------------------------------------------------------
-
-    const result = await client.query(
-      `
-        INSERT INTO public.rest_days (
-          user_id,
-          rest_date,
-          note
+    const restDay = db.transaction(() => {
+      // SQLite's local date follows the user's operating-system timezone.
+      // Use a local date built from local year/month/day (avoids locale implementation differences).
+      const now = new Date();
+      const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (date > localToday) {
+        const e = new Error("A future date cannot be marked as a rest day.");
+        e.statusCode = 400;
+        throw e;
+      }
+      if (
+        db
+          .prepare("SELECT id FROM workouts WHERE user_id=? AND workout_date=?")
+          .get(req.user.id, date)
+      ) {
+        const e = new Error(
+          "This date already contains a workout and cannot be marked as a rest day.",
+        );
+        e.statusCode = 409;
+        throw e;
+      }
+      return db
+        .prepare(
+          "INSERT INTO rest_days(user_id,rest_date,note) VALUES(?,?,?) RETURNING id,rest_date,note,created_at,updated_at",
         )
-        VALUES (
-          $1,
-          $2,
-          $3
-        )
-        RETURNING
-          id,
-          rest_date,
-          note,
-          created_at,
-          updated_at
-      `,
-      [
-        userId,
-        date,
-        normalizeOptionalText(note),
-      ],
-    );
-
-
-    await client.query('COMMIT');
-
-
-    const row = result.rows[0];
-
-
-    res.status(201).json({
-      success: true,
-      message:
-        'Rest day created successfully.',
-
-      restDay: {
-        id: row.id,
-        date: row.rest_date,
-        note: row.note,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      },
-    });
-  } catch (error) {
-    await client.query('ROLLBACK');
-
-
-    // --------------------------------------------------------
-    // UNIQUE (user_id, rest_date)
-    // --------------------------------------------------------
-
-    if (error.code === '23505') {
-      return res.status(409).json({
-        success: false,
-        message:
-          'This date is already marked as a rest day.',
+        .get(req.user.id, date, normalizeOptionalText(note));
+    })();
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Rest day created successfully.",
+        restDay: format(restDay),
       });
-    }
-
-
-    if (error.statusCode) {
+  } catch (error) {
+    if (error.code === "SQLITE_CONSTRAINT_UNIQUE")
       return res
-        .status(error.statusCode)
+        .status(409)
         .json({
           success: false,
-          message: error.message,
+          message: "This date is already marked as a rest day.",
         });
-    }
-
-
-    console.error(
-      'Failed to create rest day:',
-      error,
-    );
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create rest day.',
-    });
-  } finally {
-    client.release();
+    if (error.statusCode)
+      return res
+        .status(error.statusCode)
+        .json({ success: false, message: error.message });
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to create rest day." });
   }
 }
-
-
-// ============================================================
-// DELETE REST DAY BY DATE
-//
-// DELETE /api/rest-days/:date
-//
-// Example:
-// DELETE /api/rest-days/2026-10-11
-// ============================================================
-
-export async function deleteRestDay(
-  req,
-  res,
-) {
+export function deleteRestDay(req, res) {
+  const { date } = req.params;
+  if (!isValidDateString(date))
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid rest day date." });
   try {
-    const userId = req.user.id;
-
-    const { date } = req.params;
-
-
-    // --------------------------------------------------------
-    // VALIDATE DATE
-    // --------------------------------------------------------
-
-    if (!isValidDateString(date)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid rest day date.',
-      });
-    }
-
-
-    // --------------------------------------------------------
-    // DELETE
-    // --------------------------------------------------------
-
-    const result = await pool.query(
-      `
-        DELETE FROM public.rest_days
-        WHERE user_id = $1
-          AND rest_date = $2
-        RETURNING
-          id,
-          rest_date,
-          note
-      `,
-      [
-        userId,
-        date,
-      ],
-    );
-
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Rest day not found.',
-      });
-    }
-
-
-    const row = result.rows[0];
-
-
-    res.status(200).json({
+    const row = db
+      .prepare(
+        "DELETE FROM rest_days WHERE user_id=? AND rest_date=? RETURNING id,rest_date,note",
+      )
+      .get(req.user.id, date);
+    if (!row)
+      return res
+        .status(404)
+        .json({ success: false, message: "Rest day not found." });
+    return res.json({
       success: true,
-      message:
-        'Rest day removed successfully.',
-
-      restDay: {
-        id: row.id,
-        date: row.rest_date,
-        note: row.note,
-      },
+      message: "Rest day removed successfully.",
+      restDay: { id: row.id, date: row.rest_date, note: row.note },
     });
   } catch (error) {
-    console.error(
-      'Failed to delete rest day:',
-      error,
-    );
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete rest day.',
-    });
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to delete rest day." });
   }
 }
