@@ -7,6 +7,24 @@
 BEGIN TRANSACTION;
 INSERT OR IGNORE INTO users (email, password_hash) VALUES ('demo@forge.local', 'OFFLINE_DESKTOP_NO_LOGIN');
 
+-- Generic profile for a new FORGE installation.
+-- Users can personalize this later in Settings.
+INSERT OR IGNORE INTO profiles (
+    user_id,
+    name,
+    training_focus,
+    height_cm,
+    bio
+)
+SELECT
+    id,
+    'FORGE Athlete',
+    NULL,
+    NULL,
+    NULL
+FROM users
+WHERE email = 'demo@forge.local';
+
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Barbell Bench Press', 'Chest', '["Triceps", "Shoulders"]', 'Barbell', 'Compound', NULL);
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Incline Barbell Bench Press', 'Chest', '["Triceps", "Shoulders"]', 'Barbell', 'Compound', NULL);
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Decline Barbell Bench Press', 'Chest', '["Triceps", "Shoulders"]', 'Barbell', 'Compound', NULL);
@@ -600,5 +618,15 @@ INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipm
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Bench Reverse Hyperextension', 'Mobility', '[]', 'Bench', 'Compound', NULL);
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Bench Hip Flexor Stretch', 'Mobility', '[]', 'Bench', 'Compound', NULL);
 INSERT OR IGNORE INTO exercises (name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern) VALUES ('Bench Supported Single-Leg Squat', 'Mobility', '[]', 'Bench', 'Compound', NULL);
+
+-- Additional standard exercises for FORGE's starter library.
+INSERT OR IGNORE INTO exercises
+(name, primary_muscle, secondary_muscles, equipment, exercise_type, movement_pattern)
+VALUES
+('Dumbbell Bicep Curl', 'Biceps', '["Forearms"]', 'Dumbbells', 'Isolation', NULL),
+('Dumbbell Shoulder Press', 'Shoulders', '["Triceps"]', 'Dumbbells', 'Compound', NULL),
+('Forearm Plank', 'Core', '[]', 'Bodyweight', 'Core', NULL),
+('Push-Up', 'Chest', '["Triceps", "Shoulders"]', 'Bodyweight', 'Compound', NULL),
+('Resistance Band Row', 'Back', '["Biceps", "Shoulders"]', 'Resistance Band', 'Compound', NULL);
 
 COMMIT;

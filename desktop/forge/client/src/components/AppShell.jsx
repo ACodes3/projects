@@ -180,6 +180,11 @@ export default function AppShell() {
             <span>Back to Start</span>
           </button>
 
+          <footer className="app-shell__creator-credit">
+            <strong>Made by Aspasija</strong>
+            <span>© {new Date().getFullYear()} FORGE</span>
+          </footer>
+
         </div>
 
       </aside>

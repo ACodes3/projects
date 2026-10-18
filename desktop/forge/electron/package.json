@@ -1,16 +1,17 @@
 {
-  "name": "electron",
+  "name": "forge-fitness-tracker",
   "version": "1.0.0",
-  "description": "",
+  "description": "FORGE - Offline Training & Nutrition Tracker",
+  "productName": "FORGE",
   "main": "main.js",
+  "type": "module",
   "scripts": {
-  "start": "electron ."
+    "start": "electron ."
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "devDependencies": {
-    "electron": "^44.9.0"
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3"
   }
 }
