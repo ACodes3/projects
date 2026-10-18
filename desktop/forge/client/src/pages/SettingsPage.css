@@ -1,0 +1,440 @@
+.settings-page {
+  width: 100%;
+
+  margin: 0 auto;
+}
+
+/* =========================================
+   MESSAGE
+========================================= */
+
+.settings-page__message {
+  margin-bottom: 16px;
+
+  padding: 11px 13px;
+
+  border: 1px solid rgba(217, 255, 119, 0.14);
+  border-radius: 7px;
+
+  background: rgba(217, 255, 119, 0.045);
+
+  color: #c9e96f;
+
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   SECTION
+========================================= */
+
+.settings-page__section {
+  padding: 20px;
+
+  margin-bottom: 14px;
+}
+
+.settings-page__section-heading {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  margin-bottom: 18px;
+}
+
+.settings-page__section-icon {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid rgba(217, 255, 119, 0.11);
+  border-radius: 7px;
+
+  background: rgba(217, 255, 119, 0.05);
+
+  color: #d9ff77;
+}
+
+.settings-page__section-icon--danger {
+  border-color: rgba(227, 108, 108, 0.13);
+
+  background: rgba(227, 108, 108, 0.045);
+
+  color: #e37f7f;
+}
+
+.settings-page__section-heading h2 {
+  margin: 0;
+
+  color: #e8ebed;
+
+  font-size: 16px;
+  font-weight: 620;
+
+  letter-spacing: -0.02em;
+}
+
+.settings-page__section-heading p {
+  max-width: 590px;
+
+  margin: 5px 0 0;
+
+  color: #737b81;
+
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+/* =========================================
+   NUTRITION GOAL NOTE
+========================================= */
+
+.settings-page__goal-note {
+  margin-bottom: 14px;
+
+  padding: 10px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  background: #111416;
+
+  color: #737b81;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   NUTRITION GOALS
+========================================= */
+
+.settings-page__goals {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.settings-page__goals label {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.settings-page__goals label > span {
+  color: #858d93;
+
+  font-size: 9px;
+  font-weight: 550;
+}
+
+.settings-page__goals label > div {
+  display: flex;
+  align-items: center;
+
+  min-height: 42px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 7px;
+
+  background: #101315;
+}
+
+.settings-page__goals label > div:focus-within {
+  border-color: rgba(217, 255, 119, 0.26);
+}
+
+.settings-page__goals input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+
+  padding: 0 10px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #e7e9ea;
+
+  font: inherit;
+  font-size: 11px;
+}
+
+.settings-page__goals input::placeholder {
+  color: #596166;
+}
+
+.settings-page__goals small {
+  flex-shrink: 0;
+
+  padding: 0 10px;
+
+  color: #697177;
+
+  font-size: 9px;
+}
+
+/* =========================================
+   SECTION ACTIONS
+========================================= */
+
+.settings-page__section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+/* =========================================
+   BACKUP ACTIONS
+========================================= */
+
+.settings-page__backup-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+/* =========================================
+   DATA LIST
+========================================= */
+
+.settings-page__data-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-page__data-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  min-height: 64px;
+
+  padding: 10px 0;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-page__data-list > div:first-child {
+  padding-top: 0;
+}
+
+.settings-page__data-list > div:last-child {
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.settings-page__data-list > div > div {
+  min-width: 0;
+}
+
+.settings-page__data-list strong {
+  display: block;
+
+  color: #d9dcde;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.settings-page__data-list span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6d757b;
+
+  font-size: 9px;
+}
+
+.settings-page__data-list button {
+  flex-shrink: 0;
+
+  min-height: 32px;
+
+  padding: 0 10px;
+
+  border: 1px solid rgba(227, 108, 108, 0.12);
+  border-radius: 6px;
+
+  background: rgba(227, 108, 108, 0.035);
+
+  color: #c87979;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.settings-page__data-list button:hover {
+  border-color: rgba(227, 108, 108, 0.24);
+
+  background: rgba(227, 108, 108, 0.065);
+
+  color: #eb8c8c;
+}
+
+/* =========================================
+   DANGER ZONE
+========================================= */
+
+.settings-page__danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  border-color: rgba(227, 108, 108, 0.1);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(227, 108, 108, 0.025),
+      transparent 45%
+    ),
+    #14171a;
+}
+
+.settings-page__danger > div {
+  min-width: 0;
+}
+
+.settings-page__danger strong {
+  display: block;
+
+  color: #e0e3e5;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-page__danger span {
+  display: block;
+
+  max-width: 650px;
+
+  margin-top: 4px;
+
+  color: #70787e;
+
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.settings-page__danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  flex-shrink: 0;
+
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(227, 108, 108, 0.18);
+  border-radius: 6px;
+
+  background: rgba(227, 108, 108, 0.055);
+
+  color: #e08080;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.settings-page__danger-button:hover {
+  border-color: rgba(227, 108, 108, 0.3);
+
+  background: rgba(227, 108, 108, 0.085);
+
+  color: #f09090;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+  .settings-page__goals {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .settings-page__section {
+    padding: 16px;
+  }
+
+  .settings-page__goals {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-page__section-actions,
+  .settings-page__backup-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-page__section-actions .button,
+  .settings-page__backup-actions .button {
+    width: 100%;
+  }
+
+  .settings-page__danger {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-page__danger-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .settings-page__data-list > div {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .settings-page__data-list button {
+    width: 100%;
+  }
+}

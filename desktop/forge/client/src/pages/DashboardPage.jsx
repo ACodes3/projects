@@ -1,0 +1,2735 @@
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import {
+  ArrowRight,
+  CalendarDays,
+  Dumbbell,
+  ExternalLink,
+  Flame,
+  Moon,
+  Plus,
+  Scale,
+  Target,
+  Utensils,
+} from 'lucide-react';
+
+import {
+  Link,
+} from 'react-router-dom';
+
+import {
+  getNutritionEntries,
+  getNutritionGoals,
+  getProgressEntries,
+  getRestDays,
+  getWorkouts,
+} from '../api/forgeApi.js';
+
+import './DashboardPage.css';
+
+
+const MEALS = [
+  'Breakfast',
+  'Lunch',
+  'Snacks',
+  'Dinner',
+];
+
+
+const GOAL_KEYS = [
+  'calories',
+  'protein',
+  'carbs',
+  'fat',
+];
+
+
+/* =========================================
+   API NORMALIZATION
+========================================= */
+
+function normalizeDate(
+  value,
+) {
+  if (!value) {
+    return '';
+  }
+
+  if (
+    typeof value ===
+    'string'
+  ) {
+    return value.slice(
+      0,
+      10,
+    );
+  }
+
+  try {
+    return new Date(
+      value,
+    )
+      .toISOString()
+      .slice(
+        0,
+        10,
+      );
+  } catch {
+    return '';
+  }
+}
+
+
+function normalizeNumber(
+  value,
+) {
+  if (
+    value === null
+    || value === undefined
+    || value === ''
+  ) {
+    return null;
+  }
+
+  const number =
+    Number(
+      value,
+    );
+
+  return Number.isFinite(
+    number,
+  )
+    ? number
+    : null;
+}
+
+
+/* =========================================
+   NUTRITION API
+========================================= */
+
+function extractNutritionEntries(
+  response,
+) {
+  if (
+    Array.isArray(
+      response,
+    )
+  ) {
+    return response;
+  }
+
+  if (
+    Array.isArray(
+      response?.entries,
+    )
+  ) {
+    return response.entries;
+  }
+
+  if (
+    Array.isArray(
+      response
+        ?.nutritionEntries,
+    )
+  ) {
+    return response
+      .nutritionEntries;
+  }
+
+  if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    return response.data;
+  }
+
+  return [];
+}
+
+
+function normalizeNutritionEntry(
+  entry,
+) {
+  return {
+    id:
+      entry.id,
+
+    date:
+      normalizeDate(
+        entry.entry_date
+        ?? entry.date,
+      ),
+
+    meal:
+      entry.meal
+      ?? 'Breakfast',
+
+    name:
+      entry.name
+      ?? '',
+
+    calories:
+      Number(
+        entry.calories
+        ?? 0,
+      ),
+
+    protein:
+      Number(
+        entry.protein_g
+        ?? entry.protein
+        ?? 0,
+      ),
+
+    carbs:
+      Number(
+        entry.carbs_g
+        ?? entry.carbs
+        ?? 0,
+      ),
+
+    fat:
+      Number(
+        entry.fat_g
+        ?? entry.fat
+        ?? 0,
+      ),
+
+    createdAt:
+      entry.created_at
+      ?? entry.createdAt
+      ?? null,
+  };
+}
+
+
+function groupNutritionByDate(
+  entries,
+) {
+  return entries.reduce(
+    (
+      grouped,
+      rawEntry,
+    ) => {
+      const entry =
+        normalizeNutritionEntry(
+          rawEntry,
+        );
+
+      if (!entry.date) {
+        return grouped;
+      }
+
+      if (
+        !grouped[
+          entry.date
+        ]
+      ) {
+        grouped[
+          entry.date
+        ] = [];
+      }
+
+      grouped[
+        entry.date
+      ].push(
+        entry,
+      );
+
+      return grouped;
+    },
+    {},
+  );
+}
+
+
+/* =========================================
+   GOALS API
+========================================= */
+
+function normalizeGoals(
+  response,
+) {
+  const raw =
+    response?.goals
+    ?? response?.nutritionGoals
+    ?? response?.data?.goals
+    ?? response
+    ?? {};
+
+  return {
+    calories:
+      Number(
+        raw.calories
+        ?? 0,
+      ),
+
+    protein:
+      Number(
+        raw.protein_g
+        ?? raw.protein
+        ?? 0,
+      ),
+
+    carbs:
+      Number(
+        raw.carbs_g
+        ?? raw.carbs
+        ?? 0,
+      ),
+
+    fat:
+      Number(
+        raw.fat_g
+        ?? raw.fat
+        ?? 0,
+      ),
+  };
+}
+
+
+/* =========================================
+   PROGRESS API
+========================================= */
+
+function extractProgressEntries(
+  response,
+) {
+  if (
+    Array.isArray(
+      response,
+    )
+  ) {
+    return response;
+  }
+
+  if (
+    Array.isArray(
+      response?.entries,
+    )
+  ) {
+    return response.entries;
+  }
+
+  if (
+    Array.isArray(
+      response
+        ?.progressEntries,
+    )
+  ) {
+    return response
+      .progressEntries;
+  }
+
+  if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    return response.data;
+  }
+
+  return [];
+}
+
+
+function normalizeProgressEntry(
+  entry,
+) {
+  return {
+    id:
+      entry.id,
+
+    date:
+      normalizeDate(
+        entry.entry_date
+        ?? entry.date,
+      ),
+
+    weight:
+      normalizeNumber(
+        entry.weight_kg
+        ?? entry.weight,
+      ),
+
+    bodyFat:
+      normalizeNumber(
+        entry.body_fat_percent
+        ?? entry.bodyFat,
+      ),
+
+    createdAt:
+      entry.created_at
+      ?? entry.createdAt
+      ?? null,
+  };
+}
+
+
+/* =========================================
+   REST DAY API
+========================================= */
+
+function extractRestDays(
+  response,
+) {
+  let raw = [];
+
+  if (
+    Array.isArray(
+      response,
+    )
+  ) {
+    raw =
+      response;
+  } else if (
+    Array.isArray(
+      response?.restDays,
+    )
+  ) {
+    raw =
+      response.restDays;
+  } else if (
+    Array.isArray(
+      response?.rest_days,
+    )
+  ) {
+    raw =
+      response.rest_days;
+  } else if (
+    Array.isArray(
+      response?.data,
+    )
+  ) {
+    raw =
+      response.data;
+  }
+
+  return raw
+    .map(
+      (item) => {
+        if (
+          typeof item ===
+          'string'
+        ) {
+          return normalizeDate(
+            item,
+          );
+        }
+
+        return normalizeDate(
+          item?.rest_date
+          ?? item?.date,
+        );
+      },
+    )
+    .filter(
+      Boolean,
+    );
+}
+
+
+/* =========================================
+   DATE
+========================================= */
+
+function getToday() {
+  const now =
+    new Date();
+
+  const year =
+    now.getFullYear();
+
+  const month =
+    String(
+      now.getMonth()
+      + 1,
+    ).padStart(
+      2,
+      '0',
+    );
+
+  const day =
+    String(
+      now.getDate(),
+    ).padStart(
+      2,
+      '0',
+    );
+
+  return `${year}-${month}-${day}`;
+}
+
+
+function parseDate(
+  date,
+) {
+  if (!date) {
+    return 0;
+  }
+
+  const timestamp =
+    new Date(
+      `${date}T12:00:00`,
+    ).getTime();
+
+  return Number.isFinite(
+    timestamp,
+  )
+    ? timestamp
+    : 0;
+}
+
+
+function formatDate(
+  date,
+) {
+  if (!date) {
+    return 'Unknown date';
+  }
+
+  return new Date(
+    `${date}T12:00:00`,
+  ).toLocaleDateString(
+    'en-US',
+    {
+      month:
+        'short',
+
+      day:
+        'numeric',
+
+      year:
+        'numeric',
+    },
+  );
+}
+
+
+function formatShortDate(
+  date,
+) {
+  if (!date) {
+    return '';
+  }
+
+  if (
+    date === getToday()
+  ) {
+    return 'Today';
+  }
+
+  return new Date(
+    `${date}T12:00:00`,
+  ).toLocaleDateString(
+    'en-US',
+    {
+      month:
+        'short',
+
+      day:
+        'numeric',
+    },
+  );
+}
+
+
+function getWeekRange() {
+  const start =
+    new Date();
+
+  const day =
+    start.getDay();
+
+  start.setDate(
+    start.getDate()
+    - (
+      (
+        day + 6
+      ) % 7
+    ),
+  );
+
+  start.setHours(
+    0,
+    0,
+    0,
+    0,
+  );
+
+  const end =
+    new Date(
+      start,
+    );
+
+  end.setDate(
+    end.getDate()
+    + 7,
+  );
+
+  return {
+    start:
+      start.getTime(),
+
+    end:
+      end.getTime(),
+  };
+}
+
+
+/* =========================================
+   WORKOUT HELPERS
+========================================= */
+
+function getTrackingMode(
+  exercise,
+) {
+  return (
+    exercise.trackingMode
+    || 'reps'
+  );
+}
+
+
+function getWorkoutStats(
+  workout,
+) {
+  const exercises =
+    workout?.exercises
+    || [];
+
+  let repSets = 0;
+
+  let intervals = 0;
+
+  let tut = 0;
+
+  let volume = 0;
+
+  exercises.forEach(
+    (exercise) => {
+      const mode =
+        getTrackingMode(
+          exercise,
+        );
+
+      const sets =
+        exercise.sets
+        || [];
+
+      if (
+        mode === 'time'
+      ) {
+        intervals +=
+          sets.length;
+
+        tut +=
+          sets.reduce(
+            (
+              total,
+              set,
+            ) =>
+              total
+              + Number(
+                set.durationSeconds
+                || 0,
+              ),
+            0,
+          );
+
+        return;
+      }
+
+      repSets +=
+        sets.length;
+
+      volume +=
+        sets.reduce(
+          (
+            total,
+            set,
+          ) =>
+            total
+            + (
+              Number(
+                set.weight
+                || 0,
+              )
+              * Number(
+                set.reps
+                || 0,
+              )
+            ),
+          0,
+        );
+    },
+  );
+
+  return {
+    exercises:
+      exercises.length,
+
+    repSets,
+
+    intervals,
+
+    tut,
+
+    volume,
+  };
+}
+
+
+function formatDuration(
+  seconds,
+) {
+  const total =
+    Math.max(
+      0,
+      Math.round(
+        Number(
+          seconds,
+        ) || 0,
+      ),
+    );
+
+  const hours =
+    Math.floor(
+      total / 3600,
+    );
+
+  const minutes =
+    Math.floor(
+      (
+        total % 3600
+      ) / 60,
+    );
+
+  const remaining =
+    total % 60;
+
+  if (
+    hours > 0
+  ) {
+    return `${hours}:${String(
+      minutes,
+    ).padStart(
+      2,
+      '0',
+    )}:${String(
+      remaining,
+    ).padStart(
+      2,
+      '0',
+    )}`;
+  }
+
+  if (
+    minutes > 0
+  ) {
+    return `${minutes}:${String(
+      remaining,
+    ).padStart(
+      2,
+      '0',
+    )}`;
+  }
+
+  return `${remaining}s`;
+}
+
+
+function formatVolume(
+  volume,
+) {
+  if (
+    volume >= 1000
+  ) {
+    return `${
+      (
+        volume / 1000
+      ).toFixed(1)
+    }k kg`;
+  }
+
+  return `${Math.round(
+    volume,
+  )} kg`;
+}
+
+
+/* =========================================
+   NUTRITION
+========================================= */
+
+function getNutritionTotals(
+  entries = [],
+) {
+  return entries.reduce(
+    (
+      totals,
+      entry,
+    ) => ({
+      calories:
+        totals.calories
+        + Number(
+          entry.calories
+          || 0,
+        ),
+
+      protein:
+        totals.protein
+        + Number(
+          entry.protein
+          || 0,
+        ),
+
+      carbs:
+        totals.carbs
+        + Number(
+          entry.carbs
+          || 0,
+        ),
+
+      fat:
+        totals.fat
+        + Number(
+          entry.fat
+          || 0,
+        ),
+    }),
+    {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+    },
+  );
+}
+
+
+function getConfiguredGoals(
+  goals,
+) {
+  return GOAL_KEYS.filter(
+    (key) =>
+      Number(
+        goals[key],
+      ) > 0,
+  );
+}
+
+
+function getTargetRatio(
+  key,
+  actual,
+  target,
+) {
+  const value =
+    Math.max(
+      0,
+      Number(
+        actual,
+      ) || 0,
+    );
+
+  if (!target) {
+    return 0;
+  }
+
+  if (
+    key === 'protein'
+  ) {
+    return Math.min(
+      1,
+      value / target,
+    );
+  }
+
+  const deviation =
+    Math.abs(
+      value - target,
+    ) / target;
+
+  return Math.max(
+    0,
+    1 - deviation,
+  );
+}
+
+
+function calculateNutritionScore(
+  entries,
+  goals,
+) {
+  const totals =
+    getNutritionTotals(
+      entries,
+    );
+
+  const configuredGoals =
+    getConfiguredGoals(
+      goals,
+    );
+
+  if (
+    configuredGoals.length ===
+    0
+  ) {
+    const loggedMeals =
+      MEALS.filter(
+        (meal) =>
+          entries.some(
+            (entry) =>
+              entry.meal ===
+              meal,
+          ),
+      );
+
+    return {
+      score:
+        loggedMeals.length
+        * 15,
+
+      totals,
+
+      mode:
+        'logging',
+
+      loggedMeals,
+    };
+  }
+
+  const pointsPerGoal =
+    60
+    / configuredGoals.length;
+
+  const score =
+    configuredGoals.reduce(
+      (
+        total,
+        key,
+      ) => {
+        const target =
+          Number(
+            goals[key],
+          );
+
+        const ratio =
+          getTargetRatio(
+            key,
+            totals[key],
+            target,
+          );
+
+        return (
+          total
+          + (
+            ratio
+            * pointsPerGoal
+          )
+        );
+      },
+      0,
+    );
+
+  return {
+    score:
+      Math.round(
+        score,
+      ),
+
+    totals,
+
+    mode:
+      'targets',
+
+    loggedMeals: [],
+  };
+}
+
+
+/* =========================================
+   DAILY SCORE
+========================================= */
+
+function getDailyScore({
+  hasWorkout,
+  isRestDay,
+  nutritionEntries,
+  goals,
+}) {
+  const training =
+    hasWorkout
+    || isRestDay
+      ? 40
+      : 0;
+
+  const nutrition =
+    calculateNutritionScore(
+      nutritionEntries,
+      goals,
+    );
+
+  return {
+    total:
+      training
+      + nutrition.score,
+
+    training,
+
+    nutrition:
+      nutrition.score,
+
+    nutritionMode:
+      nutrition.mode,
+
+    nutritionTotals:
+      nutrition.totals,
+
+    loggedMeals:
+      nutrition.loggedMeals,
+  };
+}
+
+
+function getScoreLabel(
+  score,
+) {
+  if (
+    score >= 80
+  ) {
+    return 'Good day';
+  }
+
+  if (
+    score >= 50
+  ) {
+    return 'Moderate';
+  }
+
+  if (
+    score > 0
+  ) {
+    return 'Needs work';
+  }
+
+  return 'Not started';
+}
+
+
+function getScoreLevel(
+  score,
+) {
+  if (
+    score >= 80
+  ) {
+    return 'good';
+  }
+
+  if (
+    score >= 50
+  ) {
+    return 'moderate';
+  }
+
+  return 'poor';
+}
+
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
+export default function DashboardPage() {
+  const [
+    workouts,
+    setWorkouts,
+  ] = useState([]);
+
+  const [
+    nutrition,
+    setNutrition,
+  ] = useState({});
+
+  const [
+    progress,
+    setProgress,
+  ] = useState([]);
+
+  const [
+    restDays,
+    setRestDays,
+  ] = useState([]);
+
+  const [
+    goals,
+    setGoals,
+  ] = useState({});
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState('');
+
+
+  /* =========================================
+     LOAD DASHBOARD DATA
+  ========================================= */
+
+  async function loadDashboard() {
+    try {
+      setLoading(
+        true,
+      );
+
+      setError('');
+
+      const [
+        workoutsResponse,
+        nutritionResponse,
+        progressResponse,
+        restDaysResponse,
+        goalsResponse,
+      ] =
+        await Promise.all([
+          getWorkouts(),
+
+          getNutritionEntries(),
+
+          getProgressEntries(),
+
+          getRestDays(),
+
+          getNutritionGoals(),
+        ]);
+
+      setWorkouts(
+        Array.isArray(
+          workoutsResponse,
+        )
+          ? workoutsResponse
+          : [],
+      );
+
+      setNutrition(
+        groupNutritionByDate(
+          extractNutritionEntries(
+            nutritionResponse,
+          ),
+        ),
+      );
+
+      setProgress(
+        extractProgressEntries(
+          progressResponse,
+        ).map(
+          normalizeProgressEntry,
+        ),
+      );
+
+      setRestDays(
+        extractRestDays(
+          restDaysResponse,
+        ),
+      );
+
+      setGoals(
+        normalizeGoals(
+          goalsResponse,
+        ),
+      );
+    } catch (
+      loadError
+    ) {
+      console.error(
+        'Failed to load dashboard:',
+        loadError,
+      );
+
+      setError(
+        loadError.message
+        || 'Failed to load dashboard.',
+      );
+    } finally {
+      setLoading(
+        false,
+      );
+    }
+  }
+
+
+  useEffect(() => {
+    // Initial dashboard load intentionally triggers state updates after async fetches.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDashboard();
+  }, []);
+
+
+  const today =
+    getToday();
+
+  const goalsConfigured =
+    getConfiguredGoals(
+      goals,
+    ).length > 0;
+
+
+  /* =========================================
+     SORTED DATA
+  ========================================= */
+
+  const sortedWorkouts =
+    useMemo(
+      () =>
+        [...workouts].sort(
+          (
+            a,
+            b,
+          ) =>
+            parseDate(
+              b.date,
+            )
+            - parseDate(
+              a.date,
+            )
+            || (
+              new Date(
+                b.createdAt
+                || 0,
+              )
+              - new Date(
+                a.createdAt
+                || 0,
+              )
+            ),
+        ),
+      [
+        workouts,
+      ],
+    );
+
+
+  const sortedProgress =
+    useMemo(
+      () =>
+        [...progress].sort(
+          (
+            a,
+            b,
+          ) =>
+            parseDate(
+              b.date,
+            )
+            - parseDate(
+              a.date,
+            )
+            || (
+              new Date(
+                b.createdAt
+                || 0,
+              )
+              - new Date(
+                a.createdAt
+                || 0,
+              )
+            ),
+        ),
+      [
+        progress,
+      ],
+    );
+
+
+  const latestWorkout =
+    sortedWorkouts[0]
+    || null;
+
+
+  const latestWeight =
+    sortedProgress.find(
+      (entry) =>
+        entry.weight !==
+          null
+        && entry.weight !==
+          undefined
+        && entry.weight !==
+          ''
+        && Number.isFinite(
+          Number(
+            entry.weight,
+          ),
+        ),
+    ) || null;
+
+
+  /* =========================================
+     TODAY
+  ========================================= */
+
+  const todayWorkouts =
+    workouts.filter(
+      (workout) =>
+        normalizeDate(
+          workout.date,
+        ) === today,
+    );
+
+
+  const todayNutrition =
+    nutrition[
+      today
+    ] || [];
+
+
+  const todayTotals =
+    getNutritionTotals(
+      todayNutrition,
+    );
+
+
+  const todayIsRestDay =
+    restDays.includes(
+      today,
+    )
+    && todayWorkouts.length ===
+      0;
+
+
+  const todayScore =
+    getDailyScore({
+      hasWorkout:
+        todayWorkouts.length >
+        0,
+
+      isRestDay:
+        todayIsRestDay,
+
+      nutritionEntries:
+        todayNutrition,
+
+      goals,
+    });
+
+
+  const scoreLevel =
+    getScoreLevel(
+      todayScore.total,
+    );
+
+
+  /* =========================================
+     WEEK
+  ========================================= */
+
+  const week =
+    getWeekRange();
+
+
+  const workoutsThisWeek =
+    workouts.filter(
+      (workout) => {
+        const date =
+          parseDate(
+            normalizeDate(
+              workout.date,
+            ),
+          );
+
+        return (
+          date >=
+            week.start
+          && date <
+            week.end
+        );
+      },
+    ).length;
+
+
+  /* =========================================
+     LAST WORKOUT
+  ========================================= */
+
+  const latestWorkoutStats =
+    latestWorkout
+      ? getWorkoutStats(
+          latestWorkout,
+        )
+      : null;
+
+
+  /* =========================================
+     RECENT ACTIVITY
+  ========================================= */
+
+  const recentActivity =
+    useMemo(() => {
+      const items = [];
+
+
+      workouts.forEach(
+        (workout) => {
+          const date =
+            normalizeDate(
+              workout.date,
+            );
+
+          items.push({
+            id:
+              `workout-${workout.id}`,
+
+            date,
+
+            createdAt:
+              workout.createdAt
+              || `${date}T12:00:00`,
+
+            type:
+              'workout',
+
+            title:
+              workout.name
+              || 'Workout',
+
+            description:
+              'Workout completed',
+          });
+        },
+      );
+
+
+      Object.entries(
+        nutrition,
+      ).forEach(
+        (
+          [
+            date,
+            entries,
+          ],
+        ) => {
+          if (
+            !Array.isArray(
+              entries,
+            )
+            || entries.length ===
+              0
+          ) {
+            return;
+          }
+
+          const latestCreatedAt =
+            entries
+              .map(
+                (entry) =>
+                  entry.createdAt,
+              )
+              .filter(
+                Boolean,
+              )
+              .sort()
+              .at(
+                -1,
+              );
+
+          items.push({
+            id:
+              `nutrition-${date}`,
+
+            date,
+
+            createdAt:
+              latestCreatedAt
+              || `${date}T23:00:00`,
+
+            type:
+              'nutrition',
+
+            title:
+              'Nutrition logged',
+
+            description:
+              `${entries.length} ${
+                entries.length ===
+                1
+                  ? 'food entry'
+                  : 'food entries'
+              }`,
+          });
+        },
+      );
+
+
+      progress.forEach(
+        (entry) => {
+          items.push({
+            id:
+              `progress-${entry.id}`,
+
+            date:
+              entry.date,
+
+            createdAt:
+              entry.createdAt
+              || `${entry.date}T12:00:00`,
+
+            type:
+              'progress',
+
+            title:
+              'Progress updated',
+
+            description:
+              entry.weight !==
+                null
+                ? `${entry.weight} kg`
+                : 'New measurement',
+          });
+        },
+      );
+
+
+      restDays.forEach(
+        (date) => {
+          const hasWorkout =
+            workouts.some(
+              (workout) =>
+                normalizeDate(
+                  workout.date,
+                ) === date,
+            );
+
+          if (
+            hasWorkout
+          ) {
+            return;
+          }
+
+          items.push({
+            id:
+              `rest-${date}`,
+
+            date,
+
+            createdAt:
+              `${date}T12:00:00`,
+
+            type:
+              'rest',
+
+            title:
+              'Recovery day',
+
+            description:
+              'Intentional rest day',
+          });
+        },
+      );
+
+
+      return items
+        .sort(
+          (
+            a,
+            b,
+          ) =>
+            new Date(
+              b.createdAt
+              || `${b.date}T12:00:00`,
+            )
+            - new Date(
+              a.createdAt
+              || `${a.date}T12:00:00`,
+            ),
+        )
+        .slice(
+          0,
+          6,
+        );
+    }, [
+      workouts,
+      nutrition,
+      progress,
+      restDays,
+    ]);
+
+
+  /* =========================================
+     RENDER
+  ========================================= */
+
+  return (
+    <main className="dashboard-page">
+
+      {/* =====================================
+          HEADER
+      ===================================== */}
+
+      <header className="page__header">
+
+        <div className="page__header-text">
+
+          <span className="page__eyebrow">
+            Overview
+          </span>
+
+          <h1 className="page__title">
+            Dashboard
+          </h1>
+
+          <p className="page__description">
+            Your training,
+            recovery, nutrition
+            and progress at a
+            glance.
+          </p>
+
+        </div>
+
+
+        <Link
+          to="/workouts/session"
+          className="button button--primary"
+        >
+          <Plus
+            size={16}
+          />
+
+          Log Workout
+        </Link>
+
+      </header>
+
+
+      {/* =====================================
+          LOADING / ERROR
+      ===================================== */}
+
+      {loading && (
+
+        <section className="panel dashboard-page__empty">
+
+          <CalendarDays
+            size={22}
+          />
+
+          <strong>
+            Loading dashboard
+          </strong>
+
+          <span>
+            Loading your FORGE
+            data from the server.
+          </span>
+
+        </section>
+
+      )}
+
+
+      {!loading
+      && error && (
+
+        <section className="panel dashboard-page__empty">
+
+          <CalendarDays
+            size={22}
+          />
+
+          <strong>
+            Dashboard unavailable
+          </strong>
+
+          <span>
+            {error}
+          </span>
+
+        </section>
+
+      )}
+
+
+      {!loading
+      && !error && (
+
+        <>
+
+          {/* =====================================
+              STATS
+          ===================================== */}
+
+          <section className="dashboard-page__stats">
+
+            <article className="dashboard-page__stat">
+
+              <div className="dashboard-page__stat-icon">
+
+                <Dumbbell
+                  size={18}
+                />
+
+              </div>
+
+              <div>
+
+                <span>
+                  This Week
+                </span>
+
+                <strong>
+                  {
+                    workoutsThisWeek
+                  }
+                </strong>
+
+                <small>
+                  workouts
+                </small>
+
+              </div>
+
+            </article>
+
+
+            <article className="dashboard-page__stat">
+
+              <div className="dashboard-page__stat-icon">
+
+                <Scale
+                  size={18}
+                />
+
+              </div>
+
+              <div>
+
+                <span>
+                  Latest Weight
+                </span>
+
+                <strong>
+                  {
+                    latestWeight
+                      ? `${latestWeight.weight} kg`
+                      : '—'
+                  }
+                </strong>
+
+                <small>
+                  {
+                    latestWeight
+                      ? formatShortDate(
+                          latestWeight.date,
+                        )
+                      : 'not logged'
+                  }
+                </small>
+
+              </div>
+
+            </article>
+
+
+            <article className="dashboard-page__stat">
+
+              <div className="dashboard-page__stat-icon">
+
+                <Flame
+                  size={18}
+                />
+
+              </div>
+
+              <div>
+
+                <span>
+                  Calories Today
+                </span>
+
+                <strong>
+                  {Math.round(
+                    todayTotals.calories,
+                  )}
+                </strong>
+
+                <small>
+                  {
+                    goals.calories
+                      ? `of ${goals.calories} kcal`
+                      : 'kcal logged'
+                  }
+                </small>
+
+              </div>
+
+            </article>
+
+
+            <article className="dashboard-page__stat">
+
+              <div className="dashboard-page__stat-icon">
+
+                <Utensils
+                  size={18}
+                />
+
+              </div>
+
+              <div>
+
+                <span>
+                  Protein Today
+                </span>
+
+                <strong>
+                  {Math.round(
+                    todayTotals.protein,
+                  )}g
+                </strong>
+
+                <small>
+                  {
+                    goals.protein
+                      ? `of ${goals.protein}g`
+                      : 'logged'
+                  }
+                </small>
+
+              </div>
+
+            </article>
+
+          </section>
+
+
+          {/* =====================================
+              MAIN GRID
+          ===================================== */}
+
+          <section className="dashboard-page__grid">
+
+            {/* =================================
+                TODAY
+            ================================= */}
+
+            <article className="panel dashboard-page__today">
+
+              <div className="dashboard-page__panel-heading">
+
+                <div>
+
+                  <span>
+                    Daily Progress
+                  </span>
+
+                  <h2>
+                    Today
+                  </h2>
+
+                </div>
+
+                <Link
+                  to="/calendar"
+                >
+                  Calendar
+
+                  <ArrowRight
+                    size={14}
+                  />
+                </Link>
+
+              </div>
+
+
+              <div className="dashboard-page__today-content">
+
+                <div
+                  className={`dashboard-page__score dashboard-page__score--${scoreLevel}`}
+                >
+
+                  <strong>
+                    {
+                      todayScore.total
+                    }%
+                  </strong>
+
+                  <span>
+                    {getScoreLabel(
+                      todayScore.total,
+                    )}
+                  </span>
+
+                </div>
+
+
+                <div className="dashboard-page__today-breakdown">
+
+                  <div>
+
+                    <div className="dashboard-page__today-label">
+
+                      <span>
+                        Training /
+                        Recovery
+                      </span>
+
+                      <strong>
+                        {
+                          todayScore.training
+                        }
+                        /40
+                      </strong>
+
+                    </div>
+
+                    <div className="dashboard-page__progress-bar">
+
+                      <span
+                        style={{
+                          width:
+                            `${
+                              (
+                                todayScore.training
+                                / 40
+                              )
+                              * 100
+                            }%`,
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div className="dashboard-page__today-label">
+
+                      <span>
+                        Nutrition
+                      </span>
+
+                      <strong>
+                        {
+                          todayScore.nutrition
+                        }
+                        /60
+                      </strong>
+
+                    </div>
+
+                    <div className="dashboard-page__progress-bar">
+
+                      <span
+                        style={{
+                          width:
+                            `${
+                              (
+                                todayScore.nutrition
+                                / 60
+                              )
+                              * 100
+                            }%`,
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="dashboard-page__today-status">
+
+                {todayWorkouts.length >
+                0 ? (
+
+                  <div>
+
+                    <Dumbbell
+                      size={16}
+                    />
+
+                    <span>
+                      Workout completed
+                    </span>
+
+                  </div>
+
+                ) : todayIsRestDay ? (
+
+                  <div className="dashboard-page__today-rest">
+
+                    <Moon
+                      size={16}
+                    />
+
+                    <span>
+                      Recovery day
+                    </span>
+
+                  </div>
+
+                ) : (
+
+                  <div>
+
+                    <Dumbbell
+                      size={16}
+                    />
+
+                    <span>
+                      No workout yet
+                    </span>
+
+                  </div>
+
+                )}
+
+              </div>
+
+
+              <div className="dashboard-page__score-source">
+
+                <Target
+                  size={13}
+                />
+
+                <span>
+                  {
+                    goalsConfigured
+                      ? 'Nutrition score uses your calorie and macro targets.'
+                      : 'Nutrition targets are not set yet, so meal logging is used.'
+                  }
+                </span>
+
+              </div>
+
+            </article>
+
+
+            {/* =================================
+                LAST WORKOUT
+            ================================= */}
+
+            <article className="panel dashboard-page__last-workout">
+
+              <div className="dashboard-page__panel-heading">
+
+                <div>
+
+                  <span>
+                    Training
+                  </span>
+
+                  <h2>
+                    Last Workout
+                  </h2>
+
+                </div>
+
+                <Link
+                  to="/workouts"
+                >
+                  View All
+
+                  <ArrowRight
+                    size={14}
+                  />
+                </Link>
+
+              </div>
+
+
+              {!latestWorkout ? (
+
+                <div className="dashboard-page__empty">
+
+                  <Dumbbell
+                    size={22}
+                  />
+
+                  <strong>
+                    No workouts yet
+                  </strong>
+
+                  <span>
+                    Your latest
+                    completed workout
+                    will appear here.
+                  </span>
+
+                </div>
+
+              ) : (
+
+                <>
+
+                  <div className="dashboard-page__workout-title">
+
+                    <div className="dashboard-page__workout-icon">
+
+                      <Dumbbell
+                        size={18}
+                      />
+
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        {
+                          latestWorkout.name
+                        }
+                      </strong>
+
+                      <span>
+                        {formatDate(
+                          latestWorkout.date,
+                        )}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="dashboard-page__workout-stats">
+
+                    <div>
+
+                      <strong>
+                        {
+                          latestWorkoutStats
+                            .exercises
+                        }
+                      </strong>
+
+                      <span>
+                        exercises
+                      </span>
+
+                    </div>
+
+
+                    {latestWorkoutStats
+                      .repSets > 0 && (
+
+                      <div>
+
+                        <strong>
+                          {
+                            latestWorkoutStats
+                              .repSets
+                          }
+                        </strong>
+
+                        <span>
+                          sets
+                        </span>
+
+                      </div>
+
+                    )}
+
+
+                    {latestWorkoutStats
+                      .intervals > 0 && (
+
+                      <div>
+
+                        <strong>
+                          {
+                            latestWorkoutStats
+                              .intervals
+                          }
+                        </strong>
+
+                        <span>
+                          intervals
+                        </span>
+
+                      </div>
+
+                    )}
+
+
+                    {latestWorkoutStats
+                      .tut > 0 && (
+
+                      <div>
+
+                        <strong>
+                          {formatDuration(
+                            latestWorkoutStats
+                              .tut,
+                          )}
+                        </strong>
+
+                        <span>
+                          TUT
+                        </span>
+
+                      </div>
+
+                    )}
+
+
+                    {latestWorkoutStats
+                      .volume > 0 && (
+
+                      <div>
+
+                        <strong>
+                          {formatVolume(
+                            latestWorkoutStats
+                              .volume,
+                          )}
+                        </strong>
+
+                        <span>
+                          volume
+                        </span>
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
+                  <div className="dashboard-page__exercise-preview">
+
+                    {(
+                      latestWorkout
+                        .exercises
+                      || []
+                    )
+                      .slice(
+                        0,
+                        4,
+                      )
+                      .map(
+                        (
+                          exercise,
+                        ) => (
+
+                          <div
+                            key={
+                              exercise.id
+                            }
+                          >
+
+                            <span>
+                              {
+                                exercise.name
+                              }
+                            </span>
+
+                            <small>
+                              {
+                                getTrackingMode(
+                                  exercise,
+                                ) ===
+                                'time'
+                                  ? `${
+                                      exercise
+                                        .sets
+                                        ?.length
+                                      || 0
+                                    } intervals`
+                                  : `${
+                                      exercise
+                                        .sets
+                                        ?.length
+                                      || 0
+                                    } sets`
+                              }
+                            </small>
+
+                          </div>
+
+                        ),
+                      )}
+
+                  </div>
+
+
+                  {latestWorkout
+                    .youtubeUrl && (
+
+                    <a
+                      href={
+                        latestWorkout
+                          .youtubeUrl
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="dashboard-page__video-link"
+                    >
+                      <ExternalLink
+                        size={14}
+                      />
+
+                      Open workout video
+                    </a>
+
+                  )}
+
+                </>
+
+              )}
+
+            </article>
+
+
+            {/* =================================
+                NUTRITION
+            ================================= */}
+
+            <article className="panel dashboard-page__nutrition">
+
+              <div className="dashboard-page__panel-heading">
+
+                <div>
+
+                  <span>
+                    Nutrition
+                  </span>
+
+                  <h2>
+                    Today
+                  </h2>
+
+                </div>
+
+                <Link
+                  to="/nutrition"
+                >
+                  Open Log
+
+                  <ArrowRight
+                    size={14}
+                  />
+                </Link>
+
+              </div>
+
+
+              <div className="dashboard-page__macro-grid">
+
+                <div>
+
+                  <strong>
+                    {Math.round(
+                      todayTotals.calories,
+                    )}
+                  </strong>
+
+                  <span>
+                    {
+                      goals.calories
+                        ? `/ ${goals.calories} kcal`
+                        : 'kcal'
+                    }
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <strong>
+                    {Math.round(
+                      todayTotals.protein,
+                    )}g
+                  </strong>
+
+                  <span>
+                    {
+                      goals.protein
+                        ? `/ ${goals.protein}g protein`
+                        : 'protein'
+                    }
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <strong>
+                    {Math.round(
+                      todayTotals.carbs,
+                    )}g
+                  </strong>
+
+                  <span>
+                    {
+                      goals.carbs
+                        ? `/ ${goals.carbs}g carbs`
+                        : 'carbs'
+                    }
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <strong>
+                    {Math.round(
+                      todayTotals.fat,
+                    )}g
+                  </strong>
+
+                  <span>
+                    {
+                      goals.fat
+                        ? `/ ${goals.fat}g fat`
+                        : 'fat'
+                    }
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div className="dashboard-page__meals">
+
+                {MEALS.map(
+                  (meal) => {
+                    const mealEntries =
+                      todayNutrition.filter(
+                        (entry) =>
+                          entry.meal ===
+                          meal,
+                      );
+
+                    const logged =
+                      mealEntries.length >
+                      0;
+
+                    return (
+                      <div
+                        key={
+                          meal
+                        }
+                        className={
+                          logged
+                            ? 'dashboard-page__meal dashboard-page__meal--logged'
+                            : 'dashboard-page__meal'
+                        }
+                      >
+
+                        <div>
+
+                          <span>
+                            {meal}
+                          </span>
+
+                          <small>
+                            {
+                              logged
+                                ? `${mealEntries.length} ${
+                                    mealEntries.length ===
+                                    1
+                                      ? 'item'
+                                      : 'items'
+                                  }`
+                                : 'Not logged'
+                            }
+                          </small>
+
+                        </div>
+
+                        <span className="dashboard-page__meal-status">
+                          {
+                            logged
+                              ? '✓'
+                              : '—'
+                          }
+                        </span>
+
+                      </div>
+                    );
+                  },
+                )}
+
+              </div>
+
+            </article>
+
+
+            {/* =================================
+                RECENT ACTIVITY
+            ================================= */}
+
+            <article className="panel dashboard-page__activity">
+
+              <div className="dashboard-page__panel-heading">
+
+                <div>
+
+                  <span>
+                    History
+                  </span>
+
+                  <h2>
+                    Recent Activity
+                  </h2>
+
+                </div>
+
+              </div>
+
+
+              {recentActivity.length ===
+              0 ? (
+
+                <div className="dashboard-page__empty">
+
+                  <CalendarDays
+                    size={22}
+                  />
+
+                  <strong>
+                    Nothing logged yet
+                  </strong>
+
+                  <span>
+                    Your recent
+                    activity will
+                    appear here.
+                  </span>
+
+                </div>
+
+              ) : (
+
+                <div className="dashboard-page__activity-list">
+
+                  {recentActivity.map(
+                    (
+                      item,
+                    ) => {
+                      let Icon =
+                        CalendarDays;
+
+                      if (
+                        item.type ===
+                        'workout'
+                      ) {
+                        Icon =
+                          Dumbbell;
+                      }
+
+                      if (
+                        item.type ===
+                        'nutrition'
+                      ) {
+                        Icon =
+                          Utensils;
+                      }
+
+                      if (
+                        item.type ===
+                        'progress'
+                      ) {
+                        Icon =
+                          Scale;
+                      }
+
+                      if (
+                        item.type ===
+                        'rest'
+                      ) {
+                        Icon =
+                          Moon;
+                      }
+
+                      return (
+                        <div
+                          className="dashboard-page__activity-item"
+                          key={
+                            item.id
+                          }
+                        >
+
+                          <div className="dashboard-page__activity-icon">
+
+                            <Icon
+                              size={15}
+                            />
+
+                          </div>
+
+                          <div>
+
+                            <strong>
+                              {
+                                item.title
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                item.description
+                              }
+                            </span>
+
+                          </div>
+
+                          <time>
+                            {formatShortDate(
+                              item.date,
+                            )}
+                          </time>
+
+                        </div>
+                      );
+                    },
+                  )}
+
+                </div>
+
+              )}
+
+            </article>
+
+          </section>
+
+
+          {/* =====================================
+              QUICK ACTIONS
+          ===================================== */}
+
+          <section className="dashboard-page__quick-actions">
+
+            <Link
+              to="/workouts/session"
+              className="dashboard-page__quick-action"
+            >
+              <Dumbbell
+                size={17}
+              />
+
+              <div>
+
+                <strong>
+                  Log Workout
+                </strong>
+
+                <span>
+                  Reps or timed intervals
+                </span>
+
+              </div>
+
+              <ArrowRight
+                size={15}
+              />
+            </Link>
+
+
+            <Link
+              to="/nutrition"
+              className="dashboard-page__quick-action"
+            >
+              <Utensils
+                size={17}
+              />
+
+              <div>
+
+                <strong>
+                  Add Food
+                </strong>
+
+                <span>
+                  Update today's nutrition
+                </span>
+
+              </div>
+
+              <ArrowRight
+                size={15}
+              />
+            </Link>
+
+
+            <Link
+              to="/calendar"
+              className="dashboard-page__quick-action"
+            >
+              <CalendarDays
+                size={17}
+              />
+
+              <div>
+
+                <strong>
+                  Calendar
+                </strong>
+
+                <span>
+                  Progress and rest days
+                </span>
+
+              </div>
+
+              <ArrowRight
+                size={15}
+              />
+            </Link>
+
+
+            <Link
+              to="/progress"
+              className="dashboard-page__quick-action"
+            >
+              <Scale
+                size={17}
+              />
+
+              <div>
+
+                <strong>
+                  Measurements
+                </strong>
+
+                <span>
+                  Update body progress
+                </span>
+
+              </div>
+
+              <ArrowRight
+                size={15}
+              />
+            </Link>
+
+          </section>
+
+        </>
+
+      )}
+
+    </main>
+  );
+}
