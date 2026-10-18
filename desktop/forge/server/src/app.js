@@ -8,6 +8,7 @@ import progressRoutes from './routes/progressRoutes.js';
 import restDayRoutes from './routes/restDayRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import backupRoutes from "./routes/backupRoutes.js";
 
 const app = express();
 
@@ -55,6 +56,8 @@ app.use('/api/rest-days', restDayRoutes);
 app.use('/api/profile', profileRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
+
+app.use("/api/backup", backupRoutes);
 
 
 // ============================================================

@@ -1,4 +1,6 @@
 import {
+  Download,
+  HardDriveDownload,
   RotateCcw,
   Save,
   Target,
@@ -21,8 +23,7 @@ import './SettingsPage.css';
 /* =========================================
    LOCAL DATA
 
-   All permanent FORGE data is now stored
-   in PostgreSQL.
+   Permanent FORGE data is stored in SQLite.
 
    Only the unfinished workout draft stays
    in localStorage intentionally.
@@ -116,6 +117,8 @@ export default function SettingsPage() {
     savingGoals,
     setSavingGoals,
   ] = useState(false);
+
+  const [downloadingBackup, setDownloadingBackup] = useState(false);
 
 
   /* =========================================
@@ -389,6 +392,58 @@ export default function SettingsPage() {
     setMessage(
       'Workout draft cleared.',
     );
+  }
+
+
+  /* =========================================
+     DATABASE BACKUP
+  ========================================= */
+
+  async function downloadBackup() {
+    if (downloadingBackup) return;
+
+    setDownloadingBackup(true);
+    setMessage('Preparing your database backup...');
+
+    let objectUrl;
+
+    try {
+      const apiBase = (
+        import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      ).replace(/\/$/, '');
+
+      const response = await fetch(`${apiBase}/backup/download`);
+
+      if (!response.ok) {
+        throw new Error('Could not download the database backup.');
+      }
+
+      const blob = await response.blob();
+      if (!blob.size) {
+        throw new Error('The downloaded backup was empty.');
+      }
+
+      objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const date = new Date().toLocaleDateString('en-CA');
+
+      link.href = objectUrl;
+      link.download = `forge-backup-${date}.sqlite`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setMessage('Backup download started. Keep the file somewhere safe.');
+    } catch (error) {
+      console.error('Failed to download database backup:', error);
+      setMessage(error.message || 'Failed to download database backup.');
+    } finally {
+      if (objectUrl) {
+        // Allow the browser to finish starting the download.
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+      }
+      setDownloadingBackup(false);
+    }
   }
 
 
@@ -706,6 +761,45 @@ export default function SettingsPage() {
 
 
       {/* =====================================
+          BACKUP & RESTORE
+      ===================================== */}
+
+      <section className="panel settings-page__section">
+        <div className="settings-page__section-heading">
+          <div className="settings-page__section-icon">
+            <HardDriveDownload size={18} />
+          </div>
+
+          <div>
+            <h2>Backup &amp; Restore</h2>
+            <p>
+              Download a complete copy of your local FORGE SQLite
+              database, including workouts, exercises, nutrition,
+              progress, and profile information.
+            </p>
+          </div>
+        </div>
+
+        <div className="settings-page__goal-note">
+          Store backups in a safe location. Restoring a backup will be
+          added separately, with validation and recovery safeguards.
+        </div>
+
+        <div className="settings-page__backup-actions">
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={downloadBackup}
+            disabled={downloadingBackup}
+          >
+            <Download size={15} />
+            {downloadingBackup ? 'Preparing Backup...' : 'Download Backup'}
+          </button>
+        </div>
+      </section>
+
+
+      {/* =====================================
           WORKOUT DRAFT
       ===================================== */}
 
@@ -781,15 +875,14 @@ export default function SettingsPage() {
         <div>
 
           <strong>
-            Persistent data is server-backed
+            Your data is stored locally
           </strong>
 
           <span>
-            Workouts, nutrition,
-            progress, profile,
-            rest days and nutrition
-            targets are stored in
-            PostgreSQL.
+            Workouts, nutrition, progress, profile, rest days,
+            exercise library, and nutrition targets are stored locally
+            in SQLite. No internet connection is required to access
+            your saved data.
           </span>
 
         </div>
