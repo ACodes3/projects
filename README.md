@@ -13,6 +13,7 @@ The following project categories are currently available in this repository:
 | [devops/](devops/) | Deployment, infrastructure, automation, and DevOps-related work. |
 | [frontend-projects/](frontend-projects/) | User interfaces and client-side web applications. |
 | [fullstack-projects/](fullstack-projects/) | Applications combining frontend and backend technologies. |
+| [desktop/](desktop/) | Desktop applications (Windows, Linux, MacOS). |
 
 Some projects include their own README with setup instructions, technology details, and usage notes.
 
