@@ -827,3 +827,46 @@
     font-size: 27px;
   }
 }
+/* Back to Start shares the sidebar navigation style. */
+.app-shell__sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-shell__back-to-start {
+  font-family: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-shell__back-to-start:focus-visible {
+  outline: 2px solid #d9ff77;
+  outline-offset: -2px;
+}
+
+@media (max-width: 850px) {
+  .app-shell__sidebar-bottom {
+    flex-direction: row;
+    gap: 2px;
+    width: 116px;
+  }
+
+  .app-shell__sidebar-bottom .app-shell__nav-link {
+    flex: 1;
+    width: auto;
+  }
+}
+
+@media (max-width: 650px) {
+  .app-shell__sidebar-bottom {
+    width: 104px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-shell__sidebar-bottom {
+    width: 96px;
+  }
+}

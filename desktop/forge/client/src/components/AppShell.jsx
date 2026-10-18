@@ -1,5 +1,6 @@
 import {
   Activity,
+  ArrowLeft,
   CalendarDays,
   Dumbbell,
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
 import {
   NavLink,
   Outlet,
+  useNavigate,
 } from 'react-router-dom';
 
 import './AppShell.css';
@@ -56,6 +58,13 @@ const navigation = [
 ];
 
 export default function AppShell() {
+  const navigate = useNavigate();
+
+  function returnToStart() {
+    sessionStorage.removeItem('forge:entered');
+    navigate('/start', { replace: true });
+  }
+
   return (
     <div className="app-shell">
 
@@ -159,6 +168,17 @@ export default function AppShell() {
               Settings
             </span>
           </NavLink>
+
+          <button
+            type="button"
+            className="app-shell__nav-link app-shell__back-to-start"
+            onClick={returnToStart}
+            aria-label="Back to Start"
+            title="Back to Start"
+          >
+            <ArrowLeft size={18} strokeWidth={1.8} />
+            <span>Back to Start</span>
+          </button>
 
         </div>
 
