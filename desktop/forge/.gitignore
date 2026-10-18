@@ -1,0 +1,22 @@
+# SQLite database files
+*.sqlite
+*.sqlite3
+*.db
+
+# SQLite journal and WAL files
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
