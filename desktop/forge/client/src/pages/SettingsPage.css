@@ -218,6 +218,37 @@
 }
 
 /* =========================================
+   SELECTED BACKUP
+========================================= */
+
+.settings-page__backup-result {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217, 255, 119, 0.12);
+  border-radius: 7px;
+  background: #111416;
+  overflow-wrap: anywhere;
+}
+
+.settings-page__backup-result strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #d9ff77;
+  font-size: 11px;
+}
+
+.settings-page__backup-result span,
+.settings-page__backup-result p {
+  color: #939ca2;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.settings-page__backup-result p {
+  margin: 7px 0 0;
+}
+
+/* =========================================
    DATA LIST
 ========================================= */
 
