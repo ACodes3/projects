@@ -1,30 +1,29 @@
+
 import dotenv from 'dotenv';
 
 import app from './app.js';
-import pool from './config/db.js';
+import db from './config/sqlite.js';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
+// ============================================================
+// START FORGE API
+// ============================================================
 
-async function startServer() {
+function startServer() {
   try {
-    const result = await pool.query(
-      'SELECT current_database(), NOW()',
-    );
+    // Check SQLite database connection
+    const result = db
+      .prepare('SELECT COUNT(*) AS total FROM exercises')
+      .get();
 
-    console.log('PostgreSQL connected successfully');
-    console.log(
-      'Database:',
-      result.rows[0].current_database,
-    );
-    console.log(
-      'Server time:',
-      result.rows[0].now,
-    );
+    console.log('SQLite connected successfully');
+    console.log('Exercises in database:', result.total);
 
-    app.listen(PORT, () => {
+    // Start Express server
+    app.listen(PORT, '127.0.0.1', () => {
       console.log(
         `FORGE API running at http://localhost:${PORT}`,
       );
@@ -36,6 +35,5 @@ async function startServer() {
     process.exit(1);
   }
 }
-
 
 startServer();
