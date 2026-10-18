@@ -1,5 +1,7 @@
 import {
   Download,
+  FileCheck2,
+  FolderOpen,
   HardDriveDownload,
   RotateCcw,
   Save,
@@ -119,6 +121,11 @@ export default function SettingsPage() {
   ] = useState(false);
 
   const [downloadingBackup, setDownloadingBackup] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState(null);
+  const [backupValidation, setBackupValidation] = useState(null);
+  const [selectingBackup, setSelectingBackup] = useState(false);
+  const [validatingBackup, setValidatingBackup] = useState(false);
+
 
 
   /* =========================================
@@ -443,6 +450,67 @@ export default function SettingsPage() {
         setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       }
       setDownloadingBackup(false);
+    }
+  }
+
+
+  /* =========================================
+     SELECT & VALIDATE BACKUP (READ ONLY)
+  ========================================= */
+
+  async function selectBackup() {
+    if (selectingBackup || validatingBackup) return;
+
+    if (typeof window.forgeDesktop?.selectBackup !== 'function') {
+      setMessage('Backup selection is available in the FORGE desktop app.');
+      return;
+    }
+
+    setSelectingBackup(true);
+    setMessage('');
+    try {
+      const selection = await window.forgeDesktop.selectBackup();
+      if (!selection) return; // Cancel keeps previous selection.
+
+      setSelectedBackup(selection.name);
+      setBackupValidation(null);
+      setMessage(`Selected backup: ${selection.name}`);
+    } catch (error) {
+      console.error('Failed to select backup:', error);
+      setMessage(error.message || 'Could not select backup.');
+    } finally {
+      setSelectingBackup(false);
+    }
+  }
+
+  async function validateBackup() {
+    if (!selectedBackup || validatingBackup || selectingBackup) return;
+
+    if (typeof window.forgeDesktop?.validateBackup !== 'function') {
+      setMessage('Backup validation is available in the FORGE desktop app.');
+      return;
+    }
+
+    setValidatingBackup(true);
+    setBackupValidation(null);
+    setMessage('Validating selected backup...');
+
+    try {
+      const result = await window.forgeDesktop.validateBackup();
+      if (!result?.success || !result?.valid) {
+        throw new Error(result?.message || 'Backup validation failed.');
+      }
+
+      setBackupValidation({
+        exercises: result.exercises,
+        workouts: result.workouts,
+      });
+      setMessage('Backup validated successfully. No data was changed.');
+    } catch (error) {
+      console.error('Failed to validate backup:', error);
+      setMessage(error.message || 'Backup validation failed.');
+    } finally {
+      setValidatingBackup(false);
     }
   }
 
@@ -781,8 +849,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings-page__goal-note">
-          Store backups in a safe location. Restoring a backup will be
-          added separately, with validation and recovery safeguards.
+          Keep downloaded backups in a safe location. You can select and
+          validate a backup here. Restoring data is not enabled yet.
         </div>
 
         <div className="settings-page__backup-actions">
@@ -795,7 +863,40 @@ export default function SettingsPage() {
             <Download size={15} />
             {downloadingBackup ? 'Preparing Backup...' : 'Download Backup'}
           </button>
+          <button
+            type="button"
+            className="button"
+            onClick={selectBackup}
+            disabled={selectingBackup || validatingBackup}
+          >
+            <FolderOpen size={15} />
+            {selectingBackup ? 'Selecting...' : 'Select Backup'}
+          </button>
+          <button
+            type="button"
+            className="button"
+            onClick={validateBackup}
+            disabled={!selectedBackup || selectingBackup || validatingBackup}
+          >
+            <FileCheck2 size={15} />
+            {validatingBackup ? 'Validating...' : 'Validate Backup'}
+          </button>
         </div>
+
+        {selectedBackup && (
+          <div className="settings-page__backup-result" aria-live="polite">
+            <strong>Selected file</strong>
+            <span>{selectedBackup}</span>
+            {backupValidation ? (
+              <p>
+                Valid FORGE backup — {backupValidation.exercises} exercises,
+                {' '}{backupValidation.workouts} workouts.
+              </p>
+            ) : (
+              <p>Not validated yet. Your current database is unchanged.</p>
+            )}
+          </div>
+        )}
       </section>
 
 
