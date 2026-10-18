@@ -9,6 +9,7 @@ import {
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Dumbbell,
   Pencil,
@@ -115,6 +116,7 @@ export default function LibraryPage() {
   const [muscle, setMuscle] = useState("All");
   const [equipment, setEquipment] = useState("All");
   const [type, setType] = useState("All");
+  const [page, setPage] = useState(1);
 
   const [selectedId, setSelectedId] = useState(null);
 
@@ -262,6 +264,13 @@ export default function LibraryPage() {
     type,
   ]);
 
+  // Paginate the filtered results, not the full exercise library.
+  const PAGE_SIZE = 20;
+  const pageCount = Math.max(1, Math.ceil(filteredExercises.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const visibleExercises = filteredExercises.slice(pageStart, pageStart + PAGE_SIZE);
+
   const filtersActive =
     search !== "" ||
     muscle !== "All" ||
@@ -273,6 +282,7 @@ export default function LibraryPage() {
     setMuscle("All");
     setEquipment("All");
     setType("All");
+    setPage(1);
   }
 
   /* =========================================
@@ -600,7 +610,7 @@ export default function LibraryPage() {
             aria-label="Search exercises"
             value={search}
             onChange={(event) =>
-              setSearch(event.target.value)
+              { setSearch(event.target.value); setPage(1); }
             }
           />
 
@@ -608,7 +618,7 @@ export default function LibraryPage() {
             <button
               type="button"
               aria-label="Clear search"
-              onClick={() => setSearch("")}
+              onClick={() => { setSearch(""); setPage(1); }}
             >
               <X size={15} />
             </button>
@@ -624,7 +634,7 @@ export default function LibraryPage() {
             id="muscle-filter"
             value={muscle}
             onChange={(event) =>
-              setMuscle(event.target.value)
+              { setMuscle(event.target.value); setPage(1); }
             }
           >
             {muscleGroups.map((item) => (
@@ -647,7 +657,7 @@ export default function LibraryPage() {
             id="equipment-filter"
             value={equipment}
             onChange={(event) =>
-              setEquipment(event.target.value)
+              { setEquipment(event.target.value); setPage(1); }
             }
           >
             {equipmentTypes.map((item) => (
@@ -670,7 +680,7 @@ export default function LibraryPage() {
             id="type-filter"
             value={type}
             onChange={(event) =>
-              setType(event.target.value)
+              { setType(event.target.value); setPage(1); }
             }
           >
             {exerciseTypes.map((item) => (
@@ -764,7 +774,7 @@ export default function LibraryPage() {
               </button>
             </div>
           ) : (
-            filteredExercises.map((exercise) => {
+            visibleExercises.map((exercise) => {
               const selected =
                 selectedId === exercise.id;
 
@@ -805,6 +815,34 @@ export default function LibraryPage() {
                 </button>
               );
             })
+          )}
+          {!loading && filteredExercises.length > 0 && (
+            <nav className="library-page__pagination" aria-label="Exercise pages">
+              <span className="library-page__pagination-summary">
+                Showing {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, filteredExercises.length)} of {filteredExercises.length}
+              </span>
+              <div className="library-page__pagination-actions">
+                <button
+                  type="button"
+                  className="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  <ChevronLeft size={15} /> Previous
+                </button>
+                <span className="library-page__pagination-number">
+                  Page {currentPage} of {pageCount}
+                </span>
+                <button
+                  type="button"
+                  className="button"
+                  disabled={currentPage === pageCount}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Next <ChevronRight size={15} />
+                </button>
+              </div>
+            </nav>
           )}
         </section>
 

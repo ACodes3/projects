@@ -1418,3 +1418,47 @@
     transition: none;
   }
 }
+
+/* =========================================
+   EXERCISE LIBRARY PAGINATION
+========================================= */
+
+.library-page__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.library-page__pagination-summary,
+.library-page__pagination-number {
+  color: #92999f;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.library-page__pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-page .library-page__pagination .button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+@media (max-width: 650px) {
+  .library-page__pagination {
+    flex-direction: column;
+  }
+
+  .library-page__pagination-actions {
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+}
