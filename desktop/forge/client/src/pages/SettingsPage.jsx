@@ -4,6 +4,7 @@ import {
   FolderOpen,
   HardDriveDownload,
   RotateCcw,
+  ShieldAlert,
   Save,
   Target,
   Trash2,
@@ -125,6 +126,7 @@ export default function SettingsPage() {
   const [backupValidation, setBackupValidation] = useState(null);
   const [selectingBackup, setSelectingBackup] = useState(false);
   const [validatingBackup, setValidatingBackup] = useState(false);
+  const [restoringBackup, setRestoringBackup] = useState(false);
 
 
 
@@ -459,7 +461,7 @@ export default function SettingsPage() {
   ========================================= */
 
   async function selectBackup() {
-    if (selectingBackup || validatingBackup) return;
+    if (selectingBackup || validatingBackup || restoringBackup) return;
 
     if (typeof window.forgeDesktop?.selectBackup !== 'function') {
       setMessage('Backup selection is available in the FORGE desktop app.');
@@ -484,7 +486,7 @@ export default function SettingsPage() {
   }
 
   async function validateBackup() {
-    if (!selectedBackup || validatingBackup || selectingBackup) return;
+    if (!selectedBackup || validatingBackup || selectingBackup || restoringBackup) return;
 
     if (typeof window.forgeDesktop?.validateBackup !== 'function') {
       setMessage('Backup validation is available in the FORGE desktop app.');
@@ -511,6 +513,56 @@ export default function SettingsPage() {
       setMessage(error.message || 'Backup validation failed.');
     } finally {
       setValidatingBackup(false);
+    }
+  }
+
+
+  /* =========================================
+     RESTORE BACKUP — NATIVE CONFIRMATION
+  ========================================= */
+
+  async function restoreBackup() {
+    if (
+      !selectedBackup ||
+      !backupValidation ||
+      restoringBackup ||
+      validatingBackup ||
+      selectingBackup ||
+      downloadingBackup
+    ) return;
+
+    if (typeof window.forgeDesktop?.restoreBackup !== 'function') {
+      setMessage('Restoration is only available in the FORGE desktop app.');
+      return;
+    }
+
+    setRestoringBackup(true);
+    setMessage('Opening restore confirmation...');
+
+    try {
+      // The Electron main process rechecks the backup and asks for
+      // confirmation before it performs any database replacement.
+      const result = await window.forgeDesktop.restoreBackup();
+
+      if (result?.canceled) {
+        setMessage('Restore canceled. Your current data was not changed.');
+        return;
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.message || 'Restore failed.');
+      }
+
+      // Electron normally reloads the frontend after restoring.
+      // This message is a fallback if the page has not yet reloaded.
+      setMessage('Backup restored successfully. FORGE is refreshing...');
+      setSelectedBackup(null);
+      setBackupValidation(null);
+    } catch (error) {
+      console.error('Restore operation failed:', error);
+      setMessage(error.message || 'Restore failed. Check the Electron terminal.');
+    } finally {
+      setRestoringBackup(false);
     }
   }
 
@@ -849,8 +901,9 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings-page__goal-note">
-          Keep downloaded backups in a safe location. You can select and
-          validate a backup here. Restoring data is not enabled yet.
+          Keep downloaded backups in a safe location. Restoring replaces your
+          current SQLite data. FORGE will ask for confirmation and preserve
+          a safety backup before replacement.
         </div>
 
         <div className="settings-page__backup-actions">
@@ -858,7 +911,7 @@ export default function SettingsPage() {
             type="button"
             className="button button--primary"
             onClick={downloadBackup}
-            disabled={downloadingBackup}
+            disabled={downloadingBackup || restoringBackup}
           >
             <Download size={15} />
             {downloadingBackup ? 'Preparing Backup...' : 'Download Backup'}
@@ -867,7 +920,7 @@ export default function SettingsPage() {
             type="button"
             className="button"
             onClick={selectBackup}
-            disabled={selectingBackup || validatingBackup}
+            disabled={selectingBackup || validatingBackup || restoringBackup}
           >
             <FolderOpen size={15} />
             {selectingBackup ? 'Selecting...' : 'Select Backup'}
@@ -876,10 +929,23 @@ export default function SettingsPage() {
             type="button"
             className="button"
             onClick={validateBackup}
-            disabled={!selectedBackup || selectingBackup || validatingBackup}
+            disabled={!selectedBackup || selectingBackup || validatingBackup || restoringBackup}
           >
             <FileCheck2 size={15} />
             {validatingBackup ? 'Validating...' : 'Validate Backup'}
+          </button>
+          <button
+            type="button"
+            className="button settings-page__restore-button"
+            onClick={restoreBackup}
+            disabled={
+              !selectedBackup || !backupValidation ||
+              selectingBackup || validatingBackup || restoringBackup || downloadingBackup
+            }
+            aria-label="Restore selected database backup"
+          >
+            <ShieldAlert size={15} />
+            {restoringBackup ? 'Restoring...' : 'Restore Backup'}
           </button>
         </div>
 

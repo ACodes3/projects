@@ -218,6 +218,22 @@
 }
 
 /* =========================================
+   RESTORE BUTTON — DESTRUCTIVE ACTION
+========================================= */
+
+.settings-page__restore-button:not(:disabled) {
+  border-color: rgba(227, 108, 108, 0.25);
+  background: rgba(227, 108, 108, 0.075);
+  color: #ef9999;
+}
+
+.settings-page__restore-button:not(:disabled):hover {
+  border-color: rgba(227, 108, 108, 0.5);
+  background: rgba(227, 108, 108, 0.12);
+  color: #ffc0c0;
+}
+
+/* =========================================
    SELECTED BACKUP
 ========================================= */
 
