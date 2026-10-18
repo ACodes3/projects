@@ -21,12 +21,6 @@ import {
 } from "lucide-react";
 
 import {
-  equipmentTypes,
-  exerciseTypes,
-  muscleGroups,
-} from "../data/exercises";
-
-import {
   createExercise,
   deleteExercise,
   getExercises,
@@ -129,6 +123,39 @@ export default function LibraryPage() {
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [toast, setToast] = useState(null);
+
+  // Filter and form choices come from exercises loaded through the API.
+  // No local exercise catalog or data/exercises.js dependency.
+  const equipmentTypes = useMemo(
+    () => [
+      "All",
+      ...[...new Set(exercises.map((exercise) => exercise.equipment).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b)),
+    ],
+    [exercises]
+  );
+
+  const exerciseTypes = useMemo(
+    () => [
+      "All",
+      ...[...new Set(exercises.map((exercise) => exercise.type).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b)),
+    ],
+    [exercises]
+  );
+
+  const muscleGroups = useMemo(
+    () => [
+      "All",
+      ...[...new Set(
+        exercises.flatMap((exercise) => [
+          exercise.muscle,
+          ...(exercise.secondaryMuscles ?? []),
+        ]).filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b)),
+    ],
+    [exercises]
+  );
 
   /* =========================================
      API LOAD
