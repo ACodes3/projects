@@ -1277,7 +1277,7 @@ export default function WorkoutSessionPage() {
               type="text"
               maxLength={150}
               value={workoutName}
-              placeholder="e.g. Caroline Girvan — Iron Day 12"
+              placeholder="e.g. Upper Body Strength — Day 1"
               onChange={(event) => {
                 setWorkoutName(
                   event.target.value

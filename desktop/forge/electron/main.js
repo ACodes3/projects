@@ -6,15 +6,21 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+// FORGE application identity (before reading userData).
+app.setName("FORGE");
+
 const execFileAsync = promisify(execFile);
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const serverDir = path.resolve(currentDir, "../server");
 const serverEntry = path.join(serverDir, "src/server.js");
 const validateScript = path.join(serverDir, "scripts/validateBackup.js");
-const isolatedRestoreScript = path.join(serverDir, "scripts/testIsolatedRestoreCoordinator.js");
+const isolatedRestoreScript = path.join(
+  serverDir,
+  "scripts/testIsolatedRestoreCoordinator.js",
+);
 const frontendEntry = path.resolve(currentDir, "../client/dist/index.html");
 const healthUrl = "http://127.0.0.1:5000/api/health";
-const databasePath = path.resolve(currentDir, "../db/forge.sqlite");
+const databasePath = path.join(app.getPath("userData"), "data", "forge.sqlite");
 // Unique per Electron launch; helps distinguish our backend on fixed port 5000.
 const instanceId = randomUUID();
 
@@ -34,7 +40,12 @@ function startBackend() {
     cwd: serverDir,
     stdio: "inherit",
     windowsHide: true,
-    env: { ...process.env, PORT: "5000", FORGE_DB_PATH: databasePath, FORGE_INSTANCE_ID: instanceId },
+    env: {
+      ...process.env,
+      PORT: "5000",
+      FORGE_DB_PATH: databasePath,
+      FORGE_INSTANCE_ID: instanceId,
+    },
   });
 
   backendProcess = child;
@@ -62,7 +73,11 @@ async function isBackendReachable() {
 
 async function waitForBackend(child) {
   for (let attempt = 0; attempt < 50; attempt++) {
-    if (backendProcess !== child || child.exitCode !== null || child.signalCode !== null) {
+    if (
+      backendProcess !== child ||
+      child.exitCode !== null ||
+      child.signalCode !== null
+    ) {
       throw new Error("FORGE backend process stopped during startup.");
     }
     try {
@@ -79,7 +94,8 @@ async function waitForBackend(child) {
         return;
       }
     } catch (error) {
-      if (error.message === "A different API process is using port 5000.") throw error;
+      if (error.message === "A different API process is using port 5000.")
+        throw error;
       // API not listening yet.
     }
     await delay(200);
@@ -116,12 +132,16 @@ async function stopBackend() {
       cleanup();
       reject(error);
     };
-    const timeout = setTimeout(() => onError(new Error("Timed out waiting for backend to stop.")), 10000);
+    const timeout = setTimeout(
+      () => onError(new Error("Timed out waiting for backend to stop.")),
+      10000,
+    );
     child.once("exit", onExit);
     child.once("error", onError);
 
     try {
-      if (!child.kill()) onError(new Error("Could not signal backend to stop."));
+      if (!child.kill())
+        onError(new Error("Could not signal backend to stop."));
     } catch (error) {
       onError(error);
     }
@@ -134,7 +154,9 @@ async function stopBackend() {
     if (!(await isBackendReachable())) return;
     await delay(200);
   }
-  throw new Error("Port 5000 is still serving a FORGE API after backend shutdown.");
+  throw new Error(
+    "Port 5000 is still serving a FORGE API after backend shutdown.",
+  );
 }
 
 function createWindow() {
@@ -162,7 +184,9 @@ function assertForgeWindow(event) {
     window.isDestroyed() ||
     event.sender.getURL().split("#")[0] !== pathToFileURL(frontendEntry).href
   ) {
-    throw new Error("Request did not originate from the FORGE application window.");
+    throw new Error(
+      "Request did not originate from the FORGE application window.",
+    );
   }
   return window;
 }
@@ -170,7 +194,8 @@ function assertForgeWindow(event) {
 function registerBackupHandlers() {
   ipcMain.handle("forge:backup:select", async (event) => {
     const parentWindow = assertForgeWindow(event);
-    if (liveRestoreBusy) return { success: false, message: "A restore is in progress." };
+    if (liveRestoreBusy)
+      return { success: false, message: "A restore is in progress." };
     const result = await dialog.showOpenDialog(parentWindow, {
       title: "Select FORGE SQLite Backup",
       buttonLabel: "Select Backup",
@@ -187,17 +212,22 @@ function registerBackupHandlers() {
 
   ipcMain.handle("forge:backup:validate", async (event) => {
     assertForgeWindow(event);
-    if (liveRestoreBusy) return { success: false, message: "A restore is in progress." };
+    if (liveRestoreBusy)
+      return { success: false, message: "A restore is in progress." };
     if (!selectedBackupPath) {
       return { success: false, message: "Select a backup first." };
     }
     try {
-      const { stdout } = await execFileAsync("node", [validateScript, selectedBackupPath], {
-        cwd: serverDir,
-        windowsHide: true,
-        timeout: 15000,
-        maxBuffer: 1024 * 1024,
-      });
+      const { stdout } = await execFileAsync(
+        "node",
+        [validateScript, selectedBackupPath],
+        {
+          cwd: serverDir,
+          windowsHide: true,
+          timeout: 15000,
+          maxBuffer: 1024 * 1024,
+        },
+      );
       const result = JSON.parse(stdout.trim());
       return {
         success: result.success === true,
@@ -226,8 +256,16 @@ function registerBackupHandlers() {
   // Does not stop Express, create backups, or replace database files.
   ipcMain.handle("forge:restore:prepare", async (event) => {
     assertForgeWindow(event);
-    if (lifecycleBusy || restoreDryRunBusy || restorePreparationBusy || liveRestoreBusy) {
-      return { success: false, message: "Another backend operation is in progress." };
+    if (
+      lifecycleBusy ||
+      restoreDryRunBusy ||
+      restorePreparationBusy ||
+      liveRestoreBusy
+    ) {
+      return {
+        success: false,
+        message: "Another backend operation is in progress.",
+      };
     }
     if (!selectedBackupPath) {
       return { success: false, message: "Select a backup first." };
@@ -237,20 +275,26 @@ function registerBackupHandlers() {
     try {
       const source = fs.realpathSync(selectedBackupPath);
       const target = fs.realpathSync(databasePath);
-      if (process.platform === "win32"
-        ? source.toLowerCase() === target.toLowerCase()
-        : source === target) {
+      if (
+        process.platform === "win32"
+          ? source.toLowerCase() === target.toLowerCase()
+          : source === target
+      ) {
         throw new Error("The selected backup is the active FORGE database.");
       }
 
       // The selected file can change after a previous validation, so check again.
       async function validate(filePath) {
-        const { stdout } = await execFileAsync("node", [validateScript, filePath], {
-          cwd: serverDir,
-          windowsHide: true,
-          timeout: 15000,
-          maxBuffer: 1024 * 1024,
-        });
+        const { stdout } = await execFileAsync(
+          "node",
+          [validateScript, filePath],
+          {
+            cwd: serverDir,
+            windowsHide: true,
+            timeout: 15000,
+            maxBuffer: 1024 * 1024,
+          },
+        );
         const result = JSON.parse(stdout.trim());
         if (result.success !== true || result.valid !== true) {
           throw new Error(result.message || "Database validation failed.");
@@ -262,7 +306,9 @@ function registerBackupHandlers() {
       const backup = await validate(source);
       const current = await validate(target);
       if (selectedBackupPath !== selectedPath) {
-        throw new Error("Backup selection changed during preparation. Try again.");
+        throw new Error(
+          "Backup selection changed during preparation. Try again.",
+        );
       }
 
       const safetyDirectory = path.join(app.getPath("userData"), "backups");
@@ -277,7 +323,10 @@ function registerBackupHandlers() {
       };
     } catch (error) {
       console.error("Restore preparation failed:", error);
-      return { success: false, message: error.message || "Restore preparation failed." };
+      return {
+        success: false,
+        message: error.message || "Restore preparation failed.",
+      };
     } finally {
       restorePreparationBusy = false;
     }
@@ -287,7 +336,12 @@ function registerBackupHandlers() {
   // It does NOT stop or replace the Electron-managed live database.
   ipcMain.handle("forge:restore:dry-run", async (event) => {
     assertForgeWindow(event);
-    if (restoreDryRunBusy || lifecycleBusy || restorePreparationBusy || liveRestoreBusy) {
+    if (
+      restoreDryRunBusy ||
+      lifecycleBusy ||
+      restorePreparationBusy ||
+      liveRestoreBusy
+    ) {
       return { success: false, message: "Another test is in progress." };
     }
     if (!selectedBackupPath) {
@@ -304,24 +358,33 @@ function registerBackupHandlers() {
           timeout: 120000,
           maxBuffer: 2 * 1024 * 1024,
           env: { ...process.env, FORGE_DB_PATH: databasePath },
-        }
+        },
       );
-      if (stderr.trim()) console.warn("Restore dry-run diagnostics:", stderr.trim());
+      if (stderr.trim())
+        console.warn("Restore dry-run diagnostics:", stderr.trim());
       if (!stdout.includes("ISOLATED RESTORE COORDINATOR TEST PASSED.")) {
-        throw new Error("The isolated test did not report a successful result.");
+        throw new Error(
+          "The isolated test did not report a successful result.",
+        );
       }
       console.log(stdout.trim());
       return {
         success: true,
-        message: "Isolated restore test passed. The live database was not replaced.",
+        message:
+          "Isolated restore test passed. The live database was not replaced.",
         log: stdout.trim(),
       };
     } catch (error) {
       console.error("Restore dry-run failed:", error);
       return {
         success: false,
-        message: error.killed ? "The isolated test timed out." : "Isolated restore test failed. See the Electron terminal for details.",
-        log: [error.stdout, error.stderr].filter(Boolean).join("\n").slice(-10000),
+        message: error.killed
+          ? "The isolated test timed out."
+          : "Isolated restore test failed. See the Electron terminal for details.",
+        log: [error.stdout, error.stderr]
+          .filter(Boolean)
+          .join("\n")
+          .slice(-10000),
       };
     } finally {
       restoreDryRunBusy = false;
@@ -332,8 +395,16 @@ function registerBackupHandlers() {
   // confirmation dialog. No JS caller may supply arbitrary filesystem paths.
   ipcMain.handle("forge:restore:execute", async (event) => {
     const parentWindow = assertForgeWindow(event);
-    if (liveRestoreBusy || lifecycleBusy || restoreDryRunBusy || restorePreparationBusy) {
-      return { success: false, message: "Another backend operation is in progress." };
+    if (
+      liveRestoreBusy ||
+      lifecycleBusy ||
+      restoreDryRunBusy ||
+      restorePreparationBusy
+    ) {
+      return {
+        success: false,
+        message: "Another backend operation is in progress.",
+      };
     }
     if (!selectedBackupPath) {
       return { success: false, message: "Select a backup first." };
@@ -348,17 +419,23 @@ function registerBackupHandlers() {
     try {
       const source = fs.realpathSync(selectedBackupPath);
       const target = fs.realpathSync(databasePath);
-      const samePath = process.platform === "win32"
-        ? source.toLowerCase() === target.toLowerCase()
-        : source === target;
-      if (samePath) throw new Error("Cannot restore the active database from itself.");
+      const samePath =
+        process.platform === "win32"
+          ? source.toLowerCase() === target.toLowerCase()
+          : source === target;
+      if (samePath)
+        throw new Error("Cannot restore the active database from itself.");
 
       const validate = async (file) => {
         const { stdout } = await execFileAsync("node", [validateScript, file], {
-          cwd: serverDir, windowsHide: true, timeout: 15000, maxBuffer: 1024 * 1024,
+          cwd: serverDir,
+          windowsHide: true,
+          timeout: 15000,
+          maxBuffer: 1024 * 1024,
         });
         const info = JSON.parse(stdout.trim());
-        if (!info.success || !info.valid) throw new Error(info.message || "Invalid FORGE database.");
+        if (!info.success || !info.valid)
+          throw new Error(info.message || "Invalid FORGE database.");
         return info;
       };
 
@@ -379,30 +456,51 @@ function registerBackupHandlers() {
         return { success: false, canceled: true, message: "Restore canceled." };
       }
 
-      if (selectedBackupPath !== source && fs.realpathSync(selectedBackupPath) !== source) {
-        throw new Error("Backup selection changed; select and validate it again.");
+      if (
+        selectedBackupPath !== source &&
+        fs.realpathSync(selectedBackupPath) !== source
+      ) {
+        throw new Error(
+          "Backup selection changed; select and validate it again.",
+        );
       }
 
       const safetyDir = ensureSafetyBackupDirectory();
-      safetyBackupPath = path.join(safetyDir, `forge-before-restore-${Date.now()}-${randomUUID()}.sqlite`);
+      safetyBackupPath = path.join(
+        safetyDir,
+        `forge-before-restore-${Date.now()}-${randomUUID()}.sqlite`,
+      );
 
       await stopBackend();
       backendStopped = true;
 
       // Run SQLite native bindings in regular Node, not Electron's runtime.
       // restoreBackupCli validates source again and writes the persistent safety copy.
-      const { stdout } = await execFileAsync("node", [
-        path.join(serverDir, "scripts/restoreBackupCli.js"),
-        source, target, safetyBackupPath,
-      ], {
-        cwd: serverDir, windowsHide: true, timeout: 120000,
-        maxBuffer: 2 * 1024 * 1024,
-        env: { ...process.env, FORGE_DB_PATH: target },
-      });
+      const { stdout } = await execFileAsync(
+        "node",
+        [
+          path.join(serverDir, "scripts/restoreBackupCli.js"),
+          source,
+          target,
+          safetyBackupPath,
+        ],
+        {
+          cwd: serverDir,
+          windowsHide: true,
+          timeout: 120000,
+          maxBuffer: 2 * 1024 * 1024,
+          env: { ...process.env, FORGE_DB_PATH: target },
+        },
+      );
       const result = JSON.parse(stdout.trim());
-      if (!result.success) throw new Error(result.message || "Restore CLI reported failure.");
+      if (!result.success)
+        throw new Error(result.message || "Restore CLI reported failure.");
       restored = true;
-      outcome = { success: true, message: "Database restored successfully.", safetyBackupPath };
+      outcome = {
+        success: true,
+        message: "Database restored successfully.",
+        safetyBackupPath,
+      };
     } catch (error) {
       console.error("FORGE restore failed:", error);
       outcome = {
@@ -414,18 +512,26 @@ function registerBackupHandlers() {
       if (backendStopped) {
         try {
           // Never reopen a database that fails validation after restore/recovery.
-          const { stdout } = await execFileAsync("node", [validateScript, databasePath], {
-            cwd: serverDir, windowsHide: true, timeout: 15000,
-            maxBuffer: 1024 * 1024,
-          });
+          const { stdout } = await execFileAsync(
+            "node",
+            [validateScript, databasePath],
+            {
+              cwd: serverDir,
+              windowsHide: true,
+              timeout: 15000,
+              maxBuffer: 1024 * 1024,
+            },
+          );
           const info = JSON.parse(stdout.trim());
-          if (!info.success || !info.valid) throw new Error("Database is invalid after restoration.");
+          if (!info.success || !info.valid)
+            throw new Error("Database is invalid after restoration.");
           const child = startBackend();
           await waitForBackend(child);
           if (restored && !parentWindow.isDestroyed()) {
             // Allow IPC response to resolve before reloading the renderer.
             setTimeout(() => {
-              if (!parentWindow.isDestroyed()) parentWindow.webContents.reload();
+              if (!parentWindow.isDestroyed())
+                parentWindow.webContents.reload();
             }, 500);
           }
         } catch (restartError) {
@@ -445,14 +551,26 @@ function registerBackupHandlers() {
   // Temporary development-only lifecycle test. Does not restore database files.
   ipcMain.handle("forge:backend:test-restart", async (event) => {
     const window = assertForgeWindow(event);
-    if (lifecycleBusy || restoreDryRunBusy || restorePreparationBusy || liveRestoreBusy) return { success: false, message: "Another backend operation is in progress." };
+    if (
+      lifecycleBusy ||
+      restoreDryRunBusy ||
+      restorePreparationBusy ||
+      liveRestoreBusy
+    )
+      return {
+        success: false,
+        message: "Another backend operation is in progress.",
+      };
     lifecycleBusy = true;
     try {
       await stopBackend();
       console.log("FORGE backend stopped and released port 5000.");
       const child = startBackend();
       await waitForBackend(child);
-      return { success: true, message: "Backend stopped and restarted successfully." };
+      return {
+        success: true,
+        message: "Backend stopped and restarted successfully.",
+      };
     } catch (error) {
       console.error("Backend lifecycle test failed:", error);
       // If the backend stopped, try bringing it back without touching SQLite files.
@@ -503,7 +621,9 @@ if (!hasSingleInstanceLock) {
     registerBackupHandlers();
     try {
       if (await isBackendReachable()) {
-        throw new Error("Port 5000 already has an API. Stop the other backend first.");
+        throw new Error(
+          "Port 5000 already has an API. Stop the other backend first.",
+        );
       }
       const child = startBackend();
       await waitForBackend(child);

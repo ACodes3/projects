@@ -870,3 +870,40 @@
     width: 96px;
   }
 }
+
+/* =========================================
+   CREATOR CREDIT
+========================================= */
+
+.app-shell__creator-credit {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin: 10px 4px 2px;
+  padding: 15px 5px 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #858d92;
+  font-size: 10px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.app-shell__creator-credit strong {
+  color: #d9ff77;
+  font-weight: 600;
+}
+
+.app-shell__creator-credit span:last-child {
+  margin-top: 3px;
+  color: #636c72;
+  font-size: 9px;
+}
+
+/* On tablet/mobile the sidebar becomes bottom navigation. */
+@media (max-width: 850px) {
+  .app-shell__creator-credit {
+    display: none;
+  }
+}
