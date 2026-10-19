@@ -6,12 +6,69 @@
   "main": "main.js",
   "type": "module",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack:dir": "electron-builder --dir --win",
+    "dist": "electron-builder --win nsis"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "electron": "^44.9.0",
     "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.forge.fitnesstracker",
+    "productName": "FORGE",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.cjs",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../client/dist",
+        "to": "client/dist",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../server",
+        "to": "server",
+        "filter": [
+          "package.json",
+          "src/**/*",
+          "scripts/**/*",
+          "node_modules/**/*",
+          "!node_modules/.cache/**/*"
+        ]
+      },
+      {
+        "from": "../db",
+        "to": "db",
+        "filter": [
+          "schema.sqlite.sql",
+          "seed.desktop.sql"
+        ]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/logo-transparent.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FORGE"
+    }
   }
 }
