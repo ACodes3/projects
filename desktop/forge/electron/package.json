@@ -32,9 +32,7 @@
       {
         "from": "../client/dist",
         "to": "client/dist",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       },
       {
         "from": "../server",
@@ -42,9 +40,15 @@
         "filter": [
           "package.json",
           "src/**/*",
-          "scripts/**/*",
-          "node_modules/**/*",
-          "!node_modules/.cache/**/*"
+          "scripts/**/*"
+        ]
+      },
+      {
+        "from": "../server/node_modules",
+        "to": "server/node_modules",
+        "filter": [
+          "**/*",
+          "!**/.cache/**/*"
         ]
       },
       {
@@ -58,9 +62,7 @@
     ],
     "asar": true,
     "win": {
-      "target": [
-        "nsis"
-      ],
+      "target": ["nsis"],
       "icon": "assets/logo-transparent.ico"
     },
     "nsis": {
