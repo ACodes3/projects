@@ -10,15 +10,29 @@ import { promisify } from "node:util";
 app.setName("FORGE");
 
 const execFileAsync = promisify(execFile);
+
+const electronNodeOptions = {
+  windowsHide: true,
+  env: {
+    ...process.env,
+    ELECTRON_RUN_AS_NODE: "1",
+  },
+};
+
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const serverDir = path.resolve(currentDir, "../server");
+// Development uses the project folders; installed builds use extraResources.
+const resourcesDir = app.isPackaged
+  ? process.resourcesPath
+  : path.resolve(currentDir, "..");
+const serverDir = path.join(resourcesDir, "server");
+const databaseResourcesDir = path.join(resourcesDir, "db");
 const serverEntry = path.join(serverDir, "src/server.js");
 const validateScript = path.join(serverDir, "scripts/validateBackup.js");
 const isolatedRestoreScript = path.join(
   serverDir,
   "scripts/testIsolatedRestoreCoordinator.js",
 );
-const frontendEntry = path.resolve(currentDir, "../client/dist/index.html");
+const frontendEntry = path.join(resourcesDir, "client", "dist", "index.html");
 const healthUrl = "http://127.0.0.1:5000/api/health";
 const databasePath = path.join(app.getPath("userData"), "data", "forge.sqlite");
 // Unique per Electron launch; helps distinguish our backend on fixed port 5000.
@@ -31,17 +45,41 @@ let restoreDryRunBusy = false;
 let restorePreparationBusy = false;
 let liveRestoreBusy = false;
 
+// Provision only a missing user database. Never reset or overwrite existing data.
+async function ensureUserDatabase() {
+  if (fs.existsSync(databasePath)) {
+    console.log(`FORGE existing database retained: ${databasePath}`);
+    return;
+  }
+
+  // The initializer lives with the unpacked backend so it resolves its own
+  // better-sqlite3 dependency from resources/server/node_modules.
+  const initializerPath = path.join(
+    serverDir,
+    "src",
+    "config",
+    "initializeDatabase.js",
+  );
+  const { initializeDatabase } = await import(pathToFileURL(initializerPath).href);
+  const result = initializeDatabase(databasePath, databaseResourcesDir);
+  if (!result.initialized) {
+    throw new Error("FORGE first-run database initialization did not complete.");
+  }
+  console.log(`FORGE starter database created: ${databasePath}`);
+}
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function startBackend() {
   if (backendProcess) throw new Error("FORGE backend is already running.");
 
-  const child = spawn("node", [serverEntry], {
+  const child = spawn(process.execPath, [serverEntry], {
     cwd: serverDir,
     stdio: "inherit",
     windowsHide: true,
     env: {
       ...process.env,
+      ELECTRON_RUN_AS_NODE: "1",
       PORT: "5000",
       FORGE_DB_PATH: databasePath,
       FORGE_INSTANCE_ID: instanceId,
@@ -161,6 +199,7 @@ async function stopBackend() {
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
+    icon: path.join(currentDir, "assets", "logo-transparent.ico"),
     width: 1440,
     height: 900,
     minWidth: 1000,
@@ -219,11 +258,11 @@ function registerBackupHandlers() {
     }
     try {
       const { stdout } = await execFileAsync(
-        "node",
+        process.execPath,
         [validateScript, selectedBackupPath],
         {
+          ...electronNodeOptions,
           cwd: serverDir,
-          windowsHide: true,
           timeout: 15000,
           maxBuffer: 1024 * 1024,
         },
@@ -286,11 +325,11 @@ function registerBackupHandlers() {
       // The selected file can change after a previous validation, so check again.
       async function validate(filePath) {
         const { stdout } = await execFileAsync(
-          "node",
+          process.execPath,
           [validateScript, filePath],
           {
+            ...electronNodeOptions,
             cwd: serverDir,
-            windowsHide: true,
             timeout: 15000,
             maxBuffer: 1024 * 1024,
           },
@@ -350,14 +389,14 @@ function registerBackupHandlers() {
     restoreDryRunBusy = true;
     try {
       const { stdout, stderr } = await execFileAsync(
-        "node",
+        process.execPath,
         [isolatedRestoreScript, selectedBackupPath],
         {
+          ...electronNodeOptions,
           cwd: serverDir,
-          windowsHide: true,
           timeout: 120000,
           maxBuffer: 2 * 1024 * 1024,
-          env: { ...process.env, FORGE_DB_PATH: databasePath },
+          env: { ...electronNodeOptions.env, FORGE_DB_PATH: databasePath },
         },
       );
       if (stderr.trim())
@@ -427,9 +466,9 @@ function registerBackupHandlers() {
         throw new Error("Cannot restore the active database from itself.");
 
       const validate = async (file) => {
-        const { stdout } = await execFileAsync("node", [validateScript, file], {
+        const { stdout } = await execFileAsync(process.execPath, [validateScript, file], {
+          ...electronNodeOptions,
           cwd: serverDir,
-          windowsHide: true,
           timeout: 15000,
           maxBuffer: 1024 * 1024,
         });
@@ -474,10 +513,10 @@ function registerBackupHandlers() {
       await stopBackend();
       backendStopped = true;
 
-      // Run SQLite native bindings in regular Node, not Electron's runtime.
+      // Run SQLite native bindings with Electron's bundled Node runtime.
       // restoreBackupCli validates source again and writes the persistent safety copy.
       const { stdout } = await execFileAsync(
-        "node",
+        process.execPath,
         [
           path.join(serverDir, "scripts/restoreBackupCli.js"),
           source,
@@ -485,11 +524,11 @@ function registerBackupHandlers() {
           safetyBackupPath,
         ],
         {
+          ...electronNodeOptions,
           cwd: serverDir,
-          windowsHide: true,
           timeout: 120000,
           maxBuffer: 2 * 1024 * 1024,
-          env: { ...process.env, FORGE_DB_PATH: target },
+          env: { ...electronNodeOptions.env, FORGE_DB_PATH: target },
         },
       );
       const result = JSON.parse(stdout.trim());
@@ -513,11 +552,11 @@ function registerBackupHandlers() {
         try {
           // Never reopen a database that fails validation after restore/recovery.
           const { stdout } = await execFileAsync(
-            "node",
+            process.execPath,
             [validateScript, databasePath],
             {
+              ...electronNodeOptions,
               cwd: serverDir,
-              windowsHide: true,
               timeout: 15000,
               maxBuffer: 1024 * 1024,
             },
@@ -620,6 +659,7 @@ if (!hasSingleInstanceLock) {
     ensureSafetyBackupDirectory();
     registerBackupHandlers();
     try {
+      await ensureUserDatabase();
       if (await isBackendReachable()) {
         throw new Error(
           "Port 5000 already has an API. Stop the other backend first.",
