@@ -34,7 +34,13 @@ const isolatedRestoreScript = path.join(
 );
 const frontendEntry = path.join(resourcesDir, "client", "dist", "index.html");
 const healthUrl = "http://127.0.0.1:5000/api/health";
-const databasePath = path.join(app.getPath("userData"), "data", "forge.sqlite");
+const databasePath = path.join(
+  !app.isPackaged && process.env.FORGE_TEST_USER_DATA
+    ? path.resolve(process.env.FORGE_TEST_USER_DATA)
+    : app.getPath("userData"),
+  "data",
+  "forge.sqlite",
+);
 // Unique per Electron launch; helps distinguish our backend on fixed port 5000.
 const instanceId = randomUUID();
 
@@ -60,10 +66,14 @@ async function ensureUserDatabase() {
     "config",
     "initializeDatabase.js",
   );
-  const { initializeDatabase } = await import(pathToFileURL(initializerPath).href);
+  const { initializeDatabase } = await import(
+    pathToFileURL(initializerPath).href
+  );
   const result = initializeDatabase(databasePath, databaseResourcesDir);
   if (!result.initialized) {
-    throw new Error("FORGE first-run database initialization did not complete.");
+    throw new Error(
+      "FORGE first-run database initialization did not complete.",
+    );
   }
   console.log(`FORGE starter database created: ${databasePath}`);
 }
@@ -466,12 +476,16 @@ function registerBackupHandlers() {
         throw new Error("Cannot restore the active database from itself.");
 
       const validate = async (file) => {
-        const { stdout } = await execFileAsync(process.execPath, [validateScript, file], {
-          ...electronNodeOptions,
-          cwd: serverDir,
-          timeout: 15000,
-          maxBuffer: 1024 * 1024,
-        });
+        const { stdout } = await execFileAsync(
+          process.execPath,
+          [validateScript, file],
+          {
+            ...electronNodeOptions,
+            cwd: serverDir,
+            timeout: 15000,
+            maxBuffer: 1024 * 1024,
+          },
+        );
         const info = JSON.parse(stdout.trim());
         if (!info.success || !info.valid)
           throw new Error(info.message || "Invalid FORGE database.");
