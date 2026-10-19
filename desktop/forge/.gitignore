@@ -66,3 +66,7 @@ desktop.ini
 # Test coverage
 coverage/
 .nyc_output/
+
+# Allow the official FORGE installer
+!downloads/
+!downloads/FORGE Setup 1.0.0.exe
