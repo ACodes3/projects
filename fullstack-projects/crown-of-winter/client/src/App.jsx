@@ -271,33 +271,6 @@ function AppRoutes() {
           </Route>
         </Route>
 
-        {/* Temporary compatibility for existing sidebar links.
-            In the next step AppShell will link to /worlds/:worldId/... */}
-        <Route element={<ShellRoute user={user} onLogout={handleLogout} />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/tsaritsa" element={<TsaritsaPage />} />
-          <Route path="/palace" element={<PalacePage />} />
-          <Route path="/war-table" element={<WarTablePage />} />
-          <Route path="/harbingers" element={<HarbingersPage />} />
-          <Route path="/intelligence" element={<IntelligencePage />} />
-          <Route path="/gnoses" element={<GnosesPage />} />
-          <Route path="/relic-vault" element={<RelicVaultPage />} />
-          <Route path="/system" element={<SystemPage />} />
-          <Route path="/palace/throne" element={<ThroneChamberPage />} />
-          <Route path="/palace/war" element={<WarChamberPage />} />
-          <Route path="/palace/harbingers" element={<HarbingerHallPage />} />
-          <Route path="/palace/archives" element={<ImperialArchivesPage />} />
-          <Route
-            path="/palace/relic-vault"
-            element={<RelicVaultChamberPage />}
-          />
-          <Route
-            path="/palace/cryo-laboratory"
-            element={<CryoLaboratoryPage />}
-          />
-          <Route path="/palace/gnosis" element={<GnosisChamberPage />} />
-          <Route path="/palace/royal-records" element={<RoyalRecordsPage />} />
-        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
