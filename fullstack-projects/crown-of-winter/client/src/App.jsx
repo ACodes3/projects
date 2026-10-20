@@ -53,7 +53,7 @@ function AuthLoading() {
   );
 }
 
-function ProtectedRoute({ user, checkingSession }) {
+function ProtectedRoute({ user, checkingSession, onLogout }) {
   if (checkingSession) {
     return <AuthLoading />;
   }
@@ -62,7 +62,7 @@ function ProtectedRoute({ user, checkingSession }) {
     return <Navigate to="/" replace />;
   }
 
-  return <AppShell />;
+  return <AppShell user={user} onLogout={onLogout} />;
 }
 
 function LoginRoute({ user, checkingSession, onLogin }) {
@@ -133,7 +133,11 @@ function AppRoutes() {
 
       <Route
         element={
-          <ProtectedRoute user={user} checkingSession={checkingSession} />
+          <ProtectedRoute
+            user={user}
+            checkingSession={checkingSession}
+            onLogout={() => setUser(null)}
+          />
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
