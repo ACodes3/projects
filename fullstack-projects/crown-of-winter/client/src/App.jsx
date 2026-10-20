@@ -39,6 +39,7 @@ import RoyalRecordsPage from "./pages/palace/RoyalRecordsPage";
 import WorldMembersPage from "./pages/WorldMembersPage";
 
 import AppShell from "./components/AppShell";
+import PermissionGuard from "./components/PermissionGuard";
 
 function AuthLoading({ message = "Verifying Imperial Clearance..." }) {
   return (
@@ -204,14 +205,86 @@ function PalaceRoutes() {
       <Route path="relic-vault" element={<RelicVaultPage />} />
       <Route path="system" element={<SystemPage />} />
       <Route path="members" element={<WorldMembersPage />} />
-      <Route path="palace/throne" element={<ThroneChamberPage />} />
-      <Route path="palace/war" element={<WarChamberPage />} />
-      <Route path="palace/harbingers" element={<HarbingerHallPage />} />
-      <Route path="palace/archives" element={<ImperialArchivesPage />} />
-      <Route path="palace/relic-vault" element={<RelicVaultChamberPage />} />
-      <Route path="palace/cryo-laboratory" element={<CryoLaboratoryPage />} />
-      <Route path="palace/gnosis" element={<GnosisChamberPage />} />
-      <Route path="palace/royal-records" element={<RoyalRecordsPage />} />
+      <Route
+        element={
+          <PermissionGuard
+            permission="palace.view"
+            chamberName="the Throne Chamber"
+          />
+        }
+      >
+        <Route path="palace/throne" element={<ThroneChamberPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="operations.view"
+            chamberName="the War Chamber"
+          />
+        }
+      >
+        <Route path="palace/war" element={<WarChamberPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="characters.view"
+            chamberName="Harbinger Hall"
+          />
+        }
+      >
+        <Route path="palace/harbingers" element={<HarbingerHallPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="intelligence.read"
+            chamberName="the Imperial Archives"
+          />
+        }
+      >
+        <Route path="palace/archives" element={<ImperialArchivesPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="vault.view"
+            chamberName="the Relic Vault"
+          />
+        }
+      >
+        <Route path="palace/relic-vault" element={<RelicVaultChamberPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="research.view"
+            chamberName="the Cryo Laboratory"
+          />
+        }
+      >
+        <Route path="palace/cryo-laboratory" element={<CryoLaboratoryPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="gnoses.view"
+            chamberName="the Gnosis Chamber"
+          />
+        }
+      >
+        <Route path="palace/gnosis" element={<GnosisChamberPage />} />
+      </Route>
+      <Route
+        element={
+          <PermissionGuard
+            permission="directives.view"
+            chamberName="Royal Records"
+          />
+        }
+      >
+        <Route path="palace/royal-records" element={<RoyalRecordsPage />} />
+      </Route>
     </>
   );
 }
