@@ -9,15 +9,18 @@ import {
   ScrollText,
   FlaskConical,
   ChevronRight,
+  LockKeyhole,
 } from "lucide-react";
 
 import { Link, useParams } from "react-router-dom";
+import { useWorldAccess } from "../context/WorldAccessContext";
 
 import "./PalacePage.css";
 
 const chambers = [
   {
     id: "throne",
+    permission: "palace.view",
     name: "Throne Chamber",
     subtitle: "Seat of the Tsaritsa",
     icon: Crown,
@@ -28,6 +31,7 @@ const chambers = [
   },
   {
     id: "war",
+    permission: "operations.view",
     name: "War Chamber",
     subtitle: "Strategic Command",
     icon: Map,
@@ -38,6 +42,7 @@ const chambers = [
   },
   {
     id: "harbingers",
+    permission: "characters.view",
     name: "Harbinger Hall",
     subtitle: "Council Chamber",
     icon: Shield,
@@ -48,6 +53,7 @@ const chambers = [
   },
   {
     id: "archive",
+    permission: "intelligence.read",
     name: "Imperial Archives",
     subtitle: "Classified Records",
     icon: Archive,
@@ -58,6 +64,7 @@ const chambers = [
   },
   {
     id: "vault",
+    permission: "vault.view",
     name: "Relic Vault",
     subtitle: "Secured Artifacts",
     icon: Gem,
@@ -68,6 +75,7 @@ const chambers = [
   },
   {
     id: "laboratory",
+    permission: "research.view",
     name: "Cryo Laboratory",
     subtitle: "Research Division",
     icon: FlaskConical,
@@ -78,6 +86,7 @@ const chambers = [
   },
   {
     id: "gnosis",
+    permission: "gnoses.view",
     name: "Gnosis Chamber",
     subtitle: "Omega Clearance",
     icon: Snowflake,
@@ -88,6 +97,7 @@ const chambers = [
   },
   {
     id: "records",
+    permission: "directives.view",
     name: "Royal Records",
     subtitle: "Imperial Directives",
     icon: ScrollText,
@@ -100,6 +110,7 @@ const chambers = [
 
 function PalacePage() {
   const { worldId } = useParams();
+  const { status, hasPermission } = useWorldAccess();
   return (
     <main className="palace-page">
       {/* HEADER */}
@@ -173,6 +184,9 @@ function PalacePage() {
       <section className="palace-page__grid">
         {chambers.map((chamber) => {
           const Icon = chamber.icon;
+          const allowed =
+            status === "ready" && hasPermission(chamber.permission);
+          const accessPending = status === "loading";
 
           return (
             <article key={chamber.id} className="palace-card">
@@ -198,13 +212,27 @@ function PalacePage() {
 
               <div className="palace-card__footer">
                 <span>Sector {chambers.indexOf(chamber) + 1}</span>
-                <Link
-                  to={`/worlds/${encodeURIComponent(worldId)}${chamber.path}`}
-                  className="palace-card__enter"
-                >
-                  Enter
-                  <ChevronRight size={14} />
-                </Link>
+                {allowed ? (
+                  <Link
+                    to={`/worlds/${encodeURIComponent(worldId)}${chamber.path}`}
+                    className="palace-card__enter"
+                  >
+                    Enter
+                    <ChevronRight size={14} />
+                  </Link>
+                ) : (
+                  <span
+                    className="palace-card__access-denied"
+                    title={
+                      accessPending
+                        ? "Checking character permissions"
+                        : `Requires ${chamber.permission}`
+                    }
+                  >
+                    <LockKeyhole size={13} />
+                    {accessPending ? "Checking Access" : "Access Denied"}
+                  </span>
+                )}
               </div>
             </article>
           );
