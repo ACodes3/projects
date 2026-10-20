@@ -283,6 +283,38 @@ describe("Sovereign Security", () => {
     });
   });
 
+  it("rejects the obsolete world deletion bypass", async () => {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      // Simulate an application connection attempting
+      // to enable the former security bypass.
+      await client.query("SELECT set_config($1, $2, true)", [
+        "crown.world_deletion",
+        "authorized",
+      ]);
+
+      // The Sovereign assignment must remain protected.
+      await expect(
+        client.query(
+          `
+          UPDATE character_assignments
+          SET revoked_at = NOW()
+          WHERE id = $1
+        `,
+          [sovereignAssignmentId],
+        ),
+      ).rejects.toMatchObject({
+        code: "23514",
+      });
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
   it("prevents transferring the Tsaritsa to another player", async () => {
     await expect(
       pool.query(
