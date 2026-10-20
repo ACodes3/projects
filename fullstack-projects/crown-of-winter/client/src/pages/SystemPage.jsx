@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useWorldAccess } from "../context/WorldAccessContext";
 
 import {
   Settings,
@@ -117,6 +118,7 @@ function SystemPage() {
   const SelectedIcon = selectedModule.icon;
 
   const { worldId } = useParams();
+  const { status, isSovereign } = useWorldAccess();
 
   return (
     <main className="system-page">
@@ -389,13 +391,15 @@ function SystemPage() {
             </div>
           </div>
 
-          <Link
-            to={`/worlds/${worldId}/members`}
-            className="system-admin__button"
-          >
-            Manage World Members
-            <ChevronRight size={14} />
-          </Link>
+          {status === "ready" && isSovereign && (
+            <Link
+              to={`/worlds/${encodeURIComponent(worldId)}/members`}
+              className="system-admin__button"
+            >
+              Manage World Members
+              <ChevronRight size={14} />
+            </Link>
+          )}
         </article>
 
         {/* POWER */}
