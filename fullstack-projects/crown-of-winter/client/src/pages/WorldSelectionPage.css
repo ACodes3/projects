@@ -1,29 +1,6 @@
-
 /* =========================================
    CROWN OF WINTER — WORLD SELECTION
 ========================================= */
-
-.world-selection {
-  min-height: 100vh;
-  padding: 48px 24px 80px;
-
-  color: #dceef7;
-  font-family: Georgia, "Times New Roman", serif;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(92, 173, 214, 0.12),
-      transparent 42%
-    ),
-    linear-gradient(
-      145deg,
-      #07111f,
-      #0a1728 52%,
-      #081321
-    );
-}
-
 
 .world-selection {
   min-height: 100vh;
@@ -43,14 +20,8 @@
       rgba(92, 173, 214, 0.12),
       transparent 42%
     ),
-    linear-gradient(
-      145deg,
-      #07111f,
-      #0a1728 52%,
-      #081321
-    );
+    linear-gradient(145deg, #07111f, #0a1728 52%, #081321);
 }
-
 
 .world-selection__container {
   width: 100%;
@@ -75,9 +46,7 @@
   margin-bottom: 18px;
 
   color: #aee8ff;
-  filter: drop-shadow(
-    0 0 12px rgba(122, 210, 248, 0.4)
-  );
+  filter: drop-shadow(0 0 12px rgba(122, 210, 248, 0.4));
 }
 
 .world-selection__header > span {
@@ -511,5 +480,82 @@
 
   .world-selection__world {
     padding: 14px;
+  }
+}
+
+/* =========================================
+   PENDING INVITATIONS
+========================================= */
+
+.world-selection__invitation {
+  cursor: default;
+}
+
+.world-selection__invitation:hover {
+  transform: none;
+}
+
+.world-selection__invitation > div {
+  min-width: 0;
+}
+
+.world-selection__accept {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 7px;
+
+  min-height: 36px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(160, 222, 247, 0.35);
+  border-radius: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(54, 120, 153, 0.38),
+    rgba(26, 76, 105, 0.5)
+  );
+
+  color: #d6f2fc;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 9px;
+  font-weight: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+
+.world-selection__accept:hover:not(:disabled) {
+  color: #fff;
+  border-color: rgba(160, 222, 247, 0.72);
+  background: rgba(65, 148, 188, 0.4);
+}
+
+.world-selection__accept:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.world-selection__accept:focus-visible {
+  outline: 2px solid #9edff9;
+  outline-offset: 3px;
+}
+
+@media (max-width: 420px) {
+  .world-selection__invitation {
+    gap: 10px;
+  }
+
+  .world-selection__accept {
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 8px;
   }
 }
