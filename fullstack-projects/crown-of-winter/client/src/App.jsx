@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   BrowserRouter,
@@ -6,6 +6,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 
 import { authApi } from "./services/api";
@@ -87,36 +88,61 @@ function LoginRoute({ user, checkingSession, onLogin }) {
 }
 
 function AppRoutes() {
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const checkId = useRef(0);
 
+  const verifySession = useCallback(async () => {
+    const id = ++checkId.current;
+    setCheckingSession(true);
+
+    try {
+      const response = await authApi.me();
+      if (id === checkId.current) {
+        setUser(response?.data?.user ?? null);
+      }
+    } catch {
+      if (id === checkId.current) {
+        setUser(null);
+      }
+    } finally {
+      if (id === checkId.current) {
+        setCheckingSession(false);
+      }
+    }
+  }, []);
+
+  // Revalidate on initial load and browser history navigation.
   useEffect(() => {
-    let cancelled = false;
+    const timer = window.setTimeout(verifySession, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.key, verifySession]);
 
-    async function restoreSession() {
-      try {
-        const response = await authApi.me();
-
-        if (!cancelled) {
-          setUser(response?.data?.user ?? null);
-        }
-      } catch {
-        if (!cancelled) {
-          setUser(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setCheckingSession(false);
-        }
+  // Browsers may restore an earlier page from their back-forward cache.
+  useEffect(() => {
+    function handlePageShow(event) {
+      if (event.persisted) {
+        verifySession();
       }
     }
 
-    restoreSession();
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [verifySession]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  function handleLogin(authenticatedUser) {
+    ++checkId.current;
+    setUser(authenticatedUser);
+    setCheckingSession(false);
+  }
+
+  function handleLogout() {
+    // Invalidate any earlier /me response that might arrive after logout.
+    ++checkId.current;
+    setUser(null);
+    setCheckingSession(false);
+  }
 
   return (
     <Routes>
@@ -126,7 +152,7 @@ function AppRoutes() {
           <LoginRoute
             user={user}
             checkingSession={checkingSession}
-            onLogin={setUser}
+            onLogin={handleLogin}
           />
         }
       />
@@ -136,7 +162,7 @@ function AppRoutes() {
           <ProtectedRoute
             user={user}
             checkingSession={checkingSession}
-            onLogout={() => setUser(null)}
+            onLogout={handleLogout}
           />
         }
       >
