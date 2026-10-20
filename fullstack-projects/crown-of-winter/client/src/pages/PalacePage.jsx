@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import "./PalacePage.css";
 
@@ -99,6 +99,7 @@ const chambers = [
 ];
 
 function PalacePage() {
+  const { worldId } = useParams();
   return (
     <main className="palace-page">
       {/* HEADER */}
@@ -197,8 +198,10 @@ function PalacePage() {
 
               <div className="palace-card__footer">
                 <span>Sector {chambers.indexOf(chamber) + 1}</span>
-
-                <Link to={chamber.path} className="palace-card__enter">
+                <Link
+                  to={`/worlds/${encodeURIComponent(worldId)}${chamber.path}`}
+                  className="palace-card__enter"
+                >
                   Enter
                   <ChevronRight size={14} />
                 </Link>
