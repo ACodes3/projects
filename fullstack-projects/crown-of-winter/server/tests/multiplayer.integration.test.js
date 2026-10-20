@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
@@ -16,9 +10,7 @@ import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
-const runId = randomUUID()
-  .replaceAll("-", "")
-  .slice(0, 12);
+const runId = randomUUID().replaceAll("-", "").slice(0, 12);
 
 const sovereignAccount = {
   username: `tsaritsa_${runId}`,
@@ -67,14 +59,10 @@ async function verifyTestDatabase() {
     throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
-    throw new Error(
-      "Integration tests require crown-of-winter-test."
-    );
+    throw new Error("Integration tests require crown-of-winter-test.");
   }
 
   databaseVerified = true;
@@ -85,9 +73,7 @@ async function verifyTestDatabase() {
 // -----------------------------------------
 
 async function registerTestUser(account) {
-  const response = await request(app)
-    .post("/api/auth/register")
-    .send(account);
+  const response = await request(app).post("/api/auth/register").send(account);
 
   expect(response.status).toBe(201);
 
@@ -101,12 +87,10 @@ async function registerTestUser(account) {
 async function loginTestUser(account) {
   const agent = request.agent(app);
 
-  const response = await agent
-    .post("/api/auth/login")
-    .send({
-      identifier: account.username,
-      password: account.password,
-    });
+  const response = await agent.post("/api/auth/login").send({
+    identifier: account.username,
+    password: account.password,
+  });
 
   expect(response.status).toBe(200);
 
@@ -120,35 +104,23 @@ async function loginTestUser(account) {
 beforeAll(async () => {
   await verifyTestDatabase();
 
-  sovereignUserId = await registerTestUser(
-    sovereignAccount
-  );
+  sovereignUserId = await registerTestUser(sovereignAccount);
 
-  friendUserId = await registerTestUser(
-    friendAccount
-  );
+  friendUserId = await registerTestUser(friendAccount);
 
   await registerTestUser(outsiderAccount);
 
-  sovereignAgent = await loginTestUser(
-    sovereignAccount
-  );
+  sovereignAgent = await loginTestUser(sovereignAccount);
 
-  friendAgent = await loginTestUser(
-    friendAccount
-  );
+  friendAgent = await loginTestUser(friendAccount);
 
-  outsiderAgent = await loginTestUser(
-    outsiderAccount
-  );
+  outsiderAgent = await loginTestUser(outsiderAccount);
 
   // Create the multiplayer world.
-  const response = await sovereignAgent
-    .post("/api/worlds")
-    .send({
-      name: "Imperial Multiplayer Test",
-      mode: "multiplayer",
-    });
+  const response = await sovereignAgent.post("/api/worlds").send({
+    name: "Imperial Multiplayer Test",
+    mode: "multiplayer",
+  });
 
   expect(response.status).toBe(201);
 
@@ -163,7 +135,7 @@ beforeAll(async () => {
     FROM characters
     WHERE slug = 'dottore'
       AND is_playable = TRUE
-    `
+    `,
   );
 
   expect(characterResult.rowCount).toBe(1);
@@ -191,25 +163,13 @@ afterAll(async () => {
     try {
       await client.query("BEGIN");
 
-      // Temporary test-only bypass used by the existing
-      // Sovereign triggers. We will remove this separately.
-      await client.query(
-        `
-        SELECT set_config(
-          'crown.world_deletion',
-          'authorized',
-          true
-        )
-        `
-      );
-
       await client.query(
         `
         DELETE FROM worlds
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [[...createdWorldIds], sovereignUserId]
+        [[...createdWorldIds], sovereignUserId],
       );
 
       await client.query("COMMIT");
@@ -230,7 +190,7 @@ afterAll(async () => {
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -241,19 +201,17 @@ afterAll(async () => {
 
 describe("Multiplayer Integration", () => {
   it("creates a world with the Tsaritsa", async () => {
-    const response = await sovereignAgent
-      .get(`/api/worlds/${worldId}/me/permissions`);
+    const response = await sovereignAgent.get(
+      `/api/worlds/${worldId}/me/permissions`,
+    );
 
     expect(response.status).toBe(200);
 
-    expect(response.body.data.character.slug)
-      .toBe("tsaritsa");
+    expect(response.body.data.character.slug).toBe("tsaritsa");
 
-    expect(response.body.data.character.isSovereign)
-      .toBe(true);
+    expect(response.body.data.character.isSovereign).toBe(true);
 
-    expect(response.body.data.character.roles)
-      .toContain("SOVEREIGN");
+    expect(response.body.data.character.roles).toContain("SOVEREIGN");
   });
 
   it("prevents an outsider from inviting users", async () => {
@@ -278,8 +236,7 @@ describe("Multiplayer Integration", () => {
 
     membershipId = response.body.data.invitation.id;
 
-    expect(response.body.data.invitation.status)
-      .toBe("invited");
+    expect(response.body.data.invitation.status).toBe("invited");
   });
 
   it("rejects duplicate invitations", async () => {
@@ -293,8 +250,7 @@ describe("Multiplayer Integration", () => {
   });
 
   it("shows the invitation to the invited player", async () => {
-    const response = await friendAgent
-      .get("/api/invitations");
+    const response = await friendAgent.get("/api/invitations");
 
     expect(response.status).toBe(200);
 
@@ -304,26 +260,27 @@ describe("Multiplayer Integration", () => {
       invitations.some(
         (invitation) =>
           invitation.membership_id === membershipId &&
-          invitation.world_id === worldId
-      )
+          invitation.world_id === worldId,
+      ),
     ).toBe(true);
   });
 
   it("prevents another user from accepting the invitation", async () => {
-    const response = await outsiderAgent
-      .post(`/api/invitations/${membershipId}/accept`);
+    const response = await outsiderAgent.post(
+      `/api/invitations/${membershipId}/accept`,
+    );
 
     expect(response.status).toBe(404);
   });
 
   it("allows the invited player to join the world", async () => {
-    const response = await friendAgent
-      .post(`/api/invitations/${membershipId}/accept`);
+    const response = await friendAgent.post(
+      `/api/invitations/${membershipId}/accept`,
+    );
 
     expect(response.status).toBe(200);
 
-    expect(response.body.data.membership.status)
-      .toBe("active");
+    expect(response.body.data.membership.status).toBe("active");
 
     const result = await pool.query(
       `
@@ -333,7 +290,7 @@ describe("Multiplayer Integration", () => {
         AND world_id = $2
         AND user_id = $3
       `,
-      [membershipId, worldId, friendUserId]
+      [membershipId, worldId, friendUserId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -341,8 +298,9 @@ describe("Multiplayer Integration", () => {
   });
 
   it("denies sovereign access without a character", async () => {
-    const response = await friendAgent
-      .get(`/api/worlds/${worldId}/sovereign/verify`);
+    const response = await friendAgent.get(
+      `/api/worlds/${worldId}/sovereign/verify`,
+    );
 
     expect(response.status).toBe(403);
   });
@@ -377,10 +335,7 @@ describe("Multiplayer Integration", () => {
       .send({
         membership_id: membershipId,
         character_id: dottoreCharacterId,
-        roles: [
-          "HARBINGER",
-          "RESEARCH_DIRECTOR",
-        ],
+        roles: ["HARBINGER", "RESEARCH_DIRECTOR"],
       });
 
     expect(response.status).toBe(201);
@@ -393,10 +348,7 @@ describe("Multiplayer Integration", () => {
     expect(assignment.character).toBe("Il Dottore");
 
     expect(assignment.roles).toEqual(
-      expect.arrayContaining([
-        "HARBINGER",
-        "RESEARCH_DIRECTOR",
-      ])
+      expect.arrayContaining(["HARBINGER", "RESEARCH_DIRECTOR"]),
     );
   });
 
@@ -406,10 +358,7 @@ describe("Multiplayer Integration", () => {
       .send({
         membership_id: membershipId,
         character_id: dottoreCharacterId,
-        roles: [
-          "HARBINGER",
-          "RESEARCH_DIRECTOR",
-        ],
+        roles: ["HARBINGER", "RESEARCH_DIRECTOR"],
       });
 
     expect(response.status).toBe(409);
@@ -435,18 +384,18 @@ describe("Multiplayer Integration", () => {
         AND ca.world_id = $2
         AND ca.revoked_at IS NULL
       `,
-      [assignmentId, worldId]
+      [assignmentId, worldId],
     );
 
     expect(result.rowCount).toBe(1);
     expect(result.rows[0].slug).toBe("dottore");
-    expect(result.rows[0].username)
-      .toBe(friendAccount.username);
+    expect(result.rows[0].username).toBe(friendAccount.username);
   });
 
   it("loads Dottore's roles and permissions", async () => {
-    const response = await friendAgent
-      .get(`/api/worlds/${worldId}/me/permissions`);
+    const response = await friendAgent.get(
+      `/api/worlds/${worldId}/me/permissions`,
+    );
 
     expect(response.status).toBe(200);
 
@@ -456,10 +405,7 @@ describe("Multiplayer Integration", () => {
     expect(character.isSovereign).toBe(false);
 
     expect(character.roles).toEqual(
-      expect.arrayContaining([
-        "HARBINGER",
-        "RESEARCH_DIRECTOR",
-      ])
+      expect.arrayContaining(["HARBINGER", "RESEARCH_DIRECTOR"]),
     );
 
     expect(permissions).toContain("research.create");
@@ -467,32 +413,30 @@ describe("Multiplayer Integration", () => {
     expect(permissions).toContain("operations.view");
 
     expect(permissions).not.toContain("roles.assign");
-    expect(permissions).not.toContain(
-      "world.members.invite"
-    );
+    expect(permissions).not.toContain("world.members.invite");
   });
 
   it("denies Dottore Sovereign-only access", async () => {
-    const response = await friendAgent
-      .get(`/api/worlds/${worldId}/sovereign/verify`);
+    const response = await friendAgent.get(
+      `/api/worlds/${worldId}/sovereign/verify`,
+    );
 
     expect(response.status).toBe(403);
 
-    expect(response.body.message)
-      .toBe("Sovereign authority required.");
+    expect(response.body.message).toBe("Sovereign authority required.");
   });
 
   it("allows the Tsaritsa Sovereign-only access", async () => {
-    const response = await sovereignAgent
-      .get(`/api/worlds/${worldId}/sovereign/verify`);
+    const response = await sovereignAgent.get(
+      `/api/worlds/${worldId}/sovereign/verify`,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
   });
 
   it("prevents an outsider from viewing the world", async () => {
-    const response = await outsiderAgent
-      .get(`/api/worlds/${worldId}`);
+    const response = await outsiderAgent.get(`/api/worlds/${worldId}`);
 
     expect(response.status).toBe(404);
   });

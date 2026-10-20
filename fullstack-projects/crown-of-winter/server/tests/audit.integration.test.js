@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
@@ -12,14 +6,9 @@ import { randomUUID } from "node:crypto";
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
 
-import {
-  getAdminPool,
-  verifyAdminDatabase,
-} from "./helpers/adminPool.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
-import {
-  getWorldAuditLogs,
-} from "../src/services/auditService.js";
+import { getWorldAuditLogs } from "../src/services/auditService.js";
 
 // -----------------------------------------
 // Test configuration
@@ -28,9 +17,7 @@ import {
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
-const runId = randomUUID()
-  .replaceAll("-", "")
-  .slice(0, 12);
+const runId = randomUUID().replaceAll("-", "").slice(0, 12);
 
 const founderAccount = {
   username: `audit_founder_${runId}`,
@@ -85,19 +72,13 @@ async function verifyTestDatabase() {
     process.env.NODE_ENV !== "test" ||
     process.env.DB_NAME !== TEST_DATABASE
   ) {
-    throw new Error(
-      "Unsafe test environment."
-    );
+    throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
-    throw new Error(
-      "Audit tests require crown-of-winter-test."
-    );
+    throw new Error("Audit tests require crown-of-winter-test.");
   }
 
   databaseVerified = true;
@@ -108,9 +89,7 @@ async function verifyTestDatabase() {
 // -----------------------------------------
 
 async function registerTestUser(account) {
-  const response = await request(app)
-    .post("/api/auth/register")
-    .send(account);
+  const response = await request(app).post("/api/auth/register").send(account);
 
   expect(response.status).toBe(201);
 
@@ -124,12 +103,10 @@ async function registerTestUser(account) {
 async function loginTestUser(account) {
   const agent = request.agent(app);
 
-  const response = await agent
-    .post("/api/auth/login")
-    .send({
-      identifier: account.username,
-      password: account.password,
-    });
+  const response = await agent.post("/api/auth/login").send({
+    identifier: account.username,
+    password: account.password,
+  });
 
   expect(response.status).toBe(200);
 
@@ -137,12 +114,10 @@ async function loginTestUser(account) {
 }
 
 async function createTestWorld(name, mode) {
-  const response = await founderAgent
-    .post("/api/worlds")
-    .send({
-      name,
-      mode,
-    });
+  const response = await founderAgent.post("/api/worlds").send({
+    name,
+    mode,
+  });
 
   expect(response.status).toBe(201);
 
@@ -171,7 +146,7 @@ async function getAuditEntries(worldId, action) {
       AND action = $2
     ORDER BY created_at, id
     `,
-    [worldId, action]
+    [worldId, action],
   );
 
   return result.rows;
@@ -184,42 +159,27 @@ async function getAuditEntries(worldId, action) {
 beforeAll(async () => {
   await verifyTestDatabase();
 
-  founderId = await registerTestUser(
-    founderAccount
-  );
+  founderId = await registerTestUser(founderAccount);
 
-  friendId = await registerTestUser(
-    friendAccount
-  );
+  friendId = await registerTestUser(friendAccount);
 
-  outsiderId = await registerTestUser(
-    outsiderAccount
-  );
+  outsiderId = await registerTestUser(outsiderAccount);
 
-  founderAgent = await loginTestUser(
-    founderAccount
-  );
+  founderAgent = await loginTestUser(founderAccount);
 
-  friendAgent = await loginTestUser(
-    friendAccount
-  );
+  friendAgent = await loginTestUser(friendAccount);
 
-  outsiderAgent = await loginTestUser(
-    outsiderAccount
-  );
+  outsiderAgent = await loginTestUser(outsiderAccount);
 
   // Create two independent worlds.
-  const firstWorld = await createTestWorld(
-    "Audit Test Palace",
-    "multiplayer"
-  );
+  const firstWorld = await createTestWorld("Audit Test Palace", "multiplayer");
 
   firstWorldId = firstWorld.id;
   firstTsaritsaId = firstWorld.character.id;
 
   const secondWorld = await createTestWorld(
     "Audit Test Fortress",
-    "singleplayer"
+    "singleplayer",
   );
 
   secondWorldId = secondWorld.id;
@@ -233,7 +193,7 @@ beforeAll(async () => {
     WHERE slug = 'dottore'
       AND is_playable = TRUE
       AND is_unique = TRUE
-    `
+    `,
   );
 
   expect(characterResult.rowCount).toBe(1);
@@ -259,26 +219,13 @@ afterAll(async () => {
     try {
       await client.query("BEGIN");
 
-      // Temporary test cleanup bypass.
-      // This is not a secure authorization mechanism;
-      // it must be replaced in the database triggers.
-      await client.query(
-        `
-        SELECT set_config(
-          'crown.world_deletion',
-          'authorized',
-          true
-        )
-        `
-      );
-
       await client.query(
         `
         DELETE FROM worlds
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [[...createdWorldIds], founderId]
+        [[...createdWorldIds], founderId],
       );
 
       await client.query("COMMIT");
@@ -296,7 +243,7 @@ afterAll(async () => {
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -306,12 +253,8 @@ afterAll(async () => {
 // =========================================
 
 describe("World Audit Logging", () => {
-
   it("creates an audit record when a world is created", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.created"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.created");
 
     expect(logs).toHaveLength(1);
     expect(logs[0].id).toBeDefined();
@@ -319,10 +262,7 @@ describe("World Audit Logging", () => {
   });
 
   it("records the correct founder and world", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.created"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.created");
 
     expect(logs).toHaveLength(1);
 
@@ -335,23 +275,15 @@ describe("World Audit Logging", () => {
   });
 
   it("records the Tsaritsa as the responsible character", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.created"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.created");
 
     expect(logs).toHaveLength(1);
 
-    expect(logs[0].world_character_id).toBe(
-      firstTsaritsaId
-    );
+    expect(logs[0].world_character_id).toBe(firstTsaritsaId);
   });
 
   it("stores world creation details as JSON", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.created"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.created");
 
     expect(logs).toHaveLength(1);
 
@@ -365,48 +297,32 @@ describe("World Audit Logging", () => {
   });
 
   it("keeps audit records separated by world", async () => {
-    const firstLogs = await getWorldAuditLogs(
-      firstWorldId
-    );
+    const firstLogs = await getWorldAuditLogs(firstWorldId);
 
-    const secondLogs = await getWorldAuditLogs(
-      secondWorldId
-    );
+    const secondLogs = await getWorldAuditLogs(secondWorldId);
 
     expect(firstLogs).toHaveLength(1);
     expect(secondLogs).toHaveLength(1);
 
-    expect(firstLogs[0].world_id).toBe(
-      firstWorldId
-    );
+    expect(firstLogs[0].world_id).toBe(firstWorldId);
 
-    expect(secondLogs[0].world_id).toBe(
-      secondWorldId
-    );
+    expect(secondLogs[0].world_id).toBe(secondWorldId);
 
-    expect(secondLogs[0].world_character_id)
-      .toBe(secondTsaritsaId);
+    expect(secondLogs[0].world_character_id).toBe(secondTsaritsaId);
 
-    expect(firstLogs[0].id).not.toBe(
-      secondLogs[0].id
-    );
+    expect(firstLogs[0].id).not.toBe(secondLogs[0].id);
   });
 
   it("retrieves audit records with the founder's username", async () => {
-    const logs = await getWorldAuditLogs(
-      firstWorldId,
-      {
-        limit: 10,
-        offset: 0,
-      }
-    );
+    const logs = await getWorldAuditLogs(firstWorldId, {
+      limit: 10,
+      offset: 0,
+    });
 
     expect(logs).toHaveLength(1);
     expect(logs[0].action).toBe("world.created");
 
-    expect(logs[0].performed_by).toBe(
-      founderAccount.username
-    );
+    expect(logs[0].performed_by).toBe(founderAccount.username);
 
     expect(logs[0].created_at).toBeDefined();
   });
@@ -419,15 +335,13 @@ describe("World Audit Logging", () => {
       WHERE user_id = $1
         AND action = 'world.created'
       `,
-      [founderId]
+      [founderId],
     );
 
-    const response = await founderAgent
-      .post("/api/worlds")
-      .send({
-        name: "A",
-        mode: "invalid",
-      });
+    const response = await founderAgent.post("/api/worlds").send({
+      name: "A",
+      mode: "invalid",
+    });
 
     expect(response.status).toBe(400);
 
@@ -438,14 +352,11 @@ describe("World Audit Logging", () => {
       WHERE user_id = $1
         AND action = 'world.created'
       `,
-      [founderId]
+      [founderId],
     );
 
-    expect(after.rows[0].total).toBe(
-      before.rows[0].total
-    );
+    expect(after.rows[0].total).toBe(before.rows[0].total);
   });
-
 });
 
 // =========================================
@@ -453,7 +364,6 @@ describe("World Audit Logging", () => {
 // =========================================
 
 describe("Invitation Audit Logging", () => {
-
   it("records an invitation sent by the Tsaritsa", async () => {
     const response = await founderAgent
       .post(`/api/worlds/${firstWorldId}/invitations`)
@@ -465,10 +375,7 @@ describe("Invitation Audit Logging", () => {
 
     invitationId = response.body.data.invitation.id;
 
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.member.invited");
 
     expect(logs).toHaveLength(1);
 
@@ -477,19 +384,14 @@ describe("Invitation Audit Logging", () => {
     expect(log.user_id).toBe(founderId);
     expect(log.world_id).toBe(firstWorldId);
 
-    expect(log.world_character_id).toBe(
-      firstTsaritsaId
-    );
+    expect(log.world_character_id).toBe(firstTsaritsaId);
 
     expect(log.resource_type).toBe("world_member");
     expect(log.resource_id).toBe(invitationId);
   });
 
   it("stores the correct invitation details", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.member.invited");
 
     expect(logs).toHaveLength(1);
 
@@ -502,10 +404,7 @@ describe("Invitation Audit Logging", () => {
   });
 
   it("does not log unauthorized invitations", async () => {
-    const before = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const before = await getAuditEntries(firstWorldId, "world.member.invited");
 
     const response = await outsiderAgent
       .post(`/api/worlds/${firstWorldId}/invitations`)
@@ -515,23 +414,15 @@ describe("Invitation Audit Logging", () => {
 
     expect(response.status).toBe(403);
 
-    const after = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const after = await getAuditEntries(firstWorldId, "world.member.invited");
 
     expect(after).toHaveLength(before.length);
 
-    expect(
-      after.some((log) => log.user_id === outsiderId)
-    ).toBe(false);
+    expect(after.some((log) => log.user_id === outsiderId)).toBe(false);
   });
 
   it("does not create another log for duplicate invitations", async () => {
-    const before = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const before = await getAuditEntries(firstWorldId, "world.member.invited");
 
     const response = await founderAgent
       .post(`/api/worlds/${firstWorldId}/invitations`)
@@ -541,24 +432,19 @@ describe("Invitation Audit Logging", () => {
 
     expect(response.status).toBe(409);
 
-    const after = await getAuditEntries(
-      firstWorldId,
-      "world.member.invited"
-    );
+    const after = await getAuditEntries(firstWorldId, "world.member.invited");
 
     expect(after).toHaveLength(before.length);
   });
 
   it("records an accepted invitation", async () => {
-    const response = await friendAgent
-      .post(`/api/invitations/${invitationId}/accept`);
+    const response = await friendAgent.post(
+      `/api/invitations/${invitationId}/accept`,
+    );
 
     expect(response.status).toBe(200);
 
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.member.joined"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.member.joined");
 
     expect(logs).toHaveLength(1);
 
@@ -573,10 +459,7 @@ describe("Invitation Audit Logging", () => {
   });
 
   it("stores correct player joining details", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "world.member.joined"
-    );
+    const logs = await getAuditEntries(firstWorldId, "world.member.joined");
 
     expect(logs).toHaveLength(1);
 
@@ -594,18 +477,13 @@ describe("Invitation Audit Logging", () => {
         AND world_id = $2
         AND user_id = $3
       `,
-      [
-        invitationId,
-        firstWorldId,
-        friendId,
-      ]
+      [invitationId, firstWorldId, friendId],
     );
 
     expect(membership.rowCount).toBe(1);
     expect(membership.rows[0].status).toBe("active");
     expect(membership.rows[0].joined_at).not.toBeNull();
   });
-
 });
 
 // =========================================
@@ -613,17 +491,13 @@ describe("Invitation Audit Logging", () => {
 // =========================================
 
 describe("Character Assignment Audit Logging", () => {
-
   it("records assigning Dottore to the invited player", async () => {
     const response = await founderAgent
       .post(`/api/worlds/${firstWorldId}/assignments`)
       .send({
         membership_id: invitationId,
         character_id: dottoreCharacterId,
-        roles: [
-          "HARBINGER",
-          "RESEARCH_DIRECTOR",
-        ],
+        roles: ["HARBINGER", "RESEARCH_DIRECTOR"],
       });
 
     expect(response.status).toBe(201);
@@ -632,15 +506,11 @@ describe("Character Assignment Audit Logging", () => {
     const assignment = response.body.data.assignment;
 
     dottoreAssignmentId = assignment.assignment_id;
-    dottoreWorldCharacterId =
-      assignment.world_character_id;
+    dottoreWorldCharacterId = assignment.world_character_id;
 
     expect(assignment.character).toBe("Il Dottore");
 
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "character.assigned"
-    );
+    const logs = await getAuditEntries(firstWorldId, "character.assigned");
 
     expect(logs).toHaveLength(1);
 
@@ -650,24 +520,15 @@ describe("Character Assignment Audit Logging", () => {
     expect(log.world_id).toBe(firstWorldId);
     expect(log.user_id).toBe(founderId);
 
-    expect(log.world_character_id).toBe(
-      firstTsaritsaId
-    );
+    expect(log.world_character_id).toBe(firstTsaritsaId);
 
-    expect(log.resource_type).toBe(
-      "character_assignment"
-    );
+    expect(log.resource_type).toBe("character_assignment");
 
-    expect(log.resource_id).toBe(
-      dottoreAssignmentId
-    );
+    expect(log.resource_id).toBe(dottoreAssignmentId);
   });
 
   it("records the correct assigned player and character", async () => {
-    const logs = await getAuditEntries(
-      firstWorldId,
-      "character.assigned"
-    );
+    const logs = await getAuditEntries(firstWorldId, "character.assigned");
 
     expect(logs).toHaveLength(1);
 
@@ -685,10 +546,7 @@ describe("Character Assignment Audit Logging", () => {
     });
 
     expect(details.requested_roles).toEqual(
-      expect.arrayContaining([
-        "HARBINGER",
-        "RESEARCH_DIRECTOR",
-      ])
+      expect.arrayContaining(["HARBINGER", "RESEARCH_DIRECTOR"]),
     );
 
     expect(details.requested_roles).toHaveLength(2);
@@ -697,7 +555,7 @@ describe("Character Assignment Audit Logging", () => {
   it("records the roles newly granted to Dottore", async () => {
     const logs = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
     expect(logs).toHaveLength(1);
@@ -705,17 +563,11 @@ describe("Character Assignment Audit Logging", () => {
     const log = logs[0];
 
     expect(log.user_id).toBe(founderId);
-    expect(log.world_character_id).toBe(
-      firstTsaritsaId
-    );
+    expect(log.world_character_id).toBe(firstTsaritsaId);
 
-    expect(log.resource_type).toBe(
-      "world_character"
-    );
+    expect(log.resource_type).toBe("world_character");
 
-    expect(log.resource_id).toBe(
-      dottoreWorldCharacterId
-    );
+    expect(log.resource_id).toBe(dottoreWorldCharacterId);
 
     expect(log.details).toMatchObject({
       assignment_id: dottoreAssignmentId,
@@ -726,10 +578,7 @@ describe("Character Assignment Audit Logging", () => {
     });
 
     expect(log.details.roles).toEqual(
-      expect.arrayContaining([
-        "HARBINGER",
-        "RESEARCH_DIRECTOR",
-      ])
+      expect.arrayContaining(["HARBINGER", "RESEARCH_DIRECTOR"]),
     );
 
     expect(log.details.roles).toHaveLength(2);
@@ -746,31 +595,21 @@ describe("Character Assignment Audit Logging", () => {
         AND wcr.world_character_id = $2
       ORDER BY r.code
       `,
-      [
-        firstWorldId,
-        dottoreWorldCharacterId,
-      ]
+      [firstWorldId, dottoreWorldCharacterId],
     );
 
-    const databaseRoles = result.rows
-      .map((row) => row.code)
-      .sort();
+    const databaseRoles = result.rows.map((row) => row.code).sort();
 
     const logs = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
     expect(logs).toHaveLength(1);
 
-    const loggedRoles = [
-      ...logs[0].details.roles,
-    ].sort();
+    const loggedRoles = [...logs[0].details.roles].sort();
 
-    expect(databaseRoles).toEqual([
-      "HARBINGER",
-      "RESEARCH_DIRECTOR",
-    ]);
+    expect(databaseRoles).toEqual(["HARBINGER", "RESEARCH_DIRECTOR"]);
 
     expect(loggedRoles).toEqual(databaseRoles);
 
@@ -790,24 +629,22 @@ describe("Character Assignment Audit Logging", () => {
         firstWorldId,
         dottoreWorldCharacterId,
         invitationId,
-      ]
+      ],
     );
 
     expect(assignmentResult.rowCount).toBe(1);
-    expect(
-      assignmentResult.rows[0].revoked_at
-    ).toBeNull();
+    expect(assignmentResult.rows[0].revoked_at).toBeNull();
   });
 
   it("does not log duplicate character assignments", async () => {
     const assignmentsBefore = await getAuditEntries(
       firstWorldId,
-      "character.assigned"
+      "character.assigned",
     );
 
     const rolesBefore = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
     const response = await founderAgent
@@ -815,42 +652,35 @@ describe("Character Assignment Audit Logging", () => {
       .send({
         membership_id: invitationId,
         character_id: dottoreCharacterId,
-        roles: [
-          "HARBINGER",
-          "RESEARCH_DIRECTOR",
-        ],
+        roles: ["HARBINGER", "RESEARCH_DIRECTOR"],
       });
 
     expect(response.status).toBe(409);
 
     const assignmentsAfter = await getAuditEntries(
       firstWorldId,
-      "character.assigned"
+      "character.assigned",
     );
 
     const rolesAfter = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
-    expect(assignmentsAfter).toHaveLength(
-      assignmentsBefore.length
-    );
+    expect(assignmentsAfter).toHaveLength(assignmentsBefore.length);
 
-    expect(rolesAfter).toHaveLength(
-      rolesBefore.length
-    );
+    expect(rolesAfter).toHaveLength(rolesBefore.length);
   });
 
   it("does not log unauthorized character assignments", async () => {
     const assignmentsBefore = await getAuditEntries(
       firstWorldId,
-      "character.assigned"
+      "character.assigned",
     );
 
     const rolesBefore = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
     const response = await outsiderAgent
@@ -865,33 +695,22 @@ describe("Character Assignment Audit Logging", () => {
 
     const assignmentsAfter = await getAuditEntries(
       firstWorldId,
-      "character.assigned"
+      "character.assigned",
     );
 
     const rolesAfter = await getAuditEntries(
       firstWorldId,
-      "character.roles.assigned"
+      "character.roles.assigned",
     );
 
-    expect(assignmentsAfter).toHaveLength(
-      assignmentsBefore.length
+    expect(assignmentsAfter).toHaveLength(assignmentsBefore.length);
+
+    expect(rolesAfter).toHaveLength(rolesBefore.length);
+
+    expect(assignmentsAfter.some((log) => log.user_id === outsiderId)).toBe(
+      false,
     );
 
-    expect(rolesAfter).toHaveLength(
-      rolesBefore.length
-    );
-
-    expect(
-      assignmentsAfter.some(
-        (log) => log.user_id === outsiderId
-      )
-    ).toBe(false);
-
-    expect(
-      rolesAfter.some(
-        (log) => log.user_id === outsiderId
-      )
-    ).toBe(false);
+    expect(rolesAfter.some((log) => log.user_id === outsiderId)).toBe(false);
   });
-
 });

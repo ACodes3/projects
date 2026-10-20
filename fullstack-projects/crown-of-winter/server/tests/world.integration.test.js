@@ -1,11 +1,4 @@
-
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
@@ -13,17 +6,12 @@ import { randomUUID } from "node:crypto";
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
 
-import {
-  getAdminPool,
-  verifyAdminDatabase,
-} from "./helpers/adminPool.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
-const runId = randomUUID()
-  .replaceAll("-", "")
-  .slice(0, 12);
+const runId = randomUUID().replaceAll("-", "").slice(0, 12);
 
 const founderAccount = {
   username: `sovereign_${runId}`,
@@ -61,14 +49,10 @@ async function verifyTestDatabase() {
     throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
-    throw new Error(
-      "Integration tests must use the test database."
-    );
+    throw new Error("Integration tests must use the test database.");
   }
 
   databaseVerified = true;
@@ -79,9 +63,7 @@ async function verifyTestDatabase() {
 // -----------------------------------------
 
 async function registerTestUser(account) {
-  const response = await request(app)
-    .post("/api/auth/register")
-    .send(account);
+  const response = await request(app).post("/api/auth/register").send(account);
 
   expect(response.status).toBe(201);
 
@@ -95,12 +77,10 @@ async function registerTestUser(account) {
 async function loginTestUser(account) {
   const agent = request.agent(app);
 
-  const response = await agent
-    .post("/api/auth/login")
-    .send({
-      identifier: account.username,
-      password: account.password,
-    });
+  const response = await agent.post("/api/auth/login").send({
+    identifier: account.username,
+    password: account.password,
+  });
 
   expect(response.status).toBe(200);
 
@@ -121,12 +101,10 @@ beforeAll(async () => {
   founderAgent = await loginTestUser(founderAccount);
   outsiderAgent = await loginTestUser(outsiderAccount);
 
-  const response = await founderAgent
-    .post("/api/worlds")
-    .send({
-      name: "Imperial Test Realm",
-      mode: "singleplayer",
-    });
+  const response = await founderAgent.post("/api/worlds").send({
+    name: "Imperial Test Realm",
+    mode: "singleplayer",
+  });
 
   expect(response.status).toBe(201);
 
@@ -161,32 +139,13 @@ afterAll(async () => {
     try {
       await client.query("BEGIN");
 
-      // Temporary cleanup bypass.
-      // This must be replaced before production.
-      //
-      // Only the test administration connection
-      // uses this setting in this test file.
-
-      await client.query(
-        `
-        SELECT set_config(
-          'crown.world_deletion',
-          'authorized',
-          true
-        )
-        `
-      );
-
       await client.query(
         `
         DELETE FROM worlds
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [
-          [...createdWorldIds],
-          founderId,
-        ]
+        [[...createdWorldIds], founderId],
       );
 
       await client.query("COMMIT");
@@ -210,7 +169,7 @@ afterAll(async () => {
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -220,7 +179,6 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("World & Sovereign Integration", () => {
-
   it("creates a world successfully", async () => {
     const result = await pool.query(
       `
@@ -228,7 +186,7 @@ describe("World & Sovereign Integration", () => {
       FROM worlds
       WHERE id = $1
       `,
-      [worldId]
+      [worldId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -248,7 +206,7 @@ describe("World & Sovereign Integration", () => {
       WHERE world_id = $1
         AND user_id = $2
       `,
-      [worldId, founderId]
+      [worldId, founderId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -266,7 +224,7 @@ describe("World & Sovereign Integration", () => {
       WHERE wc.world_id = $1
         AND c.slug = 'tsaritsa'
       `,
-      [worldId]
+      [worldId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -285,7 +243,7 @@ describe("World & Sovereign Integration", () => {
         AND wm.user_id = $3
         AND ca.revoked_at IS NULL
       `,
-      [worldId, tsaritsaId, founderId]
+      [worldId, tsaritsaId, founderId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -301,11 +259,10 @@ describe("World & Sovereign Integration", () => {
       WHERE wcr.world_id = $1
         AND wcr.world_character_id = $2
       `,
-      [worldId, tsaritsaId]
+      [worldId, tsaritsaId],
     );
 
-    expect(result.rows.map((row) => row.code))
-      .toContain("SOVEREIGN");
+    expect(result.rows.map((row) => row.code)).toContain("SOVEREIGN");
   });
 
   it("rejects a duplicate Tsaritsa in the same world", async () => {
@@ -314,7 +271,7 @@ describe("World & Sovereign Integration", () => {
       SELECT id
       FROM characters
       WHERE slug = 'tsaritsa'
-      `
+      `,
     );
 
     const tsaritsaDefinitionId = character.rows[0].id;
@@ -328,20 +285,18 @@ describe("World & Sovereign Integration", () => {
         )
         VALUES ($1, $2)
         `,
-        [worldId, tsaritsaDefinitionId]
-      )
+        [worldId, tsaritsaDefinitionId],
+      ),
     ).rejects.toMatchObject({
       code: "23505",
     });
   });
 
   it("creates independent Tsaritsa instances in separate worlds", async () => {
-    const response = await founderAgent
-      .post("/api/worlds")
-      .send({
-        name: "Second Test Realm",
-        mode: "multiplayer",
-      });
+    const response = await founderAgent.post("/api/worlds").send({
+      name: "Second Test Realm",
+      mode: "multiplayer",
+    });
 
     expect(response.status).toBe(201);
 
@@ -355,43 +310,34 @@ describe("World & Sovereign Integration", () => {
   });
 
   it("lists worlds belonging to the founder", async () => {
-    const response = await founderAgent
-      .get("/api/worlds");
+    const response = await founderAgent.get("/api/worlds");
 
     expect(response.status).toBe(200);
 
-    const worldIds = response.body.data.worlds.map(
-      (world) => world.id
-    );
+    const worldIds = response.body.data.worlds.map((world) => world.id);
 
     expect(worldIds).toContain(worldId);
   });
 
   it("prevents another user from accessing the world", async () => {
-    const response = await outsiderAgent
-      .get(`/api/worlds/${worldId}`);
+    const response = await outsiderAgent.get(`/api/worlds/${worldId}`);
 
     expect(response.status).toBe(404);
   });
 
   it("rejects invalid world creation data", async () => {
-    const invalidName = await founderAgent
-      .post("/api/worlds")
-      .send({
-        name: "A",
-        mode: "singleplayer",
-      });
+    const invalidName = await founderAgent.post("/api/worlds").send({
+      name: "A",
+      mode: "singleplayer",
+    });
 
     expect(invalidName.status).toBe(400);
 
-    const invalidMode = await founderAgent
-      .post("/api/worlds")
-      .send({
-        name: "Invalid World",
-        mode: "unknown",
-      });
+    const invalidMode = await founderAgent.post("/api/worlds").send({
+      name: "Invalid World",
+      mode: "unknown",
+    });
 
     expect(invalidMode.status).toBe(400);
   });
-
 });
