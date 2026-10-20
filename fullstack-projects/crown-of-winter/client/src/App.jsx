@@ -13,6 +13,8 @@ import {
 import { authApi } from "./services/api";
 import { worldApi } from "./services/worldApi";
 
+import { WorldAccessProvider } from "./context/WorldAccessContext";
+
 import LoginPage from "./pages/LoginPage";
 import WorldSelectionPage from "./pages/WorldSelectionPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -175,6 +177,16 @@ function WorldGuard() {
   return <Outlet />;
 }
 
+function WorldAccessLayout() {
+  const { worldId } = useParams();
+
+  return (
+    <WorldAccessProvider worldId={worldId}>
+      <Outlet />
+    </WorldAccessProvider>
+  );
+}
+
 function ShellRoute({ user, onLogout }) {
   return <AppShell user={user} onLogout={onLogout} />;
 }
@@ -268,9 +280,11 @@ function AppRoutes() {
         <Route path="/worlds" element={<WorldSelectionRoute />} />
 
         <Route path="/worlds/:worldId" element={<WorldGuard />}>
-          <Route element={<ShellRoute user={user} onLogout={handleLogout} />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            {PalaceRoutes()}
+          <Route element={<WorldAccessLayout />}>
+            <Route element={<ShellRoute user={user} onLogout={handleLogout} />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              {PalaceRoutes()}
+            </Route>
           </Route>
         </Route>
       </Route>
