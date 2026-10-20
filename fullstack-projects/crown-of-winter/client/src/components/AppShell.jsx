@@ -12,10 +12,11 @@ import {
   ArrowLeftRight,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
+import { accessApi } from "../services/accessApi";
 
 import "./AppShell.css";
 
@@ -69,6 +70,67 @@ function AppShell({ user, onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
+  const [identity, setIdentity] = useState({
+    worldId: null,
+    status: "loading",
+    character: null,
+    message: "",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!worldId)
+      return () => {
+        cancelled = true;
+      };
+
+    accessApi
+      .getMyPermissions(worldId)
+      .then((response) => {
+        if (cancelled) return;
+        setIdentity({
+          worldId,
+          status: "ready",
+          character: response?.data?.character ?? null,
+          message: "",
+        });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setIdentity({
+          worldId,
+          status: error?.status === 403 ? "unassigned" : "error",
+          character: null,
+          message: error?.message || "Could not load character identity.",
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [worldId]);
+
+  const currentIdentity =
+    identity.worldId === worldId
+      ? identity
+      : { status: "loading", character: null, message: "" };
+
+  const roleNames = {
+    SOVEREIGN: "Sovereign",
+    HARBINGER: "Fatui Harbinger",
+    AGENT: "Fatui Agent",
+    DIRECTOR: "Director",
+    INTELLIGENCE_OFFICER: "Intelligence Officer",
+    PALACE_ADMIN: "Palace Administrator",
+    PALACE_STAFF: "Palace Staff",
+    RESEARCH_DIRECTOR: "Research Director",
+    RESEARCHER: "Researcher",
+  };
+  const roleLabel = currentIdentity.character?.roles
+    ?.map((code) => roleNames[code] || code)
+    .join(" · ");
+
   async function handleLogout() {
     if (loggingOut) return;
 
@@ -121,10 +183,7 @@ function AppShell({ user, onLogout }) {
         </nav>
 
         <div className="app-shell__sidebar-bottom">
-          <NavLink
-            to="/worlds"
-            className="app-shell__nav-item"
-          >
+          <NavLink to="/worlds" className="app-shell__nav-item">
             <ArrowLeftRight size={17} strokeWidth={1.4} />
             <span>Switch World</span>
           </NavLink>
@@ -176,20 +235,59 @@ function AppShell({ user, onLogout }) {
 
       <section className="app-shell__main">
         <header className="app-shell__topbar">
-          <div>
+          <div className="app-shell__topbar-heading">
             <span className="app-shell__topbar-label">Imperial Network</span>
-
             <strong>Winter Palace Command</strong>
-            {user?.username && (
-              <span className="app-shell__topbar-label">
-                Signed in as {user.username}
-              </span>
-            )}
           </div>
 
-          <div className="app-shell__status">
-            <span className="app-shell__status-dot" />
-            Cryo Network // Online
+          <div className="app-shell__topbar-right">
+            <div className="app-shell__identity" aria-live="polite">
+              <div className="app-shell__identity-icon">
+                <Crown size={19} strokeWidth={1.3} />
+              </div>
+
+              <div className="app-shell__identity-info">
+                {currentIdentity.status === "loading" && (
+                  <span>Verifying character identity...</span>
+                )}
+
+                {currentIdentity.status === "ready" &&
+                  currentIdentity.character && (
+                    <>
+                      <strong>{currentIdentity.character.name}</strong>
+                      <span>
+                        {[roleLabel, user?.username]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </>
+                  )}
+
+                {currentIdentity.status === "ready" &&
+                  !currentIdentity.character && (
+                    <span>Character identity unavailable</span>
+                  )}
+
+                {currentIdentity.status === "unassigned" && (
+                  <>
+                    <strong>Awaiting Character Assignment</strong>
+                    {user?.username && <span>{user.username}</span>}
+                  </>
+                )}
+
+                {currentIdentity.status === "error" && (
+                  <>
+                    <strong>Character identity unavailable</strong>
+                    {user?.username && <span>{user.username}</span>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="app-shell__status">
+              <span className="app-shell__status-dot" />
+              Cryo Network // Online
+            </div>
           </div>
         </header>
 
