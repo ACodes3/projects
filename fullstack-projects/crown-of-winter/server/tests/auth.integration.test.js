@@ -1,17 +1,12 @@
-
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
+
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
@@ -41,17 +36,15 @@ async function verifyTestDatabase() {
     process.env.DB_NAME !== TEST_DATABASE
   ) {
     throw new Error(
-      "Unsafe environment: integration tests require the test database."
+      "Unsafe environment: integration tests require the test database.",
     );
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
     throw new Error(
-      "Unsafe connection: application pool is not using the test database."
+      "Unsafe connection: application pool is not using the test database.",
     );
   }
 
@@ -85,15 +78,16 @@ afterAll(async () => {
     return;
   }
 
-  // Recheck the database before deleting records
+  // Verify both connections before privileged cleanup.
   await verifyTestDatabase();
+  await verifyAdminDatabase();
 
-  await pool.query(
+  await getAdminPool().query(
     `
     DELETE FROM users
     WHERE id = ANY($1::uuid[])
     `,
-    [[...createdUserIds]]
+    [[...createdUserIds]],
   );
 });
 
@@ -102,11 +96,8 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("Authentication Integration", () => {
-
   it("registers a new user successfully", async () => {
-    const uniqueId = randomUUID()
-      .replaceAll("-", "")
-      .slice(0, 12);
+    const uniqueId = randomUUID().replaceAll("-", "").slice(0, 12);
 
     const response = await request(app)
       .post("/api/auth/register")
@@ -123,44 +114,36 @@ describe("Authentication Integration", () => {
     createdUserIds.add(response.body.data.user.id);
 
     // Never expose password hashes
-    expect(
-      response.body.data.user
-    ).not.toHaveProperty("password_hash");
+    expect(response.body.data.user).not.toHaveProperty("password_hash");
   });
 
   it("rejects duplicate usernames", async () => {
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({
-        username: testAccount.username,
-        email: "another_unique@example.com",
-        password: TEST_PASSWORD,
-      });
+    const response = await request(app).post("/api/auth/register").send({
+      username: testAccount.username,
+      email: "another_unique@example.com",
+      password: TEST_PASSWORD,
+    });
 
     expect(response.status).toBe(409);
     expect(response.body.success).toBe(false);
   });
 
   it("rejects invalid email addresses", async () => {
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({
-        username: "invalid_email_user",
-        email: "not-an-email",
-        password: TEST_PASSWORD,
-      });
+    const response = await request(app).post("/api/auth/register").send({
+      username: "invalid_email_user",
+      email: "not-an-email",
+      password: TEST_PASSWORD,
+    });
 
     expect(response.status).toBe(400);
   });
 
   it("rejects passwords shorter than 12 characters", async () => {
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({
-        username: "weak_password_user",
-        email: "weak@example.com",
-        password: "short",
-      });
+    const response = await request(app).post("/api/auth/register").send({
+      username: "weak_password_user",
+      email: "weak@example.com",
+      password: "short",
+    });
 
     expect(response.status).toBe(400);
   });
@@ -172,7 +155,7 @@ describe("Authentication Integration", () => {
       FROM users
       WHERE id = $1
       `,
-      [primaryUserId]
+      [primaryUserId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -184,12 +167,10 @@ describe("Authentication Integration", () => {
   });
 
   it("logs in with valid credentials", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({
-        identifier: testAccount.username,
-        password: TEST_PASSWORD,
-      });
+    const response = await request(app).post("/api/auth/login").send({
+      identifier: testAccount.username,
+      password: TEST_PASSWORD,
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -204,12 +185,10 @@ describe("Authentication Integration", () => {
   });
 
   it("rejects incorrect passwords", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({
-        identifier: testAccount.username,
-        password: "DefinitelyWrong123!",
-      });
+    const response = await request(app).post("/api/auth/login").send({
+      identifier: testAccount.username,
+      password: "DefinitelyWrong123!",
+    });
 
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
@@ -218,12 +197,10 @@ describe("Authentication Integration", () => {
   it("allows authenticated users to access /me", async () => {
     const agent = request.agent(app);
 
-    const login = await agent
-      .post("/api/auth/login")
-      .send({
-        identifier: testAccount.email,
-        password: TEST_PASSWORD,
-      });
+    const login = await agent.post("/api/auth/login").send({
+      identifier: testAccount.email,
+      password: TEST_PASSWORD,
+    });
 
     expect(login.status).toBe(200);
 
@@ -231,17 +208,14 @@ describe("Authentication Integration", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.user.id).toBe(primaryUserId);
-    expect(response.body.data.user.username)
-      .toBe(testAccount.username);
+    expect(response.body.data.user.username).toBe(testAccount.username);
   });
 
   it("creates a database session after login", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({
-        identifier: testAccount.username,
-        password: TEST_PASSWORD,
-      });
+    const response = await request(app).post("/api/auth/login").send({
+      identifier: testAccount.username,
+      password: TEST_PASSWORD,
+    });
 
     expect(response.status).toBe(200);
 
@@ -253,7 +227,7 @@ describe("Authentication Integration", () => {
         AND revoked_at IS NULL
         AND expires_at > NOW()
       `,
-      [primaryUserId]
+      [primaryUserId],
     );
 
     expect(result.rowCount).toBeGreaterThan(0);
@@ -262,12 +236,10 @@ describe("Authentication Integration", () => {
   it("revokes the session after logout", async () => {
     const agent = request.agent(app);
 
-    const login = await agent
-      .post("/api/auth/login")
-      .send({
-        identifier: testAccount.username,
-        password: TEST_PASSWORD,
-      });
+    const login = await agent.post("/api/auth/login").send({
+      identifier: testAccount.username,
+      password: TEST_PASSWORD,
+    });
 
     expect(login.status).toBe(200);
 

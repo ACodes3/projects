@@ -1,17 +1,11 @@
-
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
 // -----------------------------------------
 // Test configuration
@@ -21,14 +15,12 @@ const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
 const TRUSTED_ORIGIN = new URL(
-  process.env.CLIENT_URL || "http://localhost:5173"
+  process.env.CLIENT_URL || "http://localhost:5173",
 ).origin;
 
 const UNTRUSTED_ORIGIN = "https://evil.example";
 
-const runId = randomUUID()
-  .replaceAll("-", "")
-  .slice(0, 12);
+const runId = randomUUID().replaceAll("-", "").slice(0, 12);
 
 const account = {
   username: `csrf_test_${runId}`,
@@ -52,14 +44,10 @@ async function verifyTestDatabase() {
     throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
-    throw new Error(
-      "CSRF tests require crown-of-winter-test."
-    );
+    throw new Error("CSRF tests require crown-of-winter-test.");
   }
 
   databaseVerified = true;
@@ -105,9 +93,7 @@ beforeAll(async () => {
 
   expect(response.status).toBe(201);
 
-  createdUserIds.add(
-    response.body.data.user.id
-  );
+  createdUserIds.add(response.body.data.user.id);
 }, 20000);
 
 // -----------------------------------------
@@ -120,14 +106,18 @@ afterAll(async () => {
   await verifyTestDatabase();
 
   if (createdUserIds.size > 0) {
+    // Only the administrative test connection
+    // deletes accounts created by this suite.
+    await verifyAdminDatabase();
+
     // Sessions are deleted by the database's
     // existing foreign-key cascade.
-    await pool.query(
+    await getAdminPool().query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -137,7 +127,6 @@ afterAll(async () => {
 // =========================================
 
 describe("CSRF Origin Protection", () => {
-
   it("allows a trusted frontend origin", async () => {
     const response = await request(app)
       .post("/api/auth/login")
@@ -174,17 +163,11 @@ describe("CSRF Origin Protection", () => {
 
     expect(response.status).toBe(403);
 
-    expect(response.body.message).toBe(
-      "Request origin not allowed."
-    );
+    expect(response.body.message).toBe("Request origin not allowed.");
   });
 
   it("rejects malformed Origin headers", async () => {
-    const invalidOrigins = [
-      "not-a-url",
-      "null",
-      "://invalid",
-    ];
+    const invalidOrigins = ["not-a-url", "null", "://invalid"];
 
     for (const origin of invalidOrigins) {
       const response = await request(app)
@@ -194,9 +177,7 @@ describe("CSRF Origin Protection", () => {
 
       expect(response.status).toBe(403);
 
-      expect(response.body.message).toBe(
-        "Invalid request origin."
-      );
+      expect(response.body.message).toBe("Invalid request origin.");
     }
   });
 
@@ -215,9 +196,7 @@ describe("CSRF Origin Protection", () => {
 
     expect(response.status).toBe(403);
 
-    expect(response.body.message).toBe(
-      "Request origin not allowed."
-    );
+    expect(response.body.message).toBe("Request origin not allowed.");
   });
 
   it("allows missing Origin only under the current test configuration", async () => {
@@ -249,9 +228,7 @@ describe("CSRF Origin Protection", () => {
 
     expect(response.status).toBe(403);
 
-    expect(response.body.message).toBe(
-      "Request origin not allowed."
-    );
+    expect(response.body.message).toBe("Request origin not allowed.");
   });
 
   it("allows trusted world requests to reach their controller", async () => {
@@ -274,9 +251,7 @@ describe("CSRF Origin Protection", () => {
 
     expect(response.status).toBe(400);
 
-    expect(response.body.message).not.toBe(
-      "Request origin not allowed."
-    );
+    expect(response.body.message).not.toBe("Request origin not allowed.");
   });
 
   it("blocks cross-origin logout but allows trusted logout", async () => {
@@ -291,8 +266,7 @@ describe("CSRF Origin Protection", () => {
 
     // The blocked request should not have
     // revoked the user's existing session.
-    const stillLoggedIn = await agent
-      .get("/api/auth/me");
+    const stillLoggedIn = await agent.get("/api/auth/me");
 
     expect(stillLoggedIn.status).toBe(200);
     expect(stillLoggedIn.body.success).toBe(true);
@@ -306,8 +280,7 @@ describe("CSRF Origin Protection", () => {
     expect(allowed.body.success).toBe(true);
 
     // The session should now be revoked.
-    const afterLogout = await agent
-      .get("/api/auth/me");
+    const afterLogout = await agent.get("/api/auth/me");
 
     expect(afterLogout.status).toBe(401);
   });
@@ -341,11 +314,8 @@ describe("CSRF Origin Protection", () => {
 
     // CORS should never authorize the foreign
     // origin as the allowed origin.
-    expect(
-      optionsResponse.headers[
-        "access-control-allow-origin"
-      ]
-    ).not.toBe(UNTRUSTED_ORIGIN);
+    expect(optionsResponse.headers["access-control-allow-origin"]).not.toBe(
+      UNTRUSTED_ORIGIN,
+    );
   });
-
 });
