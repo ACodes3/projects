@@ -9,11 +9,12 @@ import {
   Archive,
   Settings,
   Snowflake,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import { useState } from "react";
 import { LogOut } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
 
 import "./AppShell.css";
@@ -63,6 +64,8 @@ const navigation = [
 
 function AppShell({ user, onLogout }) {
   const navigate = useNavigate();
+  const { worldId } = useParams();
+  const worldBase = worldId ? `/worlds/${worldId}` : "/worlds";
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
@@ -102,7 +105,7 @@ function AppShell({ user, onLogout }) {
             return (
               <NavLink
                 key={item.path}
-                to={item.path}
+                to={`${worldBase}${item.path}`}
                 className={({ isActive }) =>
                   `app-shell__nav-item ${
                     isActive ? "app-shell__nav-item--active" : ""
@@ -119,7 +122,15 @@ function AppShell({ user, onLogout }) {
 
         <div className="app-shell__sidebar-bottom">
           <NavLink
-            to="/system"
+            to="/worlds"
+            className="app-shell__nav-item"
+          >
+            <ArrowLeftRight size={17} strokeWidth={1.4} />
+            <span>Switch World</span>
+          </NavLink>
+
+          <NavLink
+            to={`${worldBase}/system`}
             className={({ isActive }) =>
               `app-shell__nav-item ${
                 isActive ? "app-shell__nav-item--active" : ""
