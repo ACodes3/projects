@@ -12,11 +12,11 @@ import {
   ArrowLeftRight,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
-import { accessApi } from "../services/accessApi";
+import { useWorldAccess } from "../context/WorldAccessContext";
 
 import "./AppShell.css";
 
@@ -70,51 +70,8 @@ function AppShell({ user, onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
-  const [identity, setIdentity] = useState({
-    worldId: null,
-    status: "loading",
-    character: null,
-    message: "",
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!worldId)
-      return () => {
-        cancelled = true;
-      };
-
-    accessApi
-      .getMyPermissions(worldId)
-      .then((response) => {
-        if (cancelled) return;
-        setIdentity({
-          worldId,
-          status: "ready",
-          character: response?.data?.character ?? null,
-          message: "",
-        });
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setIdentity({
-          worldId,
-          status: error?.status === 403 ? "unassigned" : "error",
-          character: null,
-          message: error?.message || "Could not load character identity.",
-        });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [worldId]);
-
-  const currentIdentity =
-    identity.worldId === worldId
-      ? identity
-      : { status: "loading", character: null, message: "" };
+  // Character identity and permissions are shared across all world pages.
+  const { status, character } = useWorldAccess();
 
   const roleNames = {
     SOVEREIGN: "Sovereign",
@@ -127,7 +84,7 @@ function AppShell({ user, onLogout }) {
     RESEARCH_DIRECTOR: "Research Director",
     RESEARCHER: "Researcher",
   };
-  const roleLabel = currentIdentity.character?.roles
+  const roleLabel = character?.roles
     ?.map((code) => roleNames[code] || code)
     .join(" · ");
 
@@ -247,35 +204,31 @@ function AppShell({ user, onLogout }) {
               </div>
 
               <div className="app-shell__identity-info">
-                {currentIdentity.status === "loading" && (
+                {status === "loading" && (
                   <span>Verifying character identity...</span>
                 )}
 
-                {currentIdentity.status === "ready" &&
-                  currentIdentity.character && (
-                    <>
-                      <strong>{currentIdentity.character.name}</strong>
-                      <span>
-                        {[roleLabel, user?.username]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </>
-                  )}
+                {status === "ready" && character && (
+                  <>
+                    <strong>{character.name}</strong>
+                    <span>
+                      {[roleLabel, user?.username].filter(Boolean).join(" · ")}
+                    </span>
+                  </>
+                )}
 
-                {currentIdentity.status === "ready" &&
-                  !currentIdentity.character && (
-                    <span>Character identity unavailable</span>
-                  )}
+                {status === "ready" && !character && (
+                  <span>Character identity unavailable</span>
+                )}
 
-                {currentIdentity.status === "unassigned" && (
+                {status === "unassigned" && (
                   <>
                     <strong>Awaiting Character Assignment</strong>
                     {user?.username && <span>{user.username}</span>}
                   </>
                 )}
 
-                {currentIdentity.status === "error" && (
+                {status === "error" && (
                   <>
                     <strong>Character identity unavailable</strong>
                     {user?.username && <span>{user.username}</span>}
