@@ -19,12 +19,7 @@
       rgba(92, 173, 214, 0.12),
       transparent 28%
     ),
-    linear-gradient(
-      135deg,
-      #07111f,
-      #0a1728 52%,
-      #081321
-    );
+    linear-gradient(135deg, #07111f, #0a1728 52%, #081321);
 
   font-family: Georgia, "Times New Roman", serif;
 }
@@ -40,18 +35,15 @@
   min-width: 0;
   min-height: 0;
 
-  border-right:
-    1px solid rgba(173, 220, 239, 0.18);
+  border-right: 1px solid rgba(173, 220, 239, 0.18);
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(8, 23, 39, 0.94),
-      rgba(5, 15, 27, 0.98)
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(8, 23, 39, 0.94),
+    rgba(5, 15, 27, 0.98)
+  );
 
-  box-shadow:
-    10px 0 35px rgba(0, 6, 14, 0.18);
+  box-shadow: 10px 0 35px rgba(0, 6, 14, 0.18);
 }
 
 /* =========================================
@@ -68,8 +60,7 @@
 
   padding: 0 20px;
 
-  border-bottom:
-    1px solid rgba(173, 220, 239, 0.14);
+  border-bottom: 1px solid rgba(173, 220, 239, 0.14);
 }
 
 .app-shell__brand > svg {
@@ -77,10 +68,7 @@
 
   color: #aee8ff;
 
-  filter:
-    drop-shadow(
-      0 0 8px rgba(122, 210, 248, 0.42)
-    );
+  filter: drop-shadow(0 0 8px rgba(122, 210, 248, 0.42));
 }
 
 .app-shell__brand > div {
@@ -146,8 +134,7 @@
 
   padding: 0 12px;
 
-  border:
-    1px solid transparent;
+  border: 1px solid transparent;
 
   color: #8299a7;
 
@@ -177,15 +164,13 @@
 .app-shell__nav-item:hover {
   color: #d4edf7;
 
-  border-color:
-    rgba(156, 217, 242, 0.13);
+  border-color: rgba(156, 217, 242, 0.13);
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(85, 157, 193, 0.10),
-      rgba(85, 157, 193, 0.025)
-    );
+  background: linear-gradient(
+    90deg,
+    rgba(85, 157, 193, 0.1),
+    rgba(85, 157, 193, 0.025)
+  );
 
   transform: translateX(2px);
 }
@@ -199,15 +184,13 @@
 .app-shell__nav-item--active {
   color: #e6f7fd;
 
-  border-color:
-    rgba(159, 222, 247, 0.26);
+  border-color: rgba(159, 222, 247, 0.26);
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(72, 145, 182, 0.22),
-      rgba(48, 111, 145, 0.07)
-    );
+  background: linear-gradient(
+    90deg,
+    rgba(72, 145, 182, 0.22),
+    rgba(48, 111, 145, 0.07)
+  );
 
   box-shadow:
     inset 2px 0 0 #9edff9,
@@ -217,10 +200,7 @@
 .app-shell__nav-item--active svg {
   color: #b8ecff;
 
-  filter:
-    drop-shadow(
-      0 0 6px rgba(118, 211, 250, 0.35)
-    );
+  filter: drop-shadow(0 0 6px rgba(118, 211, 250, 0.35));
 }
 
 /* subtle active glow */
@@ -236,13 +216,12 @@
   width: 1px;
   height: calc(100% - 16px);
 
-  background:
-    linear-gradient(
-      180deg,
-      transparent,
-      rgba(163, 228, 255, 0.6),
-      transparent
-    );
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(163, 228, 255, 0.6),
+    transparent
+  );
 }
 
 /* =========================================
@@ -252,11 +231,9 @@
 .app-shell__sidebar-bottom {
   padding: 12px;
 
-  border-top:
-    1px solid rgba(173, 220, 239, 0.13);
+  border-top: 1px solid rgba(173, 220, 239, 0.13);
 
-  background:
-    rgba(3, 12, 22, 0.25);
+  background: rgba(3, 12, 22, 0.25);
 }
 
 /* =========================================
@@ -288,11 +265,9 @@
 
   padding: 0 25px;
 
-  border-bottom:
-    1px solid rgba(173, 220, 239, 0.16);
+  border-bottom: 1px solid rgba(173, 220, 239, 0.16);
 
-  background:
-    rgba(7, 20, 34, 0.38);
+  background: rgba(7, 20, 34, 0.38);
 
   backdrop-filter: blur(8px);
 }
@@ -379,11 +354,7 @@
       rgba(97, 177, 218, 0.06),
       transparent 30%
     ),
-    linear-gradient(
-      145deg,
-      rgba(9, 24, 39, 0.82),
-      rgba(5, 15, 27, 0.94)
-    );
+    linear-gradient(145deg, rgba(9, 24, 39, 0.82), rgba(5, 15, 27, 0.94));
 }
 
 /* faint palace-grid effect */
@@ -399,18 +370,10 @@
   opacity: 0.12;
 
   background-image:
-    linear-gradient(
-      rgba(142, 209, 237, 0.06) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(142, 209, 237, 0.04) 1px,
-      transparent 1px
-    );
+    linear-gradient(rgba(142, 209, 237, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 209, 237, 0.04) 1px, transparent 1px);
 
-  background-size:
-    48px 48px;
+  background-size: 48px 48px;
 }
 
 /* =========================================
@@ -429,8 +392,7 @@
 
 .app-shell__nav::-webkit-scrollbar-thumb,
 .app-shell__content::-webkit-scrollbar-thumb {
-  background:
-    rgba(131, 188, 211, 0.24);
+  background: rgba(131, 188, 211, 0.24);
 
   border-radius: 10px;
 }
@@ -455,15 +417,11 @@
   }
 
   .app-shell__nav {
-    padding:
-      15px
-      8px;
+    padding: 15px 8px;
   }
 
   .app-shell__nav-item {
-    padding:
-      0
-      10px;
+    padding: 0 10px;
   }
 
   .app-shell__content::before {
@@ -489,9 +447,7 @@
   }
 
   .app-shell__nav {
-    padding:
-      15px
-      7px;
+    padding: 15px 7px;
   }
 
   .app-shell__nav-item {
@@ -505,18 +461,156 @@
   }
 
   .app-shell__sidebar-bottom {
-    padding:
-      10px
-      7px;
+    padding: 10px 7px;
   }
 
   .app-shell__topbar {
-    padding:
-      0
-      15px;
+    padding: 0 15px;
   }
 
   .app-shell__content::before {
     left: 68px;
+  }
+}
+
+/* =========================================
+   SIGN OUT — MATCH SIDEBAR NAVIGATION
+   Works with the existing AppShell.jsx button.
+========================================= */
+
+.app-shell__sidebar-bottom > button.app-shell__nav-item {
+  width: 100%;
+  margin: 4px 0 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.06em;
+  text-align: left;
+  color: #8299a7;
+  /* Override the JSX inline transparent background on hover. */
+  background: transparent !important;
+}
+
+.app-shell__sidebar-bottom > button.app-shell__nav-item:hover:not(:disabled) {
+  color: #d4edf7;
+  background: linear-gradient(
+    90deg,
+    rgba(85, 157, 193, 0.1),
+    rgba(85, 157, 193, 0.025)
+  ) !important;
+  box-shadow: inset 0 0 0 1px rgba(156, 217, 242, 0.13);
+  transform: translateX(2px);
+}
+
+.app-shell__sidebar-bottom > button.app-shell__nav-item:focus-visible {
+  outline: 1px solid #9edff9;
+  outline-offset: 2px;
+}
+
+.app-shell__sidebar-bottom > button.app-shell__nav-item:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+.app-shell__sidebar-bottom > button.app-shell__nav-item:disabled svg {
+  color: #7398aa;
+  filter: none;
+}
+
+.app-shell__sidebar-bottom
+  > button.app-shell__nav-item:hover:not(:disabled)
+  svg {
+  color: #a7e3fb;
+}
+
+@media (max-width: 760px) {
+  .app-shell__sidebar-bottom > button.app-shell__nav-item {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+
+/* =========================================
+   SIGN OUT — MATCH SIDEBAR NAVIGATION
+========================================= */
+
+.app-shell__sidebar-bottom .app-shell__logout {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 11px;
+
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  color: #8299a7;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.06em;
+  line-height: normal;
+  text-align: left;
+  text-transform: none;
+
+  cursor: pointer;
+  appearance: none;
+
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.app-shell__sidebar-bottom .app-shell__logout svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #7398aa;
+}
+
+.app-shell__sidebar-bottom .app-shell__logout:hover:not(:disabled) {
+  color: #d4edf7;
+  border-color: rgba(156, 217, 242, 0.13);
+  background: linear-gradient(
+    90deg,
+    rgba(85, 157, 193, 0.10),
+    rgba(85, 157, 193, 0.025)
+  );
+  transform: translateX(2px);
+}
+
+.app-shell__sidebar-bottom .app-shell__logout:hover:not(:disabled) svg {
+  color: #a7e3fb;
+}
+
+.app-shell__sidebar-bottom .app-shell__logout:focus-visible {
+  outline: 1px solid #9edff9;
+  outline-offset: 2px;
+}
+
+.app-shell__sidebar-bottom .app-shell__logout:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .app-shell__sidebar-bottom .app-shell__logout {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-shell__sidebar-bottom .app-shell__logout span {
+    display: none;
   }
 }
