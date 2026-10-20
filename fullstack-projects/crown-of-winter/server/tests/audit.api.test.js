@@ -226,18 +226,6 @@ afterAll(async () => {
     try {
       await client.query("BEGIN");
 
-      // Temporary test-only world deletion
-      // mechanism. Not production authorization.
-      await client.query(
-        `
-        SELECT set_config(
-          'crown.world_deletion',
-          'authorized',
-          true
-        )
-        `,
-      );
-
       await client.query(
         `
         DELETE FROM worlds

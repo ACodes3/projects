@@ -1,4 +1,3 @@
-
 import { pool } from "../db/pool.js";
 import { createAuditLog } from "./auditService.js";
 
@@ -12,7 +11,9 @@ export class CharacterError extends Error {
 export function isUuid(value) {
   return (
     typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    )
   );
 }
 
@@ -46,14 +47,11 @@ async function requireSovereign(db, worldId, userId) {
       AND r.code = 'SOVEREIGN'
     LIMIT 1
     `,
-    [worldId, userId]
+    [worldId, userId],
   );
 
   if (result.rowCount === 0) {
-    throw new CharacterError(
-      "Sovereign authority required.",
-      403
-    );
+    throw new CharacterError("Sovereign authority required.", 403);
   }
 
   return result.rows[0].sovereign_id;
@@ -101,7 +99,7 @@ export async function getWorldCharacters(worldId, userId) {
       CASE WHEN c.slug = 'tsaritsa' THEN 0 ELSE 1 END,
       c.name
     `,
-    [worldId]
+    [worldId],
   );
 
   return result.rows;
@@ -157,7 +155,7 @@ export async function getWorldAssignments(worldId, userId) {
       wc.id, c.name, c.slug
     ORDER BY ca.assigned_at
     `,
-    [worldId]
+    [worldId],
   );
 
   return result.rows;
@@ -178,11 +176,7 @@ export async function assignCharacter({
   // 1. Validate input
   // -------------------------------------
 
-  if (
-    !isUuid(worldId) ||
-    !isUuid(membershipId) ||
-    !isUuid(characterId)
-  ) {
+  if (!isUuid(worldId) || !isUuid(membershipId) || !isUuid(characterId)) {
     throw new CharacterError("Invalid ID supplied.");
   }
 
@@ -191,23 +185,16 @@ export async function assignCharacter({
     roleCodes.length === 0 ||
     roleCodes.length > 10 ||
     roleCodes.some(
-      (code) =>
-        typeof code !== "string" ||
-        !/^[A-Z_]{2,60}$/.test(code)
+      (code) => typeof code !== "string" || !/^[A-Z_]{2,60}$/.test(code),
     )
   ) {
-    throw new CharacterError(
-      "Provide between 1 and 10 valid role codes."
-    );
+    throw new CharacterError("Provide between 1 and 10 valid role codes.");
   }
 
   const uniqueRoles = [...new Set(roleCodes)];
 
   if (uniqueRoles.includes("SOVEREIGN")) {
-    throw new CharacterError(
-      "The Sovereign role cannot be assigned.",
-      403
-    );
+    throw new CharacterError("The Sovereign role cannot be assigned.", 403);
   }
 
   const client = await pool.connect();
@@ -226,25 +213,18 @@ export async function assignCharacter({
       WHERE id = $1
       FOR UPDATE
       `,
-      [worldId]
+      [worldId],
     );
 
     if (worldResult.rowCount === 0) {
-      throw new CharacterError(
-        "World not found.",
-        404
-      );
+      throw new CharacterError("World not found.", 404);
     }
 
     // -------------------------------------
     // 3. Verify Sovereign authority
     // -------------------------------------
 
-    const sovereignId = await requireSovereign(
-      client,
-      worldId,
-      actorId
-    );
+    const sovereignId = await requireSovereign(client, worldId, actorId);
 
     // -------------------------------------
     // 4. Verify the receiving member
@@ -258,23 +238,17 @@ export async function assignCharacter({
         AND world_id = $2
         AND status = 'active'
       `,
-      [membershipId, worldId]
+      [membershipId, worldId],
     );
 
     if (memberResult.rowCount === 0) {
-      throw new CharacterError(
-        "Active world member not found.",
-        404
-      );
+      throw new CharacterError("Active world member not found.", 404);
     }
 
     const targetUserId = memberResult.rows[0].user_id;
 
     if (targetUserId === actorId) {
-      throw new CharacterError(
-        "The Sovereign's assignment is protected.",
-        403
-      );
+      throw new CharacterError("The Sovereign's assignment is protected.", 403);
     }
 
     // -------------------------------------
@@ -289,23 +263,17 @@ export async function assignCharacter({
         AND is_playable = TRUE
         AND is_unique = TRUE
       `,
-      [characterId]
+      [characterId],
     );
 
     if (characterResult.rowCount === 0) {
-      throw new CharacterError(
-        "Playable unique character not found.",
-        404
-      );
+      throw new CharacterError("Playable unique character not found.", 404);
     }
 
     const character = characterResult.rows[0];
 
     if (character.slug === "tsaritsa") {
-      throw new CharacterError(
-        "The Tsaritsa cannot be reassigned.",
-        403
-      );
+      throw new CharacterError("The Tsaritsa cannot be reassigned.", 403);
     }
 
     // -------------------------------------
@@ -319,13 +287,11 @@ export async function assignCharacter({
       WHERE code = ANY($1::VARCHAR[])
         AND code <> 'SOVEREIGN'
       `,
-      [uniqueRoles]
+      [uniqueRoles],
     );
 
     if (rolesResult.rowCount !== uniqueRoles.length) {
-      throw new CharacterError(
-        "One or more roles do not exist."
-      );
+      throw new CharacterError("One or more roles do not exist.");
     }
 
     // -------------------------------------
@@ -339,13 +305,13 @@ export async function assignCharacter({
       WHERE world_member_id = $1
         AND revoked_at IS NULL
       `,
-      [membershipId]
+      [membershipId],
     );
 
     if (existingMemberAssignment.rowCount > 0) {
       throw new CharacterError(
         "This player already controls a character.",
-        409
+        409,
       );
     }
 
@@ -353,7 +319,9 @@ export async function assignCharacter({
     // 8. Find or create world character
     // -------------------------------------
 
-    const worldCharacterResult = await client.query(
+    // Never update character_id just to retrieve an existing row.
+    // This also respects the application's column-level privileges.
+    const insertedWorldCharacter = await client.query(
       `
       INSERT INTO world_characters (
         world_id,
@@ -361,15 +329,31 @@ export async function assignCharacter({
       )
       VALUES ($1, $2)
       ON CONFLICT (world_id, character_id)
-      DO UPDATE
-        SET character_id = EXCLUDED.character_id
+      DO NOTHING
       RETURNING id
       `,
-      [worldId, characterId]
+      [worldId, characterId],
     );
 
-    const worldCharacterId =
-      worldCharacterResult.rows[0].id;
+    let worldCharacterId = insertedWorldCharacter.rows[0]?.id;
+
+    if (!worldCharacterId) {
+      const existingWorldCharacter = await client.query(
+        `
+        SELECT id
+        FROM world_characters
+        WHERE world_id = $1
+          AND character_id = $2
+        `,
+        [worldId, characterId],
+      );
+
+      if (existingWorldCharacter.rowCount !== 1) {
+        throw new CharacterError("Could not resolve the world character.", 409);
+      }
+
+      worldCharacterId = existingWorldCharacter.rows[0].id;
+    }
 
     // -------------------------------------
     // 9. Check character availability
@@ -382,14 +366,11 @@ export async function assignCharacter({
       WHERE world_character_id = $1
         AND revoked_at IS NULL
       `,
-      [worldCharacterId]
+      [worldCharacterId],
     );
 
     if (existingCharacterAssignment.rowCount > 0) {
-      throw new CharacterError(
-        "This character is already assigned.",
-        409
-      );
+      throw new CharacterError("This character is already assigned.", 409);
     }
 
     // -------------------------------------
@@ -407,12 +388,7 @@ export async function assignCharacter({
       VALUES ($1, $2, $3, $4)
       RETURNING id, assigned_at
       `,
-      [
-        worldId,
-        worldCharacterId,
-        membershipId,
-        sovereignId,
-      ]
+      [worldId, worldCharacterId, membershipId, sovereignId],
     );
 
     const assignmentId = assignmentResult.rows[0].id;
@@ -440,12 +416,7 @@ export async function assignCharacter({
         DO NOTHING
         RETURNING id
         `,
-        [
-          worldId,
-          worldCharacterId,
-          role.id,
-          sovereignId,
-        ]
+        [worldId, worldCharacterId, role.id, sovereignId],
       );
 
       if (roleInsertResult.rowCount === 1) {
