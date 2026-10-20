@@ -34,6 +34,8 @@ import CryoLaboratoryPage from "./pages/palace/CryoLaboratoryPage";
 import GnosisChamberPage from "./pages/palace/GnosisChamberPage";
 import RoyalRecordsPage from "./pages/palace/RoyalRecordsPage";
 
+import WorldMembersPage from "./pages/WorldMembersPage";
+
 import AppShell from "./components/AppShell";
 
 function AuthLoading({ message = "Verifying Imperial Clearance..." }) {
@@ -189,6 +191,7 @@ function PalaceRoutes() {
       <Route path="gnoses" element={<GnosesPage />} />
       <Route path="relic-vault" element={<RelicVaultPage />} />
       <Route path="system" element={<SystemPage />} />
+      <Route path="members" element={<WorldMembersPage />} />
       <Route path="palace/throne" element={<ThroneChamberPage />} />
       <Route path="palace/war" element={<WarChamberPage />} />
       <Route path="palace/harbingers" element={<HarbingerHallPage />} />
@@ -270,7 +273,6 @@ function AppRoutes() {
             {PalaceRoutes()}
           </Route>
         </Route>
-
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -7,9 +7,12 @@ import {
   Snowflake,
   ArrowRight,
   RefreshCw,
+  Mail,
+  CheckCircle2,
 } from "lucide-react";
 
 import { worldApi } from "../services/worldApi";
+import { invitationApi } from "../services/invitationApi";
 
 import "./WorldSelectionPage.css";
 
@@ -17,6 +20,10 @@ function WorldSelectionPage({ onSelectWorld }) {
   const [worlds, setWorlds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [invitations, setInvitations] = useState([]);
+  const [loadingInvitations, setLoadingInvitations] = useState(true);
+  const [acceptingId, setAcceptingId] = useState(null);
+  const [invitationError, setInvitationError] = useState("");
 
   const [name, setName] = useState("");
   const [mode, setMode] = useState("singleplayer");
@@ -38,6 +45,40 @@ function WorldSelectionPage({ onSelectWorld }) {
     }
   }
 
+  async function loadInvitations() {
+    setLoadingInvitations(true);
+    setInvitationError("");
+
+    try {
+      const response = await invitationApi.getMyInvitations();
+      setInvitations(response.data.invitations);
+    } catch (err) {
+      setInvitationError(err.message || "Failed to load invitations.");
+    } finally {
+      setLoadingInvitations(false);
+    }
+  }
+
+  async function handleAccept(membershipId) {
+    if (acceptingId) return;
+
+    setAcceptingId(membershipId);
+    setInvitationError("");
+
+    try {
+      await invitationApi.accept(membershipId);
+      setInvitations((current) =>
+        current.filter((item) => item.membership_id !== membershipId)
+      );
+      // Accepted worlds become active memberships. Refresh the world list.
+      await loadWorlds();
+    } catch (err) {
+      setInvitationError(err.message || "Could not accept invitation.");
+    } finally {
+      setAcceptingId(null);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -56,6 +97,24 @@ function WorldSelectionPage({ onSelectWorld }) {
       .finally(() => {
         if (!cancelled) {
           setLoading(false);
+        }
+      });
+
+    invitationApi
+      .getMyInvitations()
+      .then((response) => {
+        if (!cancelled) {
+          setInvitations(response.data.invitations);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setInvitationError(err.message || "Failed to load invitations.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingInvitations(false);
         }
       });
 
@@ -166,6 +225,69 @@ function WorldSelectionPage({ onSelectWorld }) {
 
                   <ArrowRight size={17} />
                 </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="world-selection__section">
+          <div className="world-selection__section-heading">
+            <div>
+              <span>Imperial Correspondence</span>
+              <h2>Pending Invitations</h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadInvitations}
+              disabled={loadingInvitations || acceptingId !== null}
+              className="world-selection__refresh"
+              aria-label="Refresh invitations"
+            >
+              <RefreshCw size={17} />
+            </button>
+          </div>
+
+          {invitationError && (
+            <div className="world-selection__error" role="alert">
+              {invitationError}
+            </div>
+          )}
+
+          {loadingInvitations ? (
+            <p className="world-selection__message">
+              Retrieving invitations...
+            </p>
+          ) : invitations.length === 0 ? (
+            <div className="world-selection__empty">
+              <Mail size={30} strokeWidth={1} />
+              <strong>No pending invitations</strong>
+              <p>New invitations to join other worlds will appear here.</p>
+            </div>
+          ) : (
+            <div className="world-selection__worlds">
+              {invitations.map((invitation) => (
+                <div
+                  className="world-selection__world world-selection__invitation"
+                  key={invitation.membership_id}
+                >
+                  <Mail size={22} strokeWidth={1.3} />
+                  <div>
+                    <strong>{invitation.world_name}</strong>
+                    <span>{invitation.mode} • Invitation pending</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="world-selection__accept"
+                    disabled={acceptingId !== null}
+                    onClick={() => handleAccept(invitation.membership_id)}
+                  >
+                    <CheckCircle2 size={15} />
+                    {acceptingId === invitation.membership_id
+                      ? "Joining..."
+                      : "Accept"}
+                  </button>
+                </div>
               ))}
             </div>
           )}
