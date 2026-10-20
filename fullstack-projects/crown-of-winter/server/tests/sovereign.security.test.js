@@ -1,20 +1,11 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
-import {
-  getAdminPool,
-  verifyAdminDatabase,
-} from "./helpers/adminPool.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
@@ -64,9 +55,7 @@ async function verifyTestDatabase() {
     throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
     throw new Error("Incorrect test database.");
@@ -80,9 +69,7 @@ async function verifyTestDatabase() {
 // -----------------------------------------
 
 async function registerAccount(account) {
-  const response = await request(app)
-    .post("/api/auth/register")
-    .send(account);
+  const response = await request(app).post("/api/auth/register").send(account);
 
   expect(response.status).toBe(201);
 
@@ -105,28 +92,23 @@ beforeAll(async () => {
 
   sovereignAgent = request.agent(app);
 
-  const login = await sovereignAgent
-    .post("/api/auth/login")
-    .send({
-      identifier: sovereignAccount.username,
-      password: TEST_PASSWORD,
-    });
+  const login = await sovereignAgent.post("/api/auth/login").send({
+    identifier: sovereignAccount.username,
+    password: TEST_PASSWORD,
+  });
 
   expect(login.status).toBe(200);
 
   // Create a world.
-  const worldResponse = await sovereignAgent
-    .post("/api/worlds")
-    .send({
-      name: "Sovereign Security Test",
-      mode: "multiplayer",
-    });
+  const worldResponse = await sovereignAgent.post("/api/worlds").send({
+    name: "Sovereign Security Test",
+    mode: "multiplayer",
+  });
 
   expect(worldResponse.status).toBe(201);
 
   worldId = worldResponse.body.data.world.id;
-  sovereignCharacterId =
-    worldResponse.body.data.world.character.id;
+  sovereignCharacterId = worldResponse.body.data.world.character.id;
 
   createdWorldIds.add(worldId);
 
@@ -141,7 +123,7 @@ beforeAll(async () => {
       AND wm.user_id = $2
       AND ca.revoked_at IS NULL
     `,
-    [worldId, sovereignUserId]
+    [worldId, sovereignUserId],
   );
 
   expect(assignmentResult.rowCount).toBe(1);
@@ -154,7 +136,7 @@ beforeAll(async () => {
     SELECT id
     FROM roles
     WHERE code = 'SOVEREIGN'
-    `
+    `,
   );
 
   expect(roleResult.rowCount).toBe(1);
@@ -169,13 +151,12 @@ beforeAll(async () => {
       AND world_character_id = $2
       AND role_id = $3
     `,
-    [worldId, sovereignCharacterId, sovereignRoleId]
+    [worldId, sovereignCharacterId, sovereignRoleId],
   );
 
   expect(sovereignRoleResult.rowCount).toBe(1);
 
-  sovereignRoleAssignmentId =
-    sovereignRoleResult.rows[0].id;
+  sovereignRoleAssignmentId = sovereignRoleResult.rows[0].id;
 
   // Invite another user to the world.
   const invitation = await sovereignAgent
@@ -186,23 +167,21 @@ beforeAll(async () => {
 
   expect(invitation.status).toBe(201);
 
-  friendMembershipId =
-    invitation.body.data.invitation.id;
+  friendMembershipId = invitation.body.data.invitation.id;
 
   // Accept the invitation as the friend.
   const friendAgent = request.agent(app);
 
-  const friendLogin = await friendAgent
-    .post("/api/auth/login")
-    .send({
-      identifier: friendAccount.username,
-      password: TEST_PASSWORD,
-    });
+  const friendLogin = await friendAgent.post("/api/auth/login").send({
+    identifier: friendAccount.username,
+    password: TEST_PASSWORD,
+  });
 
   expect(friendLogin.status).toBe(200);
 
-  const acceptance = await friendAgent
-    .post(`/api/invitations/${friendMembershipId}/accept`);
+  const acceptance = await friendAgent.post(
+    `/api/invitations/${friendMembershipId}/accept`,
+  );
 
   expect(acceptance.status).toBe(200);
 
@@ -212,7 +191,7 @@ beforeAll(async () => {
     SELECT id
     FROM characters
     WHERE slug = 'dottore'
-    `
+    `,
   );
 
   expect(dottoreResult.rowCount).toBe(1);
@@ -225,19 +204,14 @@ beforeAll(async () => {
     .send({
       membership_id: friendMembershipId,
       character_id: dottoreCharacterId,
-      roles: [
-        "HARBINGER",
-        "RESEARCH_DIRECTOR",
-      ],
+      roles: ["HARBINGER", "RESEARCH_DIRECTOR"],
     });
 
   expect(assignment.status).toBe(201);
 
-  dottoreAssignmentId =
-    assignment.body.data.assignment.assignment_id;
+  dottoreAssignmentId = assignment.body.data.assignment.assignment_id;
 
-  dottoreWorldCharacterId =
-    assignment.body.data.assignment.world_character_id;
+  dottoreWorldCharacterId = assignment.body.data.assignment.world_character_id;
 }, 20000);
 
 // -----------------------------------------
@@ -268,7 +242,7 @@ afterAll(async () => {
           'authorized',
           true
         )
-        `
+        `,
       );
 
       await client.query(
@@ -277,7 +251,7 @@ afterAll(async () => {
         WHERE id = ANY($1::uuid[])
           AND created_by = $2
         `,
-        [[...createdWorldIds], sovereignUserId]
+        [[...createdWorldIds], sovereignUserId],
       );
 
       await client.query("COMMIT");
@@ -296,7 +270,7 @@ afterAll(async () => {
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -306,7 +280,6 @@ afterAll(async () => {
 // -----------------------------------------
 
 describe("Sovereign Security", () => {
-
   it("prevents revoking the Tsaritsa's assignment", async () => {
     await expect(
       pool.query(
@@ -315,8 +288,8 @@ describe("Sovereign Security", () => {
         SET revoked_at = NOW()
         WHERE id = $1
         `,
-        [sovereignAssignmentId]
-      )
+        [sovereignAssignmentId],
+      ),
     ).rejects.toMatchObject({
       code: "23514",
     });
@@ -330,8 +303,8 @@ describe("Sovereign Security", () => {
         SET world_member_id = $1
         WHERE id = $2
         `,
-        [friendMembershipId, sovereignAssignmentId]
-      )
+        [friendMembershipId, sovereignAssignmentId],
+      ),
     ).rejects.toMatchObject({
       code: "23514",
     });
@@ -344,10 +317,10 @@ describe("Sovereign Security", () => {
         DELETE FROM character_assignments
         WHERE id = $1
         `,
-        [sovereignAssignmentId]
-      )
+        [sovereignAssignmentId],
+      ),
     ).rejects.toMatchObject({
-      code: "23514",
+      code: "42501",
     });
   });
 
@@ -358,10 +331,10 @@ describe("Sovereign Security", () => {
         DELETE FROM world_character_roles
         WHERE id = $1
         `,
-        [sovereignRoleAssignmentId]
-      )
+        [sovereignRoleAssignmentId],
+      ),
     ).rejects.toMatchObject({
-      code: "23514",
+      code: "42501",
     });
   });
 
@@ -371,7 +344,7 @@ describe("Sovereign Security", () => {
       SELECT id
       FROM roles
       WHERE code = 'HARBINGER'
-      `
+      `,
     );
 
     expect(harbinger.rowCount).toBe(1);
@@ -383,11 +356,8 @@ describe("Sovereign Security", () => {
         SET role_id = $1
         WHERE id = $2
         `,
-        [
-          harbinger.rows[0].id,
-          sovereignRoleAssignmentId,
-        ]
-      )
+        [harbinger.rows[0].id, sovereignRoleAssignmentId],
+      ),
     ).rejects.toMatchObject({
       code: "23514",
     });
@@ -404,12 +374,8 @@ describe("Sovereign Security", () => {
         )
         VALUES ($1, $2, $3)
         `,
-        [
-          worldId,
-          dottoreWorldCharacterId,
-          sovereignRoleId,
-        ]
-      )
+        [worldId, dottoreWorldCharacterId, sovereignRoleId],
+      ),
     ).rejects.toMatchObject({
       code: "P0001",
     });
@@ -423,8 +389,8 @@ describe("Sovereign Security", () => {
         SET character_id = $1
         WHERE id = $2
         `,
-        [dottoreCharacterId, sovereignCharacterId]
-      )
+        [dottoreCharacterId, sovereignCharacterId],
+      ),
     ).rejects.toMatchObject({
       code: "23514",
     });
@@ -436,7 +402,7 @@ describe("Sovereign Security", () => {
       SELECT id
       FROM characters
       WHERE slug = 'tsaritsa'
-      `
+      `,
     );
 
     expect(tsaritsa.rowCount).toBe(1);
@@ -448,11 +414,8 @@ describe("Sovereign Security", () => {
         SET character_id = $1
         WHERE id = $2
         `,
-        [
-          tsaritsa.rows[0].id,
-          dottoreWorldCharacterId,
-        ]
-      )
+        [tsaritsa.rows[0].id, dottoreWorldCharacterId],
+      ),
     ).rejects.toMatchObject({
       code: "23514",
     });
@@ -464,7 +427,7 @@ describe("Sovereign Security", () => {
       SELECT id
       FROM characters
       WHERE slug = 'tsaritsa'
-      `
+      `,
     );
 
     await expect(
@@ -476,8 +439,8 @@ describe("Sovereign Security", () => {
         )
         VALUES ($1, $2)
         `,
-        [worldId, tsaritsa.rows[0].id]
-      )
+        [worldId, tsaritsa.rows[0].id],
+      ),
     ).rejects.toMatchObject({
       code: "23505",
     });
@@ -492,7 +455,7 @@ describe("Sovereign Security", () => {
         AND revoked_at IS NULL
       RETURNING revoked_at
       `,
-      [dottoreAssignmentId]
+      [dottoreAssignmentId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -520,7 +483,7 @@ describe("Sovereign Security", () => {
         AND ca.world_id = $2
         AND r.code = 'SOVEREIGN'
       `,
-      [sovereignAssignmentId, worldId]
+      [sovereignAssignmentId, worldId],
     );
 
     expect(result.rowCount).toBe(1);
@@ -529,5 +492,4 @@ describe("Sovereign Security", () => {
     expect(result.rows[0].role).toBe("SOVEREIGN");
     expect(result.rows[0].revoked_at).toBeNull();
   });
-
 });

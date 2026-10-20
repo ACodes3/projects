@@ -1,11 +1,4 @@
-
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -15,18 +8,13 @@ import { randomUUID } from "node:crypto";
 import app from "../app.js";
 import { pool } from "../src/db/pool.js";
 
-import {
-  login,
-  getCurrentUser,
-} from "../src/controllers/authController.js";
+import { getAdminPool, verifyAdminDatabase } from "./helpers/adminPool.js";
 
-import {
-  authenticate,
-} from "../src/middleware/authenticate.js";
+import { login, getCurrentUser } from "../src/controllers/authController.js";
 
-import {
-  createLoginRateLimiter,
-} from "../src/middleware/loginRateLimiter.js";
+import { authenticate } from "../src/middleware/authenticate.js";
+
+import { createLoginRateLimiter } from "../src/middleware/loginRateLimiter.js";
 
 // -----------------------------------------
 // Test configuration
@@ -35,9 +23,7 @@ import {
 const TEST_DATABASE = "crown-of-winter-test";
 const TEST_PASSWORD = "WinterTesting2026!";
 
-const runId = randomUUID()
-  .replaceAll("-", "")
-  .slice(0, 12);
+const runId = randomUUID().replaceAll("-", "").slice(0, 12);
 
 const account = {
   username: `ratelimit_${runId}`,
@@ -61,14 +47,10 @@ async function verifyTestDatabase() {
     throw new Error("Unsafe test environment.");
   }
 
-  const result = await pool.query(
-    "SELECT current_database() AS database"
-  );
+  const result = await pool.query("SELECT current_database() AS database");
 
   if (result.rows[0].database !== TEST_DATABASE) {
-    throw new Error(
-      "Rate limit tests require crown-of-winter-test."
-    );
+    throw new Error("Rate limit tests require crown-of-winter-test.");
   }
 
   databaseVerified = true;
@@ -94,19 +76,11 @@ function createTestApp() {
     limit: 3,
   });
 
-  testApp.post(
-    "/login",
-    limiter,
-    login
-  );
+  testApp.post("/login", limiter, login);
 
   // Used to confirm other authenticated
   // routes are not affected by the limiter.
-  testApp.get(
-    "/me",
-    authenticate,
-    getCurrentUser
-  );
+  testApp.get("/me", authenticate, getCurrentUser);
 
   // Match the main API's server error format.
   testApp.use((error, req, res, next) => {
@@ -130,13 +104,8 @@ function loginPayload(password = TEST_PASSWORD) {
   };
 }
 
-async function attemptLogin(
-  testApp,
-  password = TEST_PASSWORD
-) {
-  return request(testApp)
-    .post("/login")
-    .send(loginPayload(password));
+async function attemptLogin(testApp, password = TEST_PASSWORD) {
+  return request(testApp).post("/login").send(loginPayload(password));
 }
 
 // -----------------------------------------
@@ -146,15 +115,11 @@ async function attemptLogin(
 beforeAll(async () => {
   await verifyTestDatabase();
 
-  const response = await request(app)
-    .post("/api/auth/register")
-    .send(account);
+  const response = await request(app).post("/api/auth/register").send(account);
 
   expect(response.status).toBe(201);
 
-  createdUserIds.add(
-    response.body.data.user.id
-  );
+  createdUserIds.add(response.body.data.user.id);
 }, 20000);
 
 // -----------------------------------------
@@ -167,14 +132,18 @@ afterAll(async () => {
   await verifyTestDatabase();
 
   if (createdUserIds.size > 0) {
+    // Verify privileged cleanup is connected
+    // to the test database before deleting users.
+    await verifyAdminDatabase();
+
     // User sessions are removed through
     // the existing database cascade.
-    await pool.query(
+    await getAdminPool().query(
       `
       DELETE FROM users
       WHERE id = ANY($1::uuid[])
       `,
-      [[...createdUserIds]]
+      [[...createdUserIds]],
     );
   }
 });
@@ -184,13 +153,10 @@ afterAll(async () => {
 // =========================================
 
 describe("Login Rate Limiting Security", () => {
-
   it("allows a normal successful login", async () => {
     const testApp = createTestApp();
 
-    const response = await attemptLogin(
-      testApp
-    );
+    const response = await attemptLogin(testApp);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -199,15 +165,9 @@ describe("Login Rate Limiting Security", () => {
   it("counts unsuccessful login attempts", async () => {
     const testApp = createTestApp();
 
-    const first = await attemptLogin(
-      testApp,
-      "IncorrectPassword1!"
-    );
+    const first = await attemptLogin(testApp, "IncorrectPassword1!");
 
-    const second = await attemptLogin(
-      testApp,
-      "IncorrectPassword2!"
-    );
+    const second = await attemptLogin(testApp, "IncorrectPassword2!");
 
     expect(first.status).toBe(401);
     expect(second.status).toBe(401);
@@ -224,25 +184,18 @@ describe("Login Rate Limiting Security", () => {
     // Three failed requests are permitted
     // by this isolated test limiter.
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await attemptLogin(
-        testApp,
-        "IncorrectPassword!"
-      );
+      const response = await attemptLogin(testApp, "IncorrectPassword!");
 
       expect(response.status).toBe(401);
     }
 
     // The fourth request must be blocked.
-    const blocked = await attemptLogin(
-      testApp,
-      "IncorrectPassword!"
-    );
+    const blocked = await attemptLogin(testApp, "IncorrectPassword!");
 
     expect(blocked.status).toBe(429);
     expect(blocked.body).toMatchObject({
       success: false,
-      message:
-        "Too many login attempts. Please try again in 15 minutes.",
+      message: "Too many login attempts. Please try again in 15 minutes.",
     });
   });
 
@@ -252,9 +205,7 @@ describe("Login Rate Limiting Security", () => {
     // Successful logins should not consume
     // our three allowed failures.
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await attemptLogin(
-        testApp
-      );
+      const response = await attemptLogin(testApp);
 
       expect(response.status).toBe(200);
     }
@@ -262,19 +213,13 @@ describe("Login Rate Limiting Security", () => {
     // Three failed attempts should still
     // be allowed after those successes.
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await attemptLogin(
-        testApp,
-        "IncorrectPassword!"
-      );
+      const response = await attemptLogin(testApp, "IncorrectPassword!");
 
       expect(response.status).toBe(401);
     }
 
     // Fourth failure must be blocked.
-    const blocked = await attemptLogin(
-      testApp,
-      "IncorrectPassword!"
-    );
+    const blocked = await attemptLogin(testApp, "IncorrectPassword!");
 
     expect(blocked.status).toBe(429);
   });
@@ -282,23 +227,17 @@ describe("Login Rate Limiting Security", () => {
   it("includes standard rate-limit headers", async () => {
     const testApp = createTestApp();
 
-    const response = await attemptLogin(
-      testApp,
-      "IncorrectPassword!"
-    );
+    const response = await attemptLogin(testApp, "IncorrectPassword!");
 
     expect(response.status).toBe(401);
 
     // express-rate-limit draft-8 headers.
-    expect(response.headers.ratelimit)
-      .toBeDefined();
+    expect(response.headers.ratelimit).toBeDefined();
 
-    expect(response.headers["ratelimit-policy"])
-      .toBeDefined();
+    expect(response.headers["ratelimit-policy"]).toBeDefined();
 
     // Legacy headers should be disabled.
-    expect(response.headers["x-ratelimit-limit"])
-      .toBeUndefined();
+    expect(response.headers["x-ratelimit-limit"]).toBeUndefined();
   });
 
   it("does not block other authenticated endpoints", async () => {
@@ -306,9 +245,7 @@ describe("Login Rate Limiting Security", () => {
     const agent = request.agent(testApp);
 
     // Create a valid session first.
-    const successfulLogin = await agent
-      .post("/login")
-      .send(loginPayload());
+    const successfulLogin = await agent.post("/login").send(loginPayload());
 
     expect(successfulLogin.status).toBe(200);
 
@@ -316,28 +253,22 @@ describe("Login Rate Limiting Security", () => {
     for (let attempt = 0; attempt < 3; attempt++) {
       const response = await agent
         .post("/login")
-        .send(
-          loginPayload("IncorrectPassword!")
-        );
+        .send(loginPayload("IncorrectPassword!"));
 
       expect(response.status).toBe(401);
     }
 
     const blockedLogin = await agent
       .post("/login")
-      .send(
-        loginPayload("IncorrectPassword!")
-      );
+      .send(loginPayload("IncorrectPassword!"));
 
     expect(blockedLogin.status).toBe(429);
 
     // The login limiter should not affect
     // the authenticated /me endpoint.
-    const currentUser = await agent
-      .get("/me");
+    const currentUser = await agent.get("/me");
 
     expect(currentUser.status).toBe(200);
     expect(currentUser.body.success).toBe(true);
   });
-
 });
