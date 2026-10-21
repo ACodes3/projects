@@ -669,8 +669,8 @@
 
   z-index: 10;
 
-  width: 54px;
-  height: 62px;
+  width: 56px;
+  height: 56px;
 
   padding: 0;
 
@@ -707,15 +707,16 @@
   position: absolute;
 
   left: 50%;
-  bottom: 8px;
+  top: 50%;
 
   display: grid;
   place-items: center;
 
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
 
-  transform: translateX(-50%) rotate(45deg);
+  transform: translate(-50%, -50%);
+  border-radius: 7px;
 
   border: 1px solid rgba(145, 207, 235, 0.34);
 
@@ -740,7 +741,7 @@
   width: 25px;
   height: 25px;
 
-  transform: rotate(-45deg);
+  transform: none;
 
   color: #96def8;
 
@@ -761,7 +762,7 @@
 .war-token__label {
   position: absolute;
 
-  top: 58px;
+  top: 53px;
   left: 50%;
 
   transform: translateX(-50%);
@@ -786,7 +787,7 @@
 /* hover */
 
 .war-token:hover .war-token__base {
-  transform: translateX(-50%) rotate(45deg) scale(1.1);
+  transform: translate(-50%, -50%) scale(1.04);
 
   border-color: rgba(168, 230, 255, 0.58);
 
@@ -802,7 +803,7 @@
 /* selected */
 
 .war-token--selected .war-token__base {
-  transform: translateX(-50%) rotate(45deg) scale(1.14);
+  transform: translate(-50%, -50%) scale(1.07);
 
   border-color: rgba(196, 240, 255, 0.86);
 
@@ -1581,12 +1582,12 @@
 
   .war-token {
     width: 42px;
-    height: 50px;
+    height: 42px;
   }
 
   .war-token__base {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 
   .war-token__gem {
