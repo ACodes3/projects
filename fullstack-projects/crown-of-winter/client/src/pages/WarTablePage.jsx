@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { warBoardApi } from "../services/warBoardApi";
+import { useWorldAccess } from "../context/WorldAccessContext";
 import {
   DndContext,
   PointerSensor,
@@ -223,9 +226,9 @@ function BoardSquare({ index }) {
   );
 }
 
-function DraggableRegion({ region, position, selected, onSelect }) {
+function DraggableRegion({ region, position, selected, onSelect, disabled }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: region.id });
+    useDraggable({ id: region.id, disabled });
 
   return (
     <button
@@ -260,7 +263,81 @@ function DraggableRegion({ region, position, selected, onSelect }) {
 
 function WarTablePage() {
   const [selectedRegionId, setSelectedRegionId] = useState(regions[0].id);
+  const { worldId } = useParams();
+  const { status: accessStatus, hasPermission } = useWorldAccess();
+  const canManageBoard =
+    accessStatus === "ready" && hasPermission("operations.manage");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [positions, setPositions] = useState(alignedStartingPositions);
+  const [savedPositions, setSavedPositions] = useState(
+    alignedStartingPositions,
+  );
+  const [boardStatus, setBoardStatus] = useState("loading");
+  const [boardError, setBoardError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    // Guard against showing positions from a previously selected world.
+    const resetTimer = setTimeout(() => {
+      if (!active) return;
+      setBoardStatus("loading");
+      setBoardError("");
+    }, 0);
+
+    warBoardApi
+      .getBoard(worldId)
+      .then((response) => {
+        if (!active) return;
+        const pieces = response?.data?.pieces;
+        if (!Array.isArray(pieces) || pieces.length !== regions.length) {
+          throw new Error(
+            "The saved board does not contain all seven nations.",
+          );
+        }
+        const nextPositions = {};
+        const occupiedSquares = new Set();
+        for (const piece of pieces) {
+          const x = piece.grid_x;
+          const y = piece.grid_y;
+          if (
+            !regions.some((region) => region.id === piece.region_id) ||
+            !Number.isInteger(x) ||
+            x < 0 ||
+            x > 7 ||
+            !Number.isInteger(y) ||
+            y < 0 ||
+            y > 7 ||
+            nextPositions[piece.region_id] ||
+            occupiedSquares.has(y * 8 + x)
+          ) {
+            throw new Error(
+              "The saved board contains invalid piece positions.",
+            );
+          }
+          occupiedSquares.add(y * 8 + x);
+          nextPositions[piece.region_id] = {
+            x: (x + 0.5) * 12.5,
+            y: (y + 0.5) * 12.5,
+          };
+        }
+        setPositions(nextPositions);
+        setSavedPositions(nextPositions);
+        setBoardStatus("ready");
+      })
+      .catch((error) => {
+        if (!active) return;
+        setBoardError(
+          error.message || "Unable to retrieve saved board positions.",
+        );
+        setBoardStatus("error");
+      });
+
+    return () => {
+      active = false;
+      clearTimeout(resetTimer);
+    };
+  }, [worldId]);
   const selectedRegion =
     regions.find((region) => region.id === selectedRegionId) || regions[0];
   const sensors = useSensors(
@@ -270,30 +347,75 @@ function WarTablePage() {
     }),
   );
 
-  function handleDragEnd({ active, over }) {
-    if (!over || !String(over.id).startsWith("square-")) return;
+  async function handleDragEnd({ active, over }) {
+    if (
+      boardStatus !== "ready" ||
+      !canManageBoard ||
+      isSaving ||
+      !over ||
+      !String(over.id).startsWith("square-")
+    )
+      return;
+
     const square = Number(String(over.id).slice("square-".length));
     if (!Number.isInteger(square) || square < 0 || square >= 64) return;
 
-    setPositions((current) => {
-      const occupied = Object.entries(current).some(
-        ([id, position]) =>
-          id !== active.id && cellForPosition(position) === square,
-      );
-      if (occupied) return current;
+    const regionId = String(active.id);
+    if (!regions.some((region) => region.id === regionId)) return;
 
-      return {
-        ...current,
-        [active.id]: {
-          x: ((square % 8) + 0.5) * 12.5,
-          y: (Math.floor(square / 8) + 0.5) * 12.5,
-        },
-      };
-    });
+    const currentSquare = cellForPosition(positions[regionId]);
+    if (currentSquare === square) return;
+
+    const occupied = Object.entries(positions).some(
+      ([id, position]) =>
+        id !== regionId && cellForPosition(position) === square,
+    );
+    if (occupied) {
+      setSaveError("That square is already occupied by another nation.");
+      return;
+    }
+
+    const gridX = square % 8;
+    const gridY = Math.floor(square / 8);
+    const previousPositions = positions;
+    const nextPositions = {
+      ...positions,
+      [regionId]: {
+        x: (gridX + 0.5) * 12.5,
+        y: (gridY + 0.5) * 12.5,
+      },
+    };
+
+    // Optimistic update; restore the last confirmed position if the API fails.
+    setIsSaving(true);
+    setSaveError("");
+    setPositions(nextPositions);
+
+    try {
+      const response = await warBoardApi.movePiece(
+        worldId,
+        regionId,
+        gridX,
+        gridY,
+      );
+      if (response?.success !== true) {
+        throw new Error(
+          response?.message || "Unable to save the board movement.",
+        );
+      }
+      setSavedPositions(nextPositions);
+    } catch (error) {
+      setPositions(previousPositions);
+      setSaveError(error?.message || "Unable to save the board movement.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function resetBoard() {
-    setPositions(alignedStartingPositions());
+    if (boardStatus !== "ready" || isSaving) return;
+    setPositions({ ...savedPositions });
+    setSaveError("");
     setSelectedRegionId(regions[0].id);
   }
 
@@ -419,7 +541,15 @@ function WarTablePage() {
                       ? pointerHits
                       : rectIntersection(args);
                   }}
-                  onDragStart={({ active }) => setSelectedRegionId(active.id)}
+                  onDragStart={({ active }) => {
+                    if (
+                      boardStatus === "ready" &&
+                      canManageBoard &&
+                      !isSaving
+                    ) {
+                      setSelectedRegionId(active.id);
+                    }
+                  }}
                   onDragEnd={handleDragEnd}
                 >
                   <div className="war-board__surface">
@@ -442,12 +572,43 @@ function WarTablePage() {
                         position={positions[region.id]}
                         selected={selectedRegionId === region.id}
                         onSelect={setSelectedRegionId}
+                        disabled={
+                          boardStatus !== "ready" || !canManageBoard || isSaving
+                        }
                       />
                     ))}
                   </div>
                 </DndContext>
               </div>
             </div>
+
+            {boardStatus === "loading" && (
+              <p role="status" style={{ color: "#99d8ed", fontSize: "11px" }}>
+                Loading saved Imperial Strategy Board...
+              </p>
+            )}
+            {boardStatus === "error" && (
+              <p role="alert" style={{ color: "#e8a2a2", fontSize: "11px" }}>
+                {boardError} Showing the default layout; board movement is
+                unavailable.
+              </p>
+            )}
+            {boardStatus === "ready" && (
+              <p role="status" style={{ color: "#779aa9", fontSize: "10px" }}>
+                {isSaving
+                  ? "Saving movement to Imperial records..."
+                  : canManageBoard
+                    ? "Drag nation pieces to move them. Successful moves are saved to PostgreSQL."
+                    : accessStatus === "loading"
+                      ? "Verifying movement permissions..."
+                      : "Board in view-only mode. Operations management clearance required to move pieces."}
+              </p>
+            )}
+            {saveError && (
+              <p role="alert" style={{ color: "#e8a2a2", fontSize: "11px" }}>
+                {saveError}
+              </p>
+            )}
 
             <div className="war-board-stage__caption">
               <span>
@@ -458,7 +619,8 @@ function WarTablePage() {
               <button
                 type="button"
                 onClick={resetBoard}
-                title="Restore original nation positions"
+                title="Restore latest successfully saved positions"
+                disabled={boardStatus !== "ready"}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
