@@ -7,6 +7,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
 import authRoutes from "./src/routes/authRoutes.js";
+import warBoardRoutes from "./src/routes/warBoardRoutes.js";
 import worldRoutes from "./src/routes/worldRoutes.js";
 import invitationRoutes from "./src/routes/invitationRoutes.js";
 import characterRoutes from "./src/routes/characterRoutes.js";
@@ -94,6 +95,12 @@ app.use("/api/worlds", accessRoutes);
 // -----------------------------------------
 
 app.use("/api/worlds", auditRoutes);
+
+// -----------------------------------------
+// Imperial Strategy Board
+// -----------------------------------------
+
+app.use("/api/worlds", warBoardRoutes);
 
 // -----------------------------------------
 // Handle unknown routes
