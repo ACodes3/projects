@@ -182,13 +182,27 @@ function RegionIcon({ token }) {
   }
 }
 
-// The initial positions are converted to board squares only when a piece moves.
 // Each cell is identified by its index, from 0 (top-left) to 63 (bottom-right).
 const cellForPosition = ({ x, y }) => {
   const column = Math.min(7, Math.max(0, Math.floor(x / 12.5)));
   const row = Math.min(7, Math.max(0, Math.floor(y / 12.5)));
   return row * 8 + column;
 };
+
+// Center every token within its square, including on initial load and reset.
+const alignedStartingPositions = () =>
+  Object.fromEntries(
+    regions.map(({ id, x, y }) => {
+      const square = cellForPosition({ x, y });
+      return [
+        id,
+        {
+          x: ((square % 8) + 0.5) * 12.5,
+          y: (Math.floor(square / 8) + 0.5) * 12.5,
+        },
+      ];
+    }),
+  );
 
 function BoardSquare({ index }) {
   const { setNodeRef, isOver } = useDroppable({ id: `square-${index}` });
@@ -246,9 +260,7 @@ function DraggableRegion({ region, position, selected, onSelect }) {
 
 function WarTablePage() {
   const [selectedRegionId, setSelectedRegionId] = useState(regions[0].id);
-  const [positions, setPositions] = useState(() =>
-    Object.fromEntries(regions.map(({ id, x, y }) => [id, { x, y }])),
-  );
+  const [positions, setPositions] = useState(alignedStartingPositions);
   const selectedRegion =
     regions.find((region) => region.id === selectedRegionId) || regions[0];
   const sensors = useSensors(
@@ -281,9 +293,7 @@ function WarTablePage() {
   }
 
   function resetBoard() {
-    setPositions(
-      Object.fromEntries(regions.map(({ id, x, y }) => [id, { x, y }])),
-    );
+    setPositions(alignedStartingPositions());
     setSelectedRegionId(regions[0].id);
   }
 
