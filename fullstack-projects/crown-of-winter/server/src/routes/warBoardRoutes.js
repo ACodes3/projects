@@ -8,22 +8,41 @@ import {
   requirePermission,
 } from "../middleware/authorize.js";
 
-import { getWarBoard } from "../controllers/warBoardController.js";
+import {
+  getWarBoard,
+  moveWarBoardPiece,
+} from "../controllers/warBoardController.js";
 
 const router = Router();
 
-// All War Board routes require authentication.
+// ==========================================
+// AUTHENTICATION & WORLD ACCESS
+// ==========================================
+
+// All routes require an authenticated user.
 router.use(authenticate);
 
-// Verify active world membership and assigned character.
+// Load the player's active character in the world.
 router.use("/:worldId", loadWorldCharacter);
 
-// GET /api/worlds/:worldId/war-board
-// Requires operations.view permission.
+// ==========================================
+// GET — RETRIEVE WAR BOARD
+// ==========================================
+
 router.get(
   "/:worldId/war-board",
   requirePermission("operations.view"),
   getWarBoard
+);
+
+// ==========================================
+// PATCH — MOVE A NATION PIECE
+// ==========================================
+
+router.patch(
+  "/:worldId/war-board/:regionId",
+  requirePermission("operations.manage"),
+  moveWarBoardPiece
 );
 
 export default router;
