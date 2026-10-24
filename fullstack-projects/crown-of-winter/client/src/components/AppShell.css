@@ -710,3 +710,290 @@
     font-size: 9px;
   }
 }
+
+/* =========================================
+   IMPERIAL COMMUNICATIONS
+   NAVBAR LAUNCHER
+========================================= */
+
+.app-shell__chat-launcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  height: 36px;
+  padding: 0 13px;
+  flex-shrink: 0;
+
+  border: 1px solid rgba(155, 216, 242, 0.22);
+  border-radius: 0;
+
+  background: rgba(38, 87, 112, 0.12);
+
+  color: #a9d9ec;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.app-shell__chat-launcher svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #95d9f2;
+}
+
+.app-shell__chat-launcher:hover,
+.app-shell__chat-launcher--active {
+  color: #e3f6fd;
+  border-color: rgba(169, 232, 255, 0.48);
+  background: rgba(56, 119, 150, 0.2);
+  box-shadow: 0 0 16px rgba(103, 190, 227, 0.08);
+}
+
+.app-shell__chat-launcher:focus-visible,
+.app-shell__chat-close:focus-visible {
+  outline: 1px solid #a9e8ff;
+  outline-offset: 3px;
+}
+
+/* =========================================
+   FLOATING CHAT POPUP
+========================================= */
+
+.app-shell__main {
+  position: relative;
+}
+
+.app-shell__chat-popup {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(390px, calc(100% - 32px));
+  height: min(520px, calc(100% - 90px));
+  min-height: 280px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(155, 216, 242, 0.28);
+  border-radius: 3px;
+
+  background: linear-gradient(155deg, #0d2335 0%, #081827 55%, #06121e 100%);
+
+  box-shadow:
+    0 20px 55px rgba(0, 4, 12, 0.75),
+    0 0 28px rgba(85, 166, 206, 0.07);
+}
+
+/* =========================================
+   CHAT HEADER
+========================================= */
+
+.app-shell__chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  min-height: 66px;
+  padding: 13px 16px;
+
+  border-bottom: 1px solid rgba(155, 216, 242, 0.14);
+
+  background: rgba(18, 43, 64, 0.42);
+}
+
+.app-shell__chat-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-shell__chat-heading > svg {
+  flex-shrink: 0;
+  color: #a5e3f9;
+}
+
+.app-shell__chat-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.app-shell__chat-heading strong {
+  color: #e5f4fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.app-shell__chat-heading span {
+  color: #799fb1;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-shell__chat-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 29px;
+  height: 29px;
+
+  border: 1px solid rgba(151, 207, 230, 0.15);
+  border-radius: 0;
+
+  background: rgba(7, 23, 37, 0.65);
+  color: #8fbdd0;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.app-shell__chat-close:hover {
+  color: #e5f7ff;
+  border-color: rgba(169, 232, 255, 0.42);
+  background: rgba(61, 119, 150, 0.2);
+}
+
+/* =========================================
+   EMPTY CHAT STATE
+========================================= */
+
+.app-shell__chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  flex: 1;
+  min-height: 0;
+
+  padding: 30px 26px;
+  text-align: center;
+}
+
+.app-shell__chat-empty > svg {
+  margin-bottom: 19px;
+  color: #8bcce7;
+  opacity: 0.75;
+}
+
+.app-shell__chat-empty strong {
+  color: #c8e4f0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+}
+
+.app-shell__chat-empty p {
+  max-width: 270px;
+  margin: 12px 0 0;
+
+  color: #7797a8;
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+/* =========================================
+   MESSAGE COMPOSER
+========================================= */
+
+.app-shell__chat-compose {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 14px;
+
+  border-top: 1px solid rgba(151, 207, 230, 0.13);
+  background: rgba(5, 17, 29, 0.72);
+}
+
+.app-shell__chat-compose input {
+  flex: 1;
+  min-width: 0;
+  height: 37px;
+  padding: 0 11px;
+
+  border: 1px solid rgba(151, 207, 230, 0.17);
+  border-radius: 0;
+
+  background: rgba(10, 29, 45, 0.85);
+
+  color: #cde9f5;
+  font-family: inherit;
+  font-size: 10px;
+
+  outline: none;
+}
+
+.app-shell__chat-compose input::placeholder {
+  color: #688898;
+}
+
+.app-shell__chat-compose button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 37px;
+  height: 37px;
+
+  border: 1px solid rgba(151, 207, 230, 0.2);
+  border-radius: 0;
+
+  background: rgba(35, 82, 108, 0.25);
+  color: #9edcf3;
+}
+
+.app-shell__chat-compose input:disabled,
+.app-shell__chat-compose button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 760px) {
+  .app-shell__chat-launcher {
+    width: 36px;
+    padding: 0;
+  }
+
+  .app-shell__chat-launcher span {
+    display: none;
+  }
+
+  .app-shell__chat-popup {
+    top: 70px;
+    right: 12px;
+    width: min(390px, calc(100% - 24px));
+    height: min(520px, calc(100% - 85px));
+  }
+}

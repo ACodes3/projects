@@ -10,9 +10,12 @@ import {
   Settings,
   Snowflake,
   ArrowLeftRight,
+  MessageSquare,
+  X,
+  Send,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
@@ -69,6 +72,7 @@ function AppShell({ user, onLogout }) {
   const worldBase = worldId ? `/worlds/${worldId}` : "/worlds";
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Character identity and permissions are shared across all world pages.
   const { status, character } = useWorldAccess();
@@ -88,6 +92,19 @@ function AppShell({ user, onLogout }) {
     ?.map((code) => roleNames[code] || code)
     .join(" · ");
 
+  // Chat is a global AppShell popup, not a route.
+  // This initial shell intentionally has no simulated messages or unread count.
+  useEffect(() => {
+    if (!chatOpen) return;
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setChatOpen(false);
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [chatOpen]);
+
   async function handleLogout() {
     if (loggingOut) return;
 
@@ -96,6 +113,7 @@ function AppShell({ user, onLogout }) {
 
     try {
       await authApi.logout();
+      setChatOpen(false);
       onLogout();
       navigate("/", { replace: true });
     } catch (error) {
@@ -198,6 +216,23 @@ function AppShell({ user, onLogout }) {
           </div>
 
           <div className="app-shell__topbar-right">
+            <button
+              type="button"
+              className={`app-shell__chat-launcher${chatOpen ? " app-shell__chat-launcher--active" : ""}`}
+              aria-label={
+                chatOpen
+                  ? "Close Imperial Communications"
+                  : "Open Imperial Communications"
+              }
+              aria-controls="imperial-communications-popup"
+              aria-expanded={chatOpen}
+              title="Imperial Communications"
+              onClick={() => setChatOpen((open) => !open)}
+            >
+              <MessageSquare size={18} strokeWidth={1.5} />
+              <span>Communications</span>
+            </button>
+
             <div className="app-shell__identity" aria-live="polite">
               <div className="app-shell__identity-icon">
                 <Crown size={19} strokeWidth={1.3} />
@@ -247,6 +282,57 @@ function AppShell({ user, onLogout }) {
         <div className="app-shell__content">
           <Outlet />
         </div>
+
+        {chatOpen && (
+          <section
+            id="imperial-communications-popup"
+            className="app-shell__chat-popup"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Imperial Communications"
+          >
+            <header className="app-shell__chat-header">
+              <div className="app-shell__chat-heading">
+                <MessageSquare size={17} strokeWidth={1.4} />
+                <div>
+                  <strong>Imperial Communications</strong>
+                  <span>
+                    WORLD CHANNEL · {character?.name ?? "WINTER PALACE"}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="app-shell__chat-close"
+                aria-label="Close chat"
+                onClick={() => setChatOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </header>
+
+            <div className="app-shell__chat-empty" role="status">
+              <Snowflake size={30} strokeWidth={1} />
+              <strong>Imperial channel awaiting activation</strong>
+              <p>
+                World messages, character portraits and unread notifications
+                will appear here once the chat API is connected.
+              </p>
+            </div>
+
+            <div className="app-shell__chat-compose">
+              <input
+                type="text"
+                placeholder="Messaging will be available soon..."
+                aria-label="Message composer (not available yet)"
+                disabled
+              />
+              <button type="button" disabled aria-label="Send message">
+                <Send size={17} />
+              </button>
+            </div>
+          </section>
+        )}
       </section>
     </div>
   );
