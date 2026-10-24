@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { warBoardApi } from "../services/warBoardApi";
+import { socket, connectSocket, disconnectSocket } from "../services/socket";
 import { useWorldAccess } from "../context/WorldAccessContext";
 import {
   DndContext,
@@ -29,6 +30,9 @@ import {
   Crosshair,
   MapPin,
   RotateCcw,
+  Wifi,
+  WifiOff,
+  LoaderCircle,
 } from "lucide-react";
 
 import "./WarTablePage.css";
@@ -220,8 +224,12 @@ function positionsFromPieces(pieces) {
     const y = piece.grid_y;
     if (
       !regions.some((region) => region.id === piece.region_id) ||
-      !Number.isInteger(x) || x < 0 || x > 7 ||
-      !Number.isInteger(y) || y < 0 || y > 7 ||
+      !Number.isInteger(x) ||
+      x < 0 ||
+      x > 7 ||
+      !Number.isInteger(y) ||
+      y < 0 ||
+      y > 7 ||
       nextPositions[piece.region_id] ||
       occupiedSquares.has(y * 8 + x)
     ) {
@@ -304,6 +312,7 @@ function WarTablePage() {
   );
   const [boardStatus, setBoardStatus] = useState("loading");
   const [boardError, setBoardError] = useState("");
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   // Synchronous flags protect active drags/saves from polling responses.
   const busyRef = useRef(false);
@@ -332,20 +341,29 @@ function WarTablePage() {
           !mounted ||
           busyRef.current ||
           requestVersion !== interactionVersionRef.current
-        ) return;
+        )
+          return;
 
         setPositions(nextPositions);
         setSavedPositions(nextPositions);
         setBoardStatus("ready");
         setBoardError("");
       } catch (error) {
-        if (!mounted || busyRef.current ||
-            requestVersion !== interactionVersionRef.current) return;
+        if (
+          !mounted ||
+          busyRef.current ||
+          requestVersion !== interactionVersionRef.current
+        )
+          return;
         if (initial) {
-          setBoardError(error?.message || "Unable to retrieve saved board positions.");
+          setBoardError(
+            error?.message || "Unable to retrieve saved board positions.",
+          );
           setBoardStatus("error");
         } else {
-          setBoardError("Synchronization unavailable; showing last confirmed board.");
+          setBoardError(
+            "Synchronization unavailable; showing last confirmed board.",
+          );
         }
       } finally {
         requestInFlight = false;
@@ -359,6 +377,104 @@ function WarTablePage() {
       window.clearInterval(intervalId);
     };
   }, [worldId]);
+
+  // ==========================================
+  // SOCKET.IO — REAL-TIME WORLD SYNCHRONIZATION
+  // ==========================================
+  useEffect(() => {
+    if (!worldId || accessStatus !== "ready") return;
+
+    let active = true;
+    const normalizedWorldId = worldId.toLowerCase();
+
+    function joinWorld() {
+      if (!socket.connected) return;
+
+      socket.emit("world:join", normalizedWorldId, (response) => {
+        if (!active) return;
+        setRealtimeConnected(response?.success === true);
+        if (!response?.success) {
+          console.warn("War Table world room unavailable:", response?.message);
+        }
+      });
+    }
+
+    function handleDisconnect() {
+      if (active) setRealtimeConnected(false);
+    }
+
+    function handleConnectError(error) {
+      if (!active) return;
+      setRealtimeConnected(false);
+      console.warn("War Table real-time connection failed:", error.message);
+    }
+
+    function handlePieceMoved(payload) {
+      if (!active || payload?.worldId !== normalizedWorldId) return;
+
+      const piece = payload?.piece;
+      if (
+        !piece ||
+        !regions.some((region) => region.id === piece.region_id) ||
+        !Number.isInteger(piece.grid_x) ||
+        !Number.isInteger(piece.grid_y) ||
+        piece.grid_x < 0 ||
+        piece.grid_x > 7 ||
+        piece.grid_y < 0 ||
+        piece.grid_y > 7
+      )
+        return;
+
+      // Don't interrupt an active drag or optimistic save.
+      // The existing polling fallback will reconcile any skipped event.
+      if (busyRef.current) return;
+
+      // Invalidate any older GET currently in flight.
+      interactionVersionRef.current += 1;
+
+      const newPosition = {
+        x: (piece.grid_x + 0.5) * 12.5,
+        y: (piece.grid_y + 0.5) * 12.5,
+      };
+
+      setPositions((current) => ({
+        ...current,
+        [piece.region_id]: newPosition,
+      }));
+      setSavedPositions((current) => ({
+        ...current,
+        [piece.region_id]: newPosition,
+      }));
+      setBoardError("");
+    }
+
+    function handleAccessRevoked(payload) {
+      if (payload?.worldId !== normalizedWorldId || !active) return;
+      setRealtimeConnected(false);
+      setBoardError("Your real-time access to this world was revoked.");
+    }
+
+    socket.on("connect", joinWorld);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+    socket.on("war-board:piece-moved", handlePieceMoved);
+    socket.on("world:access-revoked", handleAccessRevoked);
+
+    if (socket.connected) joinWorld();
+    else connectSocket();
+
+    return () => {
+      active = false;
+      socket.off("connect", joinWorld);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
+      socket.off("war-board:piece-moved", handlePieceMoved);
+      socket.off("world:access-revoked", handleAccessRevoked);
+      // This page currently owns the shared socket connection.
+      // When chat uses it too, move connection ownership to an app-wide provider.
+      disconnectSocket();
+    };
+  }, [worldId, accessStatus]);
 
   const selectedRegion =
     regions.find((region) => region.id === selectedRegionId) || regions[0];
@@ -586,7 +702,9 @@ function WarTablePage() {
                     }
                   }}
                   onDragEnd={handleDragEnd}
-                  onDragCancel={() => { busyRef.current = false; }}
+                  onDragCancel={() => {
+                    busyRef.current = false;
+                  }}
                 >
                   <div className="war-board__surface">
                     <div className="war-board__cells">
@@ -629,17 +747,36 @@ function WarTablePage() {
                 unavailable.
               </p>
             )}
+
             {boardStatus === "ready" && (
-              <p role="status" style={{ color: "#779aa9", fontSize: "10px" }}>
-                {isSaving
-                  ? "Saving movement to Imperial records..."
-                  : canManageBoard
-                    ? "Board synchronizes every 3 seconds. Drag to save movements to PostgreSQL."
-                    : accessStatus === "loading"
-                      ? "Verifying movement permissions..."
-                      : "Board in view-only mode. Operations management clearance required to move pieces."}
+              <p role="status" className="war-board-sync-status">
+                {isSaving ? (
+                  <LoaderCircle
+                    size={14}
+                    className="war-board-sync-status__loading"
+                  />
+                ) : realtimeConnected ? (
+                  <Wifi size={14} />
+                ) : (
+                  <WifiOff size={14} />
+                )}
+
+                <span>
+                  {isSaving
+                    ? "Saving movement..."
+                    : canManageBoard
+                      ? realtimeConnected
+                        ? "Live synchronization active"
+                        : "Reconnecting · Polling active"
+                      : accessStatus === "loading"
+                        ? "Checking permissions..."
+                        : realtimeConnected
+                          ? "Live synchronization · View only"
+                          : "View only · Polling active"}
+                </span>
               </p>
             )}
+
             {saveError && (
               <p role="alert" style={{ color: "#e8a2a2", fontSize: "11px" }}>
                 {saveError}

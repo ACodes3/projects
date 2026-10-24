@@ -1622,3 +1622,100 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   WAR TABLE — SYNCHRONIZATION STATUS FIX
+========================================= */
+
+/* Keep status messages below the board's
+   decorative frame and bottom crown. */
+
+.war-board-stage > p[role="status"],
+.war-board-stage > p[role="alert"] {
+  position: relative;
+  z-index: 2;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin: 52px auto 0;
+  padding: 9px 16px;
+
+  text-align: center;
+
+  border: 1px solid rgba(151, 207, 230, 0.12);
+  background: rgba(7, 23, 37, 0.85);
+  border-radius: 4px;
+}
+
+/* Errors need visual separation if a
+   status message is already displayed. */
+
+.war-board-stage > p[role="status"] + p[role="alert"] {
+  margin-top: 10px;
+}
+
+/* The board footer now sits beneath
+   the synchronization indicator. */
+
+.war-board-stage__caption {
+  margin-top: 18px;
+}
+
+/* Mobile adjustments */
+
+@media (max-width: 600px) {
+  .war-board-stage > p[role="status"],
+  .war-board-stage > p[role="alert"] {
+    margin-top: 42px;
+    padding: 8px 10px;
+  }
+
+  .war-board-stage > p[role="status"] + p[role="alert"] {
+    margin-top: 10px;
+  }
+}
+
+.war-board-sync-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.war-board-sync-status svg {
+  flex-shrink: 0;
+  color: #86d9bb;
+}
+
+.war-board-sync-status__loading {
+  animation: war-board-sync-spin 1s linear infinite;
+}
+
+@keyframes war-board-sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.war-board-sync-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  font-size: 9px;
+  line-height: 1.5;
+  color: #779aa9;
+}
+
+.war-board-sync-status span {
+  font-size: inherit;
+}
+
+.war-board-sync-status svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: #86d9bb;
+}

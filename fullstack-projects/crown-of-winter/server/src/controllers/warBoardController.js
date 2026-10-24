@@ -1,3 +1,4 @@
+
 import { pool } from "../db/pool.js";
 
 // ==========================================
@@ -20,7 +21,7 @@ export async function getWarBoard(req, res) {
       WHERE world_id = $1
       ORDER BY region_id ASC
       `,
-      [worldId],
+      [worldId]
     );
 
     return res.status(200).json({
@@ -48,7 +49,10 @@ export async function moveWarBoardPiece(req, res) {
   const { worldId, regionId } = req.params;
   const { grid_x, grid_y } = req.body ?? {};
 
-  // Validate coordinates within the 8x8 board.
+  // ----------------------------------------
+  // Validate board coordinates
+  // ----------------------------------------
+
   if (
     !Number.isInteger(grid_x) ||
     !Number.isInteger(grid_y) ||
@@ -64,6 +68,10 @@ export async function moveWarBoardPiece(req, res) {
   }
 
   try {
+    // ----------------------------------------
+    // Save movement in PostgreSQL
+    // ----------------------------------------
+
     const result = await pool.query(
       `
       UPDATE war_board_pieces
@@ -79,7 +87,7 @@ export async function moveWarBoardPiece(req, res) {
         grid_y,
         updated_at
       `,
-      [worldId, regionId, grid_x, grid_y],
+      [worldId, regionId, grid_x, grid_y]
     );
 
     if (result.rowCount === 0) {
@@ -89,15 +97,56 @@ export async function moveWarBoardPiece(req, res) {
       });
     }
 
+    const piece = result.rows[0];
+
+    // ----------------------------------------
+    // Real-time movement notification
+    // ----------------------------------------
+
+    // The shared broadcaster will be installed
+    // on the Express app in our next step.
+    //
+    // It will revalidate each recipient's active
+    // session and world membership before emitting.
+    //
+    // No raw room broadcast is used here.
+
+    const broadcastWarBoardMove =
+      req.app.get("broadcastWarBoardMove");
+
+    if (typeof broadcastWarBoardMove === "function") {
+      try {
+        await broadcastWarBoardMove({
+          worldId,
+          piece,
+        });
+      } catch (broadcastError) {
+        // The database update has already succeeded.
+        // A notification failure must not make the
+        // successful movement appear to have failed.
+        console.error(
+          "War board notification failed:",
+          broadcastError
+        );
+      }
+    }
+
+    // ----------------------------------------
+    // Return successful REST response
+    // ----------------------------------------
+
     return res.status(200).json({
       success: true,
       message: "Imperial strategy piece moved successfully.",
       data: {
-        piece: result.rows[0],
+        piece,
       },
     });
   } catch (error) {
-    // PostgreSQL unique-square constraint violation.
+    // ----------------------------------------
+    // Occupied square
+    // ----------------------------------------
+
     if (
       error.code === "23505" &&
       error.constraint === "war_board_unique_square"
