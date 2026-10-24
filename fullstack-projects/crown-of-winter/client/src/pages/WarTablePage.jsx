@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { warBoardApi } from "../services/warBoardApi";
 import { useWorldAccess } from "../context/WorldAccessContext";
@@ -207,6 +207,35 @@ const alignedStartingPositions = () =>
     }),
   );
 
+// Validate server board data and convert grid coordinates to centered percentages.
+function positionsFromPieces(pieces) {
+  if (!Array.isArray(pieces) || pieces.length !== regions.length) {
+    throw new Error("The saved board does not contain all seven nations.");
+  }
+
+  const nextPositions = {};
+  const occupiedSquares = new Set();
+  for (const piece of pieces) {
+    const x = piece.grid_x;
+    const y = piece.grid_y;
+    if (
+      !regions.some((region) => region.id === piece.region_id) ||
+      !Number.isInteger(x) || x < 0 || x > 7 ||
+      !Number.isInteger(y) || y < 0 || y > 7 ||
+      nextPositions[piece.region_id] ||
+      occupiedSquares.has(y * 8 + x)
+    ) {
+      throw new Error("The saved board contains invalid piece positions.");
+    }
+    occupiedSquares.add(y * 8 + x);
+    nextPositions[piece.region_id] = {
+      x: (x + 0.5) * 12.5,
+      y: (y + 0.5) * 12.5,
+    };
+  }
+  return nextPositions;
+}
+
 function BoardSquare({ index }) {
   const { setNodeRef, isOver } = useDroppable({ id: `square-${index}` });
 
@@ -276,68 +305,61 @@ function WarTablePage() {
   const [boardStatus, setBoardStatus] = useState("loading");
   const [boardError, setBoardError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    // Guard against showing positions from a previously selected world.
-    const resetTimer = setTimeout(() => {
-      if (!active) return;
-      setBoardStatus("loading");
-      setBoardError("");
-    }, 0);
+  // Synchronous flags protect active drags/saves from polling responses.
+  const busyRef = useRef(false);
+  const interactionVersionRef = useRef(0);
+  const activeWorldRef = useRef(worldId);
 
-    warBoardApi
-      .getBoard(worldId)
-      .then((response) => {
-        if (!active) return;
-        const pieces = response?.data?.pieces;
-        if (!Array.isArray(pieces) || pieces.length !== regions.length) {
-          throw new Error(
-            "The saved board does not contain all seven nations.",
-          );
-        }
-        const nextPositions = {};
-        const occupiedSquares = new Set();
-        for (const piece of pieces) {
-          const x = piece.grid_x;
-          const y = piece.grid_y;
-          if (
-            !regions.some((region) => region.id === piece.region_id) ||
-            !Number.isInteger(x) ||
-            x < 0 ||
-            x > 7 ||
-            !Number.isInteger(y) ||
-            y < 0 ||
-            y > 7 ||
-            nextPositions[piece.region_id] ||
-            occupiedSquares.has(y * 8 + x)
-          ) {
-            throw new Error(
-              "The saved board contains invalid piece positions.",
-            );
-          }
-          occupiedSquares.add(y * 8 + x);
-          nextPositions[piece.region_id] = {
-            x: (x + 0.5) * 12.5,
-            y: (y + 0.5) * 12.5,
-          };
-        }
+  useEffect(() => {
+    let mounted = true;
+    let requestInFlight = false;
+    activeWorldRef.current = worldId;
+    busyRef.current = false;
+    interactionVersionRef.current += 1;
+
+    async function loadBoard(initial = false) {
+      if (requestInFlight || busyRef.current) return;
+      if (!initial && document.visibilityState === "hidden") return;
+
+      requestInFlight = true;
+      const requestVersion = interactionVersionRef.current;
+      try {
+        const response = await warBoardApi.getBoard(worldId);
+        const nextPositions = positionsFromPieces(response?.data?.pieces);
+
+        // A drag or save may have started while this GET was in flight.
+        if (
+          !mounted ||
+          busyRef.current ||
+          requestVersion !== interactionVersionRef.current
+        ) return;
+
         setPositions(nextPositions);
         setSavedPositions(nextPositions);
         setBoardStatus("ready");
-      })
-      .catch((error) => {
-        if (!active) return;
-        setBoardError(
-          error.message || "Unable to retrieve saved board positions.",
-        );
-        setBoardStatus("error");
-      });
+        setBoardError("");
+      } catch (error) {
+        if (!mounted || busyRef.current ||
+            requestVersion !== interactionVersionRef.current) return;
+        if (initial) {
+          setBoardError(error?.message || "Unable to retrieve saved board positions.");
+          setBoardStatus("error");
+        } else {
+          setBoardError("Synchronization unavailable; showing last confirmed board.");
+        }
+      } finally {
+        requestInFlight = false;
+      }
+    }
 
+    loadBoard(true);
+    const intervalId = window.setInterval(() => loadBoard(false), 3000);
     return () => {
-      active = false;
-      clearTimeout(resetTimer);
+      mounted = false;
+      window.clearInterval(intervalId);
     };
   }, [worldId]);
+
   const selectedRegion =
     regions.find((region) => region.id === selectedRegionId) || regions[0];
   const sensors = useSensors(
@@ -348,6 +370,8 @@ function WarTablePage() {
   );
 
   async function handleDragEnd({ active, over }) {
+    // The drag is finished; let polling resume unless a save begins below.
+    busyRef.current = false;
     if (
       boardStatus !== "ready" ||
       !canManageBoard ||
@@ -387,6 +411,8 @@ function WarTablePage() {
     };
 
     // Optimistic update; restore the last confirmed position if the API fails.
+    busyRef.current = true;
+    interactionVersionRef.current += 1;
     setIsSaving(true);
     setSaveError("");
     setPositions(nextPositions);
@@ -403,12 +429,19 @@ function WarTablePage() {
           response?.message || "Unable to save the board movement.",
         );
       }
-      setSavedPositions(nextPositions);
+      if (activeWorldRef.current === worldId) {
+        setSavedPositions(nextPositions);
+      }
     } catch (error) {
-      setPositions(previousPositions);
-      setSaveError(error?.message || "Unable to save the board movement.");
+      if (activeWorldRef.current === worldId) {
+        setPositions(previousPositions);
+        setSaveError(error?.message || "Unable to save the board movement.");
+      }
     } finally {
-      setIsSaving(false);
+      if (activeWorldRef.current === worldId) {
+        busyRef.current = false;
+        setIsSaving(false);
+      }
     }
   }
 
@@ -547,10 +580,13 @@ function WarTablePage() {
                       canManageBoard &&
                       !isSaving
                     ) {
+                      busyRef.current = true;
+                      interactionVersionRef.current += 1;
                       setSelectedRegionId(active.id);
                     }
                   }}
                   onDragEnd={handleDragEnd}
+                  onDragCancel={() => { busyRef.current = false; }}
                 >
                   <div className="war-board__surface">
                     <div className="war-board__cells">
@@ -598,7 +634,7 @@ function WarTablePage() {
                 {isSaving
                   ? "Saving movement to Imperial records..."
                   : canManageBoard
-                    ? "Drag nation pieces to move them. Successful moves are saved to PostgreSQL."
+                    ? "Board synchronizes every 3 seconds. Drag to save movements to PostgreSQL."
                     : accessStatus === "loading"
                       ? "Verifying movement permissions..."
                       : "Board in view-only mode. Operations management clearance required to move pieces."}
