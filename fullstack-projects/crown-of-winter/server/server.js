@@ -335,6 +335,146 @@ async function broadcastChatMessage({ worldId, message }) {
 app.set("broadcastChatMessage", broadcastChatMessage);
 
 // ==========================================
+// SECURE CONVERSATION BROADCASTER
+// ==========================================
+
+// Called after a message has been persisted. Never use a world-wide
+// emit for direct correspondence. The database decides who can receive it.
+async function broadcastConversationMessage({ worldId, message }) {
+  if (typeof worldId !== "string" || !UUID_PATTERN.test(worldId)) {
+    throw new Error("Invalid conversation broadcast world ID.");
+  }
+
+  const normalizedWorldId = worldId.toLowerCase();
+  const conversationId = message?.conversation_id;
+
+  if (
+    !message?.id ||
+    String(message.world_id).toLowerCase() !== normalizedWorldId ||
+    typeof conversationId !== "string" ||
+    !UUID_PATTERN.test(conversationId)
+  ) {
+    throw new Error("Invalid conversation broadcast message.");
+  }
+
+  // Verify the message really belongs to this conversation and world.
+  // Fetch its kind from PostgreSQL, not the calling code or client.
+  const conversationResult = await pool.query(
+    `SELECT cc.kind, cc.character_a_id, cc.character_b_id
+     FROM chat_conversations cc
+     JOIN chat_messages m
+       ON m.conversation_id = cc.id AND m.world_id = cc.world_id
+     WHERE cc.id = $1 AND cc.world_id = $2 AND m.id = $3
+     LIMIT 1`,
+    [conversationId, normalizedWorldId, message.id],
+  );
+
+  const conversation = conversationResult.rows[0];
+  if (!conversation) {
+    throw new Error("Conversation or stored message not found.");
+  }
+
+  // A private chat is deliverable only if its exact pair has both
+  // participant rows. A corrupted/incomplete chat fails closed.
+  if (conversation.kind === "direct") {
+    const participants = await pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM chat_conversation_participants
+       WHERE conversation_id = $1 AND world_id = $2
+         AND world_character_id IN ($3, $4)`,
+      [
+        conversationId,
+        normalizedWorldId,
+        conversation.character_a_id,
+        conversation.character_b_id,
+      ],
+    );
+    if (participants.rows[0]?.count !== 2) {
+      throw new Error("Private conversation participants are incomplete.");
+    }
+  } else if (conversation.kind !== "world") {
+    throw new Error("Unknown conversation kind.");
+  }
+
+  const roomName = `world:${normalizedWorldId}`;
+  const sockets = await io.in(roomName).fetchSockets();
+  let delivered = 0;
+
+  for (const socket of sockets) {
+    if (socket.data.worldId !== normalizedWorldId) continue;
+
+    try {
+      const session = await getActiveSession(socket.data.tokenHash);
+      if (!session || session.id !== socket.data.user?.id) {
+        socket.disconnect(true);
+        continue;
+      }
+
+      const character = await getActiveWorldCharacter(
+        normalizedWorldId,
+        session.id,
+      );
+      if (!character) {
+        await socket.leave(roomName);
+        delete socket.data.worldId;
+        delete socket.data.character;
+        socket.emit("world:access-revoked", {
+          worldId: normalizedWorldId,
+          message: "World access is no longer available.",
+        });
+        continue;
+      }
+
+      if (conversation.kind === "direct") {
+        const recipientId = character.world_character_id.toLowerCase();
+        if (
+          recipientId !== conversation.character_a_id.toLowerCase() &&
+          recipientId !== conversation.character_b_id.toLowerCase()
+        ) {
+          continue;
+        }
+
+        // Confirm this exact currently assigned character is a participant.
+        const accessResult = await pool.query(
+          `SELECT 1 FROM chat_conversation_participants
+           WHERE conversation_id = $1 AND world_id = $2
+             AND world_character_id = $3 LIMIT 1`,
+          [conversationId, normalizedWorldId, character.world_character_id],
+        );
+        if (!accessResult.rowCount) continue;
+      }
+
+      if (
+        !socket.connected ||
+        socket.data.worldId !== normalizedWorldId ||
+        !socket.rooms.has(roomName)
+      ) {
+        continue;
+      }
+
+      socket.emit("chat:conversation-message-created", {
+        worldId: normalizedWorldId,
+        conversationId,
+        message,
+      });
+      delivered += 1;
+    } catch (error) {
+      console.error("Conversation recipient validation failed:", error);
+      // Database or auth failures must never leak a message.
+      await socket.leave(roomName);
+      delete socket.data.worldId;
+      delete socket.data.character;
+    }
+  }
+
+  console.log(
+    `[Socket.IO] Conversation ${conversationId}: ${message.id} (${delivered} recipients)`,
+  );
+}
+
+app.set("broadcastConversationMessage", broadcastConversationMessage);
+
+// ==========================================
 // AUTHENTICATED SOCKET CONNECTIONS
 // ==========================================
 
@@ -479,6 +619,8 @@ async function startServer() {
       console.log("Secure War Table broadcasting initialized.");
 
       console.log("Secure Imperial Communications broadcasting initialized.");
+
+      console.log("Secure conversation broadcasting initialized.");
     });
   } catch (error) {
     console.error("Failed to start server:", error.message);

@@ -226,6 +226,12 @@ function AppShell({ user, onLogout }) {
       }
     }
 
+    function debugPrivateMessage(payload) {
+      console.log("[GLOBAL SOCKET] Private message arrived:", payload);
+    }
+
+    socket.on("chat:conversation-message-created", debugPrivateMessage);
+
     socket.on("connect", joinWorld);
 
     socket.on("connect_error", handleConnectError);
@@ -240,6 +246,8 @@ function AppShell({ user, onLogout }) {
 
     return () => {
       disposed = true;
+
+      socket.off("chat:conversation-message-created", debugPrivateMessage);
 
       socket.off("connect", joinWorld);
 
@@ -411,7 +419,24 @@ function AppShell({ user, onLogout }) {
       void loadMessages();
     }
 
+    function handleConversationMessage(payload) {
+      console.log("[Imperial Chat] Socket message received:", payload);
+      if (
+        !active ||
+        payload?.worldId?.toLowerCase() !== world ||
+        payload?.conversationId !== conversationId
+      ) {
+        return;
+      }
+
+      if (payload.message?.id) {
+        setMessages((current) => mergeChatMessages(current, [payload.message]));
+      }
+    }
+
     socket.on("chat:message-created", handleCommonMessage);
+
+    socket.on("chat:conversation-message-created", handleConversationMessage);
 
     socket.on("connect", handleReconnect);
 
@@ -436,6 +461,11 @@ function AppShell({ user, onLogout }) {
       active = false;
 
       socket.off("chat:message-created", handleCommonMessage);
+
+      socket.off(
+        "chat:conversation-message-created",
+        handleConversationMessage,
+      );
 
       socket.off("connect", handleReconnect);
 

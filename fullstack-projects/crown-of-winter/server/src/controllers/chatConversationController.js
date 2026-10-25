@@ -1,6 +1,7 @@
 import { pool } from "../db/pool.js";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HISTORY_LIMIT = 50;
 const MAX_MESSAGE_LENGTH = 2000;
 
@@ -19,7 +20,12 @@ function serverError(res, label, error) {
 // Called only after authenticate + loadWorldCharacter middleware.
 // A direct chat must belong to the requesting character. For the common
 // world chat, loadWorldCharacter already verifies current world access.
-async function getAccessibleConversation(db, worldId, conversationId, characterId) {
+async function getAccessibleConversation(
+  db,
+  worldId,
+  conversationId,
+  characterId,
+) {
   const result = await db.query(
     `
     SELECT cc.id, cc.world_id, cc.kind,
@@ -82,7 +88,9 @@ export async function getChatContacts(req, res) {
       `,
       [req.params.worldId, req.character.id],
     );
-    return res.status(200).json({ success: true, data: { contacts: result.rows } });
+    return res
+      .status(200)
+      .json({ success: true, data: { contacts: result.rows } });
   } catch (error) {
     return serverError(res, "Failed to retrieve chat contacts:", error);
   }
@@ -142,7 +150,9 @@ export async function getChatConversations(req, res) {
       `,
       [worldId, characterId],
     );
-    return res.status(200).json({ success: true, data: { conversations: result.rows } });
+    return res
+      .status(200)
+      .json({ success: true, data: { conversations: result.rows } });
   } catch (error) {
     return serverError(res, "Failed to retrieve conversations:", error);
   }
@@ -224,14 +234,21 @@ export async function createDirectConversation(req, res) {
 export async function getConversationMessages(req, res) {
   const { worldId, conversationId } = req.params;
   if (!isUuid(conversationId)) {
-    return res.status(400).json({ success: false, message: "Invalid conversation ID." });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid conversation ID." });
   }
   try {
     const conversation = await getAccessibleConversation(
-      pool, worldId, conversationId, req.character.id,
+      pool,
+      worldId,
+      conversationId,
+      req.character.id,
     );
     if (!conversation) {
-      return res.status(404).json({ success: false, message: "Conversation not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Conversation not found." });
     }
     const result = await pool.query(
       `SELECT * FROM (
@@ -250,7 +267,9 @@ export async function getConversationMessages(req, res) {
        ) recent ORDER BY created_at ASC, id ASC`,
       [worldId, conversationId, HISTORY_LIMIT],
     );
-    return res.status(200).json({ success: true, data: { messages: result.rows } });
+    return res
+      .status(200)
+      .json({ success: true, data: { messages: result.rows } });
   } catch (error) {
     return serverError(res, "Failed to retrieve conversation messages:", error);
   }
@@ -261,10 +280,15 @@ export async function sendConversationMessage(req, res) {
   const { worldId, conversationId } = req.params;
   const rawContent = req.body?.content;
   if (!isUuid(conversationId)) {
-    return res.status(400).json({ success: false, message: "Invalid conversation ID." });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid conversation ID." });
   }
-  if (typeof rawContent !== "string" ||
-      rawContent.trim().length < 1 || rawContent.trim().length > MAX_MESSAGE_LENGTH) {
+  if (
+    typeof rawContent !== "string" ||
+    rawContent.trim().length < 1 ||
+    rawContent.trim().length > MAX_MESSAGE_LENGTH
+  ) {
     return res.status(400).json({
       success: false,
       message: `Message must contain 1 to ${MAX_MESSAGE_LENGTH} characters.`,
@@ -311,14 +335,52 @@ export async function sendConversationMessage(req, res) {
          ON wc.id = saved.sender_world_character_id
         AND wc.world_id = saved.world_id
        JOIN characters c ON c.id = wc.character_id`,
-      [worldId, conversationId, req.user.id, req.character.id, rawContent.trim()],
+      [
+        worldId,
+        conversationId,
+        req.user.id,
+        req.character.id,
+        rawContent.trim(),
+      ],
     );
     if (!result.rowCount) {
-      return res.status(403).json({ success: false, message: "Conversation access denied." });
+      return res
+        .status(403)
+        .json({ success: false, message: "Conversation access denied." });
     }
+
     const message = result.rows[0];
-    // Do not emit to the whole world: direct messages need recipient-only delivery.
-    // The next step will add conversation-authorized Socket.IO broadcasting.
+
+    // ==========================================
+    // REAL-TIME CONVERSATION BROADCAST
+    // ==========================================
+
+    // The broadcaster is registered in server.js.
+    // It verifies each recipient before delivery.
+    // Private messages are never sent to the
+    // unrestricted world channel.
+
+    const broadcastConversationMessage = req.app.get(
+      "broadcastConversationMessage",
+    );
+
+    if (typeof broadcastConversationMessage === "function") {
+      try {
+        await broadcastConversationMessage({
+          worldId,
+          message,
+        });
+      } catch (broadcastError) {
+        // The message has already been saved.
+        // A notification failure must not cause
+        // the successful POST request to fail.
+        console.error(
+          "Conversation real-time broadcast failed:",
+          broadcastError,
+        );
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: "Message sent successfully.",
