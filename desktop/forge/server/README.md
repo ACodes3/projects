@@ -1,161 +1,113 @@
-# FORGE — Backend
 
-REST API for **FORGE Training & Nutrition**, a personal fitness tracker. Built with Node.js, Express, and PostgreSQL. The server handles exercise records, workout sessions, food logs, nutrition targets, body measurements, rest days, user profile information, and dashboard data.
+# FORGE Desktop — Local Express API
 
-## Tech stack
+This directory contains the local Node.js/Express backend for **FORGE Desktop v1.0.0**.
 
-- **Node.js** with ECMAScript modules
-- **Express 5** for HTTP routes and middleware
-- **PostgreSQL** with the `pg` connection pool
-- **dotenv** for environment variables
-- **cors** for requests from the React frontend
-- **nodemon** for development-time restarts
+The active desktop database is **SQLite via `better-sqlite3`**, not PostgreSQL. Some PostgreSQL-era files (`src/config/db.js` and dependency `pg`) remain in the source tree; `src/server.js` imports `src/config/sqlite.js` for the desktop runtime.
 
-## Prerequisites
+## API responsibilities
 
-- Node.js and npm (use a current LTS release compatible with the dependencies)
-- A running PostgreSQL instance
-- The `forge/` project, including the `db/` and `server/` directories
+The API manages exercises, workouts and sets, nutrition entries/goals, progress, rest days, the local profile, dashboard data, and SQLite backups/restores.
 
-## Project structure
+| Base endpoint | Role |
+| --- | --- |
+| `GET /api/health` | Health check; includes an instance ID when launched by Electron |
+| `/api/exercises` | Exercise catalog CRUD |
+| `/api/workouts` | Workout sessions, exercises and sets |
+| `/api/nutrition` | Meal entries and macro goals |
+| `/api/progress` | Body weight and measurements |
+| `/api/rest-days` | Recovery dates |
+| `/api/profile` | Profile |
+| `/api/dashboard` | Dashboard summary |
+| `/api/backup` | Backup/restore routes |
+
+Consult `src/routes/` for precise methods and request payloads.
+
+## Folder layout
 
 ```text
-forge/
-├── db/
-│   ├── schema.sql                 # Database schema and related SQL
-│   └── seed.sql                   # Demo user and development data
-└── server/
-    ├── src/
-    │   ├── app.js                 # Express app, CORS, routes, 404 handler
-    │   ├── server.js              # Database check and HTTP startup
-    │   ├── config/db.js           # PostgreSQL connection pool
-    │   ├── controllers/           # Request handling and database logic
-    │   ├── routes/                # API route definitions
-    │   └── middleware/            # Demo/single-user context
-    ├── .env                       # Local configuration (do not commit)
-    └── package.json
+server/
+├── src/
+│   ├── app.js                        # Express routes and middleware
+│   ├── server.js                     # Localhost server entry
+│   ├── config/sqlite.js              # Active SQLite connection
+│   ├── config/initializeDatabase.js  # First-run provisioning
+│   ├── routes/                       # Endpoint definitions
+│   ├── controllers/                  # HTTP handlers
+│   ├── services/                     # Backup and restore logic
+│   └── middleware/                   # Local user context
+├── scripts/                          # Initialization and validation
+├── tests/                            # Vitest + Supertest
+└── package.json
 ```
 
-## Local setup
+## Development: SQLite API
 
-### 1. Create a PostgreSQL database
+From `server/`:
 
-Create a database (for example, `forge`) using `psql` or your preferred PostgreSQL client:
-
-```sql
-CREATE DATABASE forge;
-```
-
-Run the SQL scripts **in order**, from the repository root:
-
-```bash
-psql -U postgres -d forge -f db/schema.sql
-psql -U postgres -d forge -f db/seed.sql
-```
-
-Replace `postgres` with your PostgreSQL user and `forge` with your database name if necessary. The seed inserts the demo user, profile, nutrition goals, exercises, and sample activity. **Re-running `seed.sql` resets the demo user's activity data**, so avoid reseeding a database with activity you want to keep.
-
-### 2. Install packages
-
-```bash
-cd server
+```powershell
 npm install
-```
-
-### 3. Configure environment variables
-
-Create or update `server/.env`:
-
-```dotenv
-PORT=5000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=forge
-DB_USER=postgres
-DB_PASSWORD=your_postgres_password
-```
-
-These are illustrative values: match them to your local PostgreSQL configuration. Keep `.env` and database credentials private.
-
-### 4. Start the API
-
-For development with automatic restarts:
-
-```bash
+node scripts/init-db.js
 npm run dev
 ```
 
-Or run it normally:
+The initialization script creates the **development** SQLite file under `db/forge.sqlite` if not already initialized.
 
-```bash
+The API listens at `http://127.0.0.1:5000`. Its health endpoint is:
+
+```text
+http://localhost:5000/api/health
+```
+
+### npm scripts
+
+```powershell
 npm start
+npm run dev
+npm test
+npm run test:watch
 ```
 
-The default API address is `http://localhost:5000/api`. The server checks its PostgreSQL connection during startup and exits if it cannot connect.
+For installed desktop usage, **do not manually launch the server**. Electron initializes the database under its userData directory and starts a managed backend subprocess with `FORGE_DB_PATH` and `FORGE_INSTANCE_ID` environment variables.
 
-### 5. Check the health endpoint
+## Data initialization and safety
 
-```bash
-curl http://localhost:5000/api/health
+- `db/schema.sqlite.sql` is the active desktop schema.
+- `db/seed.desktop.sql` creates an internal local user/profile and starter exercise catalog without demo activity history.
+- `src/config/initializeDatabase.js` provisions missing databases and performs SQLite integrity and foreign-key checks.
+- `src/config/sqlite.js` enables foreign keys and WAL journaling.
+- `FORGE_DB_PATH` selects the database file.
+
+Do not commit generated `.sqlite` files, WAL/SHM files, real workout history, or exported backups.
+
+## Testing
+
+`tests/setup.js` creates a **temporary SQLite database per test worker** and inserts the local test identity.
+
+The test suite covers health checks, exercises, workouts, nutrition, progress, profiles, rest days, database initialization, backups and restore behavior.
+
+Run:
+
+```powershell
+npm test
 ```
 
-Expected response:
+Keep restore testing isolated from real personal databases.
 
-```json
-{
-  "success": true,
-  "message": "FORGE API is running."
-}
-```
+## Security boundaries
 
-## API endpoints
+The API binds to `127.0.0.1`, but its single-user middleware does **not** implement production authentication.
 
-All routes below are relative to `http://localhost:5000`.
+Treat this backend as a trusted local desktop component, **not** an internet-facing service.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/health` | API health check |
-| GET | `/api/exercises` | List active exercises |
-| GET | `/api/exercises/:id` | Get an exercise |
-| POST | `/api/exercises` | Create an exercise |
-| PUT | `/api/exercises/:id` | Update an exercise |
-| DELETE | `/api/exercises/:id` | Soft-delete an exercise |
-| GET | `/api/workouts` | List workouts |
-| GET | `/api/workouts/:id` | Get a workout |
-| POST | `/api/workouts` | Create a workout |
-| PUT | `/api/workouts/:id` | Update a workout |
-| DELETE | `/api/workouts/:id` | Delete a workout |
-| GET | `/api/nutrition` | List nutrition entries; optional `?date=YYYY-MM-DD` |
-| POST | `/api/nutrition` | Add a food entry |
-| PUT | `/api/nutrition/:id` | Edit a food entry |
-| DELETE | `/api/nutrition/:id` | Delete a food entry |
-| GET | `/api/nutrition/goals` | Read nutrition goals |
-| PUT | `/api/nutrition/goals` | Save nutrition goals |
-| GET | `/api/progress` | List progress entries; optional date filter |
-| POST | `/api/progress` | Add a progress entry |
-| PUT | `/api/progress/:id` | Edit a progress entry |
-| DELETE | `/api/progress/:id` | Delete a progress entry |
-| GET | `/api/rest-days` | List rest days |
-| POST | `/api/rest-days` | Add a rest day |
-| DELETE | `/api/rest-days/:date` | Delete a rest day for a date |
-| GET | `/api/profile` | Read the user's profile |
-| PUT | `/api/profile` | Save the user's profile |
-| GET | `/api/dashboard` | Fetch dashboard summary data |
+The Electron instance ID distinguishes the managed process; it is **not** an authentication credential.
 
-Most resources return JSON. See `src/controllers/` and the frontend's `src/api/forgeApi.js` for the exact request and response fields.
+Backup and restore paths should be validated, and untrusted database files require appropriate safeguards.
 
-## Database design
+## Copyright and license
 
-The schema includes users, profiles, exercises, workouts, workout exercises, workout sets, nutrition entries, nutrition goals, progress entries, and rest days. Workout exercises store a name snapshot so historical workouts remain understandable even when an exercise is renamed or removed from the active library. Workout sets support either repetition counts or timed durations, with optional weight.
+Copyright © 2026 ACodes3. All rights reserved in the author's original code and documentation.
 
-## Development and security notes
+Public source availability is for portfolio review; no general license to reuse or redistribute the original code is granted unless separately authorized.
 
-- **Demo-only user model:** This version does **not** implement registration or login. User-scoped routes load the seeded `demo@forge.local` user. Do **not** deploy it as a publicly accessible multi-user service without real authentication and authorization.
-- **CORS:** `src/app.js` currently permits the frontend at `http://localhost:5173`. Update the origin for another deployment address.
-- **Database:** PostgreSQL must be running, and the schema and seed must be applied before user-scoped API routes work.
-- **Scripts:** `npm run dev` and `npm start` are provided; the backend package does not define an automated test script.
-- **Missing routes:** Unknown endpoints return a JSON `404` response.
-
-## Run with the frontend
-
-Start this backend first, then run the frontend from `forge/client` using `npm run dev`. The frontend defaults to calling `http://localhost:5000/api`, unless `VITE_API_URL` overrides it.
+Third-party dependencies and assets retain their own rights and license terms. See the repository's `LICENSE` and `COPYRIGHT.md` for the project's full notices.
