@@ -73,4 +73,25 @@ export const chatApi = {
       },
     );
   },
+
+  // ==========================================
+  // UNREAD MESSAGE COUNTS
+  // ==========================================
+
+  getUnreadCounts(worldId) {
+    return apiRequest(`${worldChatPath(worldId)}/unread`);
+  },
+
+  // ==========================================
+  // MARK CONVERSATION AS READ
+  // ==========================================
+
+  markConversationRead(worldId, conversationId) {
+    return apiRequest(
+      `${worldChatPath(worldId)}/conversations/${encodeURIComponent(conversationId)}/read`,
+      {
+        method: "POST",
+      },
+    );
+  },
 };

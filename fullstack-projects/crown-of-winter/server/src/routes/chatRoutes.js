@@ -14,11 +14,28 @@ import {
   sendConversationMessage,
 } from "../controllers/chatConversationController.js";
 
+import {
+  getChatUnreadCounts,
+  markChatConversationRead,
+} from "../controllers/chatReadController.js";
+
 const router = Router();
 
 // All endpoints require a valid login and active world character.
 router.use(authenticate);
-router.use("/:worldId", loadWorldCharacter);
+
+// ==========================================
+// IMPERIAL COMMUNICATIONS — READ TRACKING
+// ==========================================
+
+// Retrieve unread counts across all accessible conversations.
+router.get("/:worldId/chat/unread", getChatUnreadCounts);
+
+// Mark a selected conversation as read.
+router.post(
+  "/:worldId/chat/conversations/:conversationId/read",
+  markChatConversationRead,
+);
 
 // Conversation chooser and contacts.
 router.get("/:worldId/chat/conversations", getChatConversations);

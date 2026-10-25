@@ -123,6 +123,7 @@ function AppShell({ user, onLogout }) {
   // ----------------------------------------
 
   const [chatOpen, setChatOpen] = useState(false);
+  const [totalUnread, setTotalUnread] = useState(0);
 
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -256,6 +257,63 @@ function AppShell({ user, onLogout }) {
       socket.off("world:access-revoked", handleAccessRevoked);
 
       disconnectSocket();
+    };
+  }, [activeWorldId, status, hasCharacter]);
+
+  // ==========================================
+  // UNREAD NOTIFICATION COUNTS
+  // ==========================================
+
+  useEffect(() => {
+    if (!activeWorldId || status !== "ready" || !hasCharacter) {
+      return;
+    }
+
+    let active = true;
+
+    async function refreshUnread() {
+      try {
+        const response = await chatApi.getUnreadCounts(activeWorldId);
+
+        if (!active || !response?.success) return;
+
+        const count = Number(response.data?.total_unread ?? 0);
+
+        setTotalUnread(Number.isFinite(count) ? Math.max(0, count) : 0);
+      } catch (error) {
+        if (active) {
+          console.error("Unable to retrieve unread messages:", error);
+        }
+      }
+    }
+
+    function handleNewChatMessage() {
+      void refreshUnread();
+    }
+
+    // Refresh unread counts when messages arrive.
+    socket.on("chat:message-created", handleNewChatMessage);
+
+    socket.on("chat:conversation-message-created", handleNewChatMessage);
+
+    socket.on("connect", handleNewChatMessage);
+
+    // Also refresh periodically to catch messages
+    // or read-state changes missed while offline.
+    const interval = window.setInterval(refreshUnread, 8000);
+
+    void refreshUnread();
+
+    return () => {
+      active = false;
+
+      socket.off("chat:message-created", handleNewChatMessage);
+
+      socket.off("chat:conversation-message-created", handleNewChatMessage);
+
+      socket.off("connect", handleNewChatMessage);
+
+      window.clearInterval(interval);
     };
   }, [activeWorldId, status, hasCharacter]);
 
@@ -797,7 +855,18 @@ function AppShell({ user, onLogout }) {
               title="Imperial Communications"
               onClick={() => setChatOpen((open) => !open)}
             >
-              <MessageSquare size={18} strokeWidth={1.5} />
+              <span className="app-shell__chat-icon">
+                <MessageSquare size={18} strokeWidth={1.5} />
+
+                {totalUnread > 0 && (
+                  <span
+                    className="app-shell__chat-badge"
+                    aria-label={`${totalUnread} unread messages`}
+                  >
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </span>
+                )}
+              </span>
 
               <span>Communications</span>
             </button>

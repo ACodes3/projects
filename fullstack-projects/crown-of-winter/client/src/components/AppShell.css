@@ -997,3 +997,51 @@
     height: min(520px, calc(100% - 85px));
   }
 }
+
+/* ==========================================
+   IMPERIAL COMMUNICATIONS — NOTIFICATION
+   ========================================== */
+
+.app-shell__chat-launcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.app-shell__chat-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.app-shell__chat-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+
+  border-radius: 999px;
+  border: 2px solid #0b1b2b;
+
+  background: #9dcfe1;
+  color: #0b2030;
+
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: content-box;
+}
