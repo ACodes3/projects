@@ -1,6 +1,6 @@
 # FORGE — Frontend
 
-**FORGE Training & Nutrition** is a web-based fitness tracker for recording workouts, managing an exercise library, tracking meals and nutrition goals, reviewing progress, and planning training and recovery. This standalone repository contains the React frontend. Data is served by the FORGE backend API, which is maintained and run as a separate project.
+**FORGE Training & Nutrition** is a web-based fitness tracker for recording workouts, managing an exercise library, tracking meals and nutrition goals, reviewing progress, and planning training and recovery. This folder contains the React frontend; data is served by the separate FORGE backend API.
 
 ## Tech stack
 
@@ -15,14 +15,12 @@
 
 - Node.js and npm (use a current version compatible with Vite 8)
 - The FORGE backend running locally or at an accessible API URL
-- A configured PostgreSQL database on the **separate backend project** (not required inside this frontend repository)
+- A configured PostgreSQL database for the backend (see the backend README)
 
-## Repository structure
-
-This README is for the **frontend-only repository**. Its root contains the files originally found in `forge/client/`.
+## Project structure
 
 ```text
-forge-frontend/
+forge-full-stack/client/
 ├── public/                    # Static assets and images
 ├── src/
 │   ├── api/forgeApi.js        # Axios client and API helpers
@@ -36,23 +34,23 @@ forge-frontend/
 ├── .env                       # Local API configuration
 ├── index.html
 ├── vite.config.js
-├── package.json
-└── README.md
+└── package.json
 ```
 
 ## Getting started
 
 ### 1. Install dependencies
 
-From this frontend repository root:
+From the project root:
 
 ```bash
+cd client
 npm install
 ```
 
 ### 2. Configure the API address
 
-Create or update `.env` in this frontend repository:
+Create or update `client/.env`:
 
 ```dotenv
 VITE_API_URL=http://localhost:5000/api
@@ -60,9 +58,9 @@ VITE_API_URL=http://localhost:5000/api
 
 The API helper in `src/api/forgeApi.js` uses this variable and defaults to `http://localhost:5000/api` when it is not set. Restart the Vite dev server after changing `.env`.
 
-### 3. Start the separate backend
+### 3. Start the backend
 
-Start the FORGE backend from **its own repository** and verify that `http://localhost:5000/api/health` responds. PostgreSQL, the database schema, and seed data are configured in the backend repository, not here. If your backend runs on a different host or port, update `VITE_API_URL` accordingly.
+In another terminal, start the FORGE backend and make sure `http://localhost:5000/api/health` responds. The backend must be configured with PostgreSQL and its database scripts first.
 
 ### 4. Start the frontend
 
@@ -128,6 +126,10 @@ Deploy the generated `dist/` directory to a static hosting provider configured t
 - If API calls fail, verify the backend is running, the database seed has been applied, the `.env` API URL is correct, and backend CORS allows the frontend origin.
 - The current frontend package does not define an automated test script.
 
-## Separate backend project
+## Related documentation
 
-This frontend does not contain the server, database schema, or SQL seed files. Configure and run those in the standalone **FORGE backend repository**. You can deploy the repositories independently; just make sure `VITE_API_URL` points to the correct backend `/api` endpoint and that the backend's CORS configuration permits the frontend URL.
+See `../server/README.md` for backend setup, the database scripts, and the available API endpoints.
+
+## Copyright and license
+
+Copyright © 2026 **ACodes3**. All rights reserved in original work owned by the copyright holder. This source is shared for portfolio review, not as an open-source grant. Third-party dependencies and assets keep their own licenses. See the root `LICENSE` and `COPYRIGHT.md` if included.

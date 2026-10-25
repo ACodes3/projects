@@ -15,27 +15,25 @@ REST API for **FORGE Training & Nutrition**, a personal fitness tracker. Built w
 
 - Node.js and npm (use a current LTS release compatible with the dependencies)
 - A running PostgreSQL instance
-- A standalone backend repository containing `src/`, `db/`, and `package.json`
+- The `forge-full-stack/` project, including the `db/` and `server/` directories
 
-## Repository structure
-
-This README is intended for the **backend-only repository**. When splitting the original project, move the SQL scripts from `forge/db/` into this repository's `db/` directory, alongside the backend code from `forge/server/`.
+## Project structure
 
 ```text
-forge-backend/
+forge-full-stack/
 ├── db/
-│   ├── schema.sql                 # Database schema
+│   ├── schema.sql                 # Database schema and related SQL
 │   └── seed.sql                   # Demo user and development data
-├── src/
-│   ├── app.js                     # Express app, CORS, routes, 404 handler
-│   ├── server.js                  # Database check and HTTP startup
-│   ├── config/db.js               # PostgreSQL connection pool
-│   ├── controllers/               # Request handling and database logic
-│   ├── routes/                    # API route definitions
-│   └── middleware/                # Demo/single-user context
-├── .env                           # Local configuration (do not commit)
-├── package.json
-└── README.md
+└── server/
+    ├── src/
+    │   ├── app.js                 # Express app, CORS, routes, 404 handler
+    │   ├── server.js              # Database check and HTTP startup
+    │   ├── config/db.js           # PostgreSQL connection pool
+    │   ├── controllers/           # Request handling and database logic
+    │   ├── routes/                # API route definitions
+    │   └── middleware/            # Demo/single-user context
+    ├── .env                       # Local configuration (do not commit)
+    └── package.json
 ```
 
 ## Local setup
@@ -48,7 +46,7 @@ Create a database (for example, `forge`) using `psql` or your preferred PostgreS
 CREATE DATABASE forge;
 ```
 
-Run the SQL scripts **in order**, from the backend repository root:
+Run the SQL scripts **in order**, from the repository root:
 
 ```bash
 psql -U postgres -d forge -f db/schema.sql
@@ -60,12 +58,13 @@ Replace `postgres` with your PostgreSQL user and `forge` with your database name
 ### 2. Install packages
 
 ```bash
+cd server
 npm install
 ```
 
 ### 3. Configure environment variables
 
-Create or update `.env` in this backend repository:
+Create or update `server/.env`:
 
 ```dotenv
 PORT=5000
@@ -143,7 +142,7 @@ All routes below are relative to `http://localhost:5000`.
 | PUT | `/api/profile` | Save the user's profile |
 | GET | `/api/dashboard` | Fetch dashboard summary data |
 
-Most resources return JSON. See `src/controllers/` and `src/routes/` for the exact request and response fields.
+Most resources return JSON. See `src/controllers/` and the frontend's `src/api/forgeApi.js` for the exact request and response fields.
 
 ## Database design
 
@@ -157,8 +156,10 @@ The schema includes users, profiles, exercises, workouts, workout exercises, wor
 - **Scripts:** `npm run dev` and `npm start` are provided; the backend package does not define an automated test script.
 - **Missing routes:** Unknown endpoints return a JSON `404` response.
 
-## Connect a separate frontend repository
+## Run with the frontend
 
-The backend runs independently of the frontend. Point your separate frontend application's `VITE_API_URL` at `http://localhost:5000/api` (or the publicly accessible backend API address when deployed). The frontend does **not** have to share this repository or directory structure.
+Start this backend first, then run the frontend from `forge-full-stack/client` using `npm run dev`. The frontend defaults to calling `http://localhost:5000/api`, unless `VITE_API_URL` overrides it.
 
-The current CORS configuration allows `http://localhost:5173`. If the frontend is hosted elsewhere, change the allowed origin in `src/app.js` to match its URL before deployment.
+## Copyright and license
+
+Copyright © 2026 **ACodes3**. All rights reserved in original work owned by the copyright holder. The API source is displayed for portfolio review, without a general reuse grant. Dependencies keep their respective licenses. See the root `LICENSE` and `COPYRIGHT.md` if included.
