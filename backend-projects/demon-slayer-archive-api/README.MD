@@ -139,5 +139,3 @@ npm run test-two
 Copyright © 2026 ACodes3. All rights reserved in original code and original documentation, to the extent held by the author.
 
 This public repository is intended as a portfolio and educational showcase. Demon Slayer / Kimetsu no Yaiba, its characters, names, lore, and associated imagery belong to their respective rights holders. This is an unofficial fan-made project, not affiliated with or endorsed by those rights holders. Third-party assets and dependencies remain subject to their own rights and licenses.
-
-**Licensing note:** `server/package.json` currently declares `"license": "ISC"`. If you intend to reserve rights in the original code rather than grant an ISC license, reconcile that metadata (and any other license files/notices) before publication. A README notice does not override an existing license grant. Review image rights separately before distributing assets.
