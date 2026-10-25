@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   Crown,
   Castle,
-  Map,
+  Map as MapIcon,
   Users,
   FileText,
   Gem,
@@ -15,14 +15,31 @@ import {
   Send,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
 import { useWorldAccess } from "../context/WorldAccessContext";
 import { socket, connectSocket, disconnectSocket } from "../services/socket";
+import { chatApi } from "../services/chatApi";
+import ChatMessage from "../components/chat/ChatMessage";
 
 import "./AppShell.css";
+
+// Merges REST responses, history and Socket.IO events without duplicate messages.
+function mergeChatMessages(current, incoming) {
+  const byId = new Map(current.map((message) => [message.id, message]));
+  for (const message of incoming) {
+    if (message?.id) byId.set(message.id, message);
+  }
+  return [...byId.values()]
+    .sort(
+      (a, b) =>
+        new Date(a.created_at) - new Date(b.created_at) ||
+        String(a.id).localeCompare(String(b.id)),
+    )
+    .slice(-50);
+}
 
 const navigation = [
   {
@@ -43,7 +60,7 @@ const navigation = [
   {
     label: "War Table",
     path: "/war-table",
-    icon: Map,
+    icon: MapIcon,
   },
   {
     label: "Harbingers",
@@ -74,6 +91,17 @@ function AppShell({ user, onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [chatStatus, setChatStatus] = useState("loading");
+  const [chatError, setChatError] = useState("");
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const currentWorldIdRef = useRef(worldId?.toLowerCase());
+
+  useEffect(() => {
+    currentWorldIdRef.current = worldId?.toLowerCase();
+  }, [worldId]);
 
   // Character identity and permissions are shared across all world pages.
   const { status, character } = useWorldAccess();
@@ -150,8 +178,114 @@ function AppShell({ user, onLogout }) {
     };
   }, [worldId, status, hasCharacter]);
 
+  // Listen globally, including while the popup is closed.
+  useEffect(() => {
+    let active = true;
+    const normalizedWorldId = worldId?.toLowerCase();
+
+    async function loadHistory() {
+      try {
+        const response = await chatApi.getMessages(normalizedWorldId);
+        if (!active) return;
+        if (!response?.success || !Array.isArray(response.data?.messages)) {
+          throw new Error("Invalid chat history response.");
+        }
+        setMessages((current) =>
+          mergeChatMessages(current, response.data.messages),
+        );
+        setChatStatus("ready");
+        setChatError("");
+      } catch (error) {
+        if (!active) return;
+        setChatStatus("error");
+        setChatError(error?.message || "Unable to load messages.");
+      }
+    }
+
+    function handleNewMessage(payload) {
+      if (!active || payload?.worldId?.toLowerCase() !== normalizedWorldId)
+        return;
+      if (payload.message?.id) {
+        setMessages((current) => mergeChatMessages(current, [payload.message]));
+      }
+    }
+
+    // Restore messages missed during a temporary network disconnection.
+    function handleReconnect() {
+      void loadHistory();
+    }
+
+    socket.on("chat:message-created", handleNewMessage);
+    socket.on("connect", handleReconnect);
+
+    // Defer initialization so this effect does not synchronously trigger a render.
+    queueMicrotask(() => {
+      if (!active) return;
+
+      setMessages([]);
+      setChatError("");
+      setDraft("");
+
+      if (!normalizedWorldId || status !== "ready" || !hasCharacter) {
+        setChatStatus("unavailable");
+        return;
+      }
+
+      setChatStatus("loading");
+      void loadHistory();
+    });
+
+    return () => {
+      active = false;
+      socket.off("chat:message-created", handleNewMessage);
+      socket.off("connect", handleReconnect);
+    };
+  }, [worldId, status, hasCharacter]);
+
+  useEffect(() => {
+    if (chatOpen) messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [chatOpen, messages]);
+
+  async function handleSendMessage(event) {
+    event.preventDefault();
+    const content = draft.trim();
+    if (
+      !worldId ||
+      !hasCharacter ||
+      chatStatus !== "ready" ||
+      sending ||
+      !content
+    )
+      return;
+    if (content.length > 2000) {
+      setChatError("Messages must be 2000 characters or fewer.");
+      return;
+    }
+
+    const sendingWorldId = worldId.toLowerCase();
+    setSending(true);
+    setChatError("");
+    try {
+      const response = await chatApi.sendMessage(sendingWorldId, content);
+      if (!response?.success || !response.data?.message?.id) {
+        throw new Error(response?.message || "Unable to send message.");
+      }
+      if (currentWorldIdRef.current !== sendingWorldId) return;
+      // A socket event may have arrived first; merge by ID either way.
+      setMessages((current) =>
+        mergeChatMessages(current, [response.data.message]),
+      );
+      setDraft((current) => (current === content ? "" : current));
+    } catch (error) {
+      if (currentWorldIdRef.current === sendingWorldId) {
+        setChatError(error?.message || "Unable to send message.");
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
   // Chat is a global AppShell popup, not a route.
-  // This initial shell intentionally has no simulated messages or unread count.
   useEffect(() => {
     if (!chatOpen) return;
 
@@ -370,26 +504,79 @@ function AppShell({ user, onLogout }) {
               </button>
             </header>
 
-            <div className="app-shell__chat-empty" role="status">
-              <Snowflake size={30} strokeWidth={1} />
-              <strong>Imperial channel awaiting activation</strong>
-              <p>
-                World messages, character portraits and unread notifications
-                will appear here once the chat API is connected.
-              </p>
+            <div
+              className="app-shell__chat-messages"
+              role="log"
+              aria-label="World chat messages"
+              aria-live="polite"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                padding: "16px 14px",
+              }}
+            >
+              {chatStatus === "loading" && (
+                <p>Loading imperial communications...</p>
+              )}
+              {chatStatus === "unavailable" && (
+                <p>Active character access required.</p>
+              )}
+              {chatStatus === "ready" && messages.length === 0 && (
+                <p
+                  style={{
+                    color: "#86aabd",
+                    fontSize: 11,
+                    textAlign: "center",
+                  }}
+                >
+                  No messages yet. Begin the imperial correspondence.
+                </p>
+              )}
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={message.sender_user_id === user?.id}
+                />
+              ))}
+              <div ref={messagesEndRef} />
             </div>
 
-            <div className="app-shell__chat-compose">
+            {chatError && (
+              <p
+                role="alert"
+                style={{ color: "#f0aaa9", fontSize: 10, margin: "0 14px 8px" }}
+              >
+                {chatError}
+              </p>
+            )}
+
+            <form
+              className="app-shell__chat-compose"
+              onSubmit={handleSendMessage}
+            >
               <input
                 type="text"
-                placeholder="Messaging will be available soon..."
-                aria-label="Message composer (not available yet)"
-                disabled
+                placeholder={
+                  chatStatus === "ready"
+                    ? "Transmit a message..."
+                    : "Communications unavailable"
+                }
+                aria-label="Message"
+                value={draft}
+                maxLength={2000}
+                onChange={(event) => setDraft(event.target.value)}
+                disabled={chatStatus !== "ready" || sending}
               />
-              <button type="button" disabled aria-label="Send message">
+              <button
+                type="submit"
+                aria-label="Send message"
+                disabled={chatStatus !== "ready" || sending || !draft.trim()}
+              >
                 <Send size={17} />
               </button>
-            </div>
+            </form>
           </section>
         )}
       </section>
