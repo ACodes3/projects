@@ -21,7 +21,7 @@ This repository serves as a **software engineering portfolio**, showcasing work 
 
 A character and world archive developed as a full-stack web application. The project brings together a React frontend, an Express REST API, PostgreSQL, API documentation, input validation, and automated backend tests.
 
-### Crown of Winter
+### [Crown of Winter](fullstack-projects/crown-of-winter/)
 
 A multiplayer, fan-inspired strategy application prototype featuring character-based access, PostgreSQL persistence, an interactive War Table, and shared and private real-time communication using Socket.IO.
 
