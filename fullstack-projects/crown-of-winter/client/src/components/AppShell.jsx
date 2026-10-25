@@ -125,6 +125,9 @@ function AppShell({ user, onLogout }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
 
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [unreadRefreshKey, setUnreadRefreshKey] = useState(0);
+
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
 
@@ -280,6 +283,17 @@ function AppShell({ user, onLogout }) {
         const count = Number(response.data?.total_unread ?? 0);
 
         setTotalUnread(Number.isFinite(count) ? Math.max(0, count) : 0);
+        const counts = {};
+
+        for (const item of response.data?.unread_counts ?? []) {
+          counts[item.conversation_id] = Number(item.unread_count) > 0 ? 1 : 0;
+        }
+
+        setUnreadCounts(counts);
+
+        setTotalUnread(
+          Object.values(counts).filter((count) => count > 0).length,
+        );
       } catch (error) {
         if (active) {
           console.error("Unable to retrieve unread messages:", error);
@@ -287,8 +301,25 @@ function AppShell({ user, onLogout }) {
       }
     }
 
-    function handleNewChatMessage() {
-      void refreshUnread();
+    async function handleNewChatMessage(payload) {
+      const incomingConversationId =
+        payload?.conversationId ?? payload?.message?.conversation_id;
+
+      const currentlyOpenId = selectedConversationRef.current;
+
+      if (
+        incomingConversationId &&
+        incomingConversationId === currentlyOpenId &&
+        worldIdRef.current === activeWorldId
+      ) {
+        try {
+          await chatApi.markConversationRead(activeWorldId, currentlyOpenId);
+        } catch (error) {
+          console.error("Unable to mark incoming message as read:", error);
+        }
+      }
+
+      await refreshUnread();
     }
 
     // Refresh unread counts when messages arrive.
@@ -315,7 +346,7 @@ function AppShell({ user, onLogout }) {
 
       window.clearInterval(interval);
     };
-  }, [activeWorldId, status, hasCharacter]);
+  }, [activeWorldId, status, hasCharacter, unreadRefreshKey]);
 
   // ==========================================
   // LOAD CONVERSATIONS AND CONTACTS
@@ -511,10 +542,6 @@ function AppShell({ user, onLogout }) {
     // Temporary polling until private
     // Socket.IO delivery is implemented.
 
-    const interval = window.setInterval(() => {
-      void loadMessages();
-    }, 3000);
-
     return () => {
       active = false;
 
@@ -526,8 +553,6 @@ function AppShell({ user, onLogout }) {
       );
 
       socket.off("connect", handleReconnect);
-
-      window.clearInterval(interval);
     };
   }, [
     activeWorldId,
@@ -554,17 +579,36 @@ function AppShell({ user, onLogout }) {
   // ==========================================
 
   function openConversation(conversation) {
-    if (!conversation?.id) {
+    if (!conversation?.id || !activeWorldId) {
       return;
     }
 
     setSelectedConversation(conversation);
-
     selectedConversationRef.current = conversation.id;
 
     setMessages([]);
     setDraft("");
     setChatError("");
+
+    const targetWorldId = activeWorldId;
+    const targetConversationId = conversation.id;
+
+    // The player has opened this conversation,
+    // so advance their read position in PostgreSQL.
+    void chatApi
+      .markConversationRead(targetWorldId, targetConversationId)
+      .then((response) => {
+        if (!response?.success) {
+          throw new Error("Unable to mark conversation as read.");
+        }
+
+        if (worldIdRef.current === targetWorldId) {
+          setUnreadRefreshKey((value) => value + 1);
+        }
+      })
+      .catch((error) => {
+        console.error("Unable to mark correspondence as read:", error);
+      });
   }
 
   // ==========================================
@@ -1018,6 +1062,7 @@ function AppShell({ user, onLogout }) {
                 <ChatConversationList
                   conversations={conversations}
                   contacts={contacts}
+                  unreadCounts={unreadCounts}
                   loading={listLoading}
                   error={listError}
                   creatingContactId={creatingContactId}

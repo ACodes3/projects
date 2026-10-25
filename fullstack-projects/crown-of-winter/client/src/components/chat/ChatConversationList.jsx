@@ -72,6 +72,23 @@ const ui = {
     marginTop: 3,
   },
   status: { color: "#9bb7c6", fontSize: 11, padding: "12px 6px", margin: 0 },
+  unreadBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    minWidth: 19,
+    height: 19,
+    padding: "0 5px",
+    borderRadius: 999,
+    background: "#9dcfe1",
+    color: "#0b2030",
+    fontFamily: "Arial, sans-serif",
+    fontSize: 10,
+    fontWeight: 700,
+    lineHeight: 1,
+    boxSizing: "border-box",
+  },
 };
 
 function CharacterAvatar({ slug, portraitUrl, world = false }) {
@@ -95,12 +112,28 @@ function CharacterAvatar({ slug, portraitUrl, world = false }) {
   );
 }
 
+function ConversationUnreadBadge({ count }) {
+  const unread = Number(count);
+  if (!Number.isFinite(unread) || unread <= 0) return null;
+
+  return (
+    <span
+      style={ui.unreadBadge}
+      aria-label={`${unread} unread messages`}
+      title={`${unread} unread messages`}
+    >
+      {unread > 99 ? "99+" : unread}
+    </span>
+  );
+}
+
 /**
  * Conversation picker for Imperial Communications.
  *
  * Props:
  * - conversations: GET /chat/conversations -> data.conversations
  * - contacts: GET /chat/contacts -> data.contacts
+ * - unreadCounts: conversation ID -> unread message count
  * - loading: whether the parent is loading conversations/contacts
  * - error: optional load/create error string
  * - creatingContactId: world_character_id being opened (optional)
@@ -113,6 +146,7 @@ function CharacterAvatar({ slug, portraitUrl, world = false }) {
 export default function ChatConversationList({
   conversations = [],
   contacts = [],
+  unreadCounts = {},
   loading = false,
   error = "",
   creatingContactId = null,
@@ -257,6 +291,9 @@ export default function ChatConversationList({
                       "Common chat for everyone in this world"}
                   </span>
                 </span>
+                <ConversationUnreadBadge
+                  count={unreadCounts[worldConversation.id] ?? 0}
+                />
               </button>
             )}
           <p style={ui.heading}>PRIVATE CORRESPONDENCES</p>
@@ -286,6 +323,9 @@ export default function ChatConversationList({
                   {conversation.last_message_content || "No messages yet"}
                 </span>
               </span>
+              <ConversationUnreadBadge
+                count={unreadCounts[conversation.id] ?? 0}
+              />
             </button>
           ))}
           <button
