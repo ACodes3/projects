@@ -15,12 +15,12 @@ REST API for **FORGE Training & Nutrition**, a personal fitness tracker. Built w
 
 - Node.js and npm (use a current LTS release compatible with the dependencies)
 - A running PostgreSQL instance
-- The `forge/` project, including the `db/` and `server/` directories
+- The `forge-full-stack/` project, including the `db/` and `server/` directories
 
 ## Project structure
 
 ```text
-forge/
+forge-full-stack/
 ├── db/
 │   ├── schema.sql                 # Database schema and related SQL
 │   └── seed.sql                   # Demo user and development data
@@ -158,4 +158,8 @@ The schema includes users, profiles, exercises, workouts, workout exercises, wor
 
 ## Run with the frontend
 
-Start this backend first, then run the frontend from `forge/client` using `npm run dev`. The frontend defaults to calling `http://localhost:5000/api`, unless `VITE_API_URL` overrides it.
+Start this backend first, then run the frontend from `forge-full-stack/client` using `npm run dev`. The frontend defaults to calling `http://localhost:5000/api`, unless `VITE_API_URL` overrides it.
+
+## Copyright and license
+
+Copyright © 2026 **ACodes3**. All rights reserved in original work owned by the copyright holder. The API source is displayed for portfolio review, without a general reuse grant. Dependencies keep their respective licenses. See the root `LICENSE` and `COPYRIGHT.md` if included.

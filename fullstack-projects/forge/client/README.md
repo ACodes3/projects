@@ -20,7 +20,7 @@
 ## Project structure
 
 ```text
-forge/client/
+forge-full-stack/client/
 ├── public/                    # Static assets and images
 ├── src/
 │   ├── api/forgeApi.js        # Axios client and API helpers
@@ -129,3 +129,7 @@ Deploy the generated `dist/` directory to a static hosting provider configured t
 ## Related documentation
 
 See `../server/README.md` for backend setup, the database scripts, and the available API endpoints.
+
+## Copyright and license
+
+Copyright © 2026 **ACodes3**. All rights reserved in original work owned by the copyright holder. This source is shared for portfolio review, not as an open-source grant. Third-party dependencies and assets keep their own licenses. See the root `LICENSE` and `COPYRIGHT.md` if included.
