@@ -248,6 +248,93 @@ async function broadcastWarBoardMove({ worldId, piece }) {
 app.set("broadcastWarBoardMove", broadcastWarBoardMove);
 
 // ==========================================
+// SECURE IMPERIAL COMMUNICATIONS BROADCASTER
+// ==========================================
+
+// Invoked after chatController commits a new
+// chat_messages row to PostgreSQL.
+// This broadcasts only; it does not write messages.
+async function broadcastChatMessage({ worldId, message }) {
+  if (typeof worldId !== "string" || !UUID_PATTERN.test(worldId)) {
+    throw new Error("Invalid chat broadcast world ID.");
+  }
+
+  if (
+    !message ||
+    typeof message !== "object" ||
+    String(message.world_id).toLowerCase() !== worldId.toLowerCase()
+  ) {
+    throw new Error("Chat message world does not match broadcast world.");
+  }
+
+  const normalizedWorldId = worldId.toLowerCase();
+  const roomName = `world:${normalizedWorldId}`;
+  const sockets = await io.in(roomName).fetchSockets();
+  let delivered = 0;
+
+  for (const socket of sockets) {
+    if (socket.data.worldId !== normalizedWorldId) {
+      continue;
+    }
+
+    try {
+      // A world room alone does not authorize message delivery.
+      // Recheck each recipient's session and world access.
+      const session = await getActiveSession(socket.data.tokenHash);
+
+      if (!session || session.id !== socket.data.user?.id) {
+        socket.disconnect(true);
+        continue;
+      }
+
+      const character = await getActiveWorldCharacter(
+        normalizedWorldId,
+        session.id,
+      );
+
+      if (!character) {
+        await socket.leave(roomName);
+        delete socket.data.worldId;
+        delete socket.data.character;
+
+        socket.emit("world:access-revoked", {
+          worldId: normalizedWorldId,
+          message: "World access is no longer available.",
+        });
+        continue;
+      }
+
+      // Room or world might have changed during the queries.
+      if (
+        !socket.connected ||
+        socket.data.worldId !== normalizedWorldId ||
+        !socket.rooms.has(roomName)
+      ) {
+        continue;
+      }
+
+      socket.emit("chat:message-created", {
+        worldId: normalizedWorldId,
+        message,
+      });
+      delivered += 1;
+    } catch (error) {
+      console.error("Chat recipient validation failed:", error);
+      // Fail closed if access cannot be verified.
+      await socket.leave(roomName);
+      delete socket.data.worldId;
+      delete socket.data.character;
+    }
+  }
+
+  console.log(
+    `[Socket.IO] Chat message in ${normalizedWorldId}: ${message.id} (${delivered} recipients)`,
+  );
+}
+
+app.set("broadcastChatMessage", broadcastChatMessage);
+
+// ==========================================
 // AUTHENTICATED SOCKET CONNECTIONS
 // ==========================================
 
@@ -390,6 +477,8 @@ async function startServer() {
       console.log("Socket.IO ready for authenticated connections.");
 
       console.log("Secure War Table broadcasting initialized.");
+
+      console.log("Secure Imperial Communications broadcasting initialized.");
     });
   } catch (error) {
     console.error("Failed to start server:", error.message);

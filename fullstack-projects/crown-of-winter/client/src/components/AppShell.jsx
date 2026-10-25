@@ -20,6 +20,7 @@ import { LogOut } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { authApi } from "../services/api";
 import { useWorldAccess } from "../context/WorldAccessContext";
+import { socket, connectSocket, disconnectSocket } from "../services/socket";
 
 import "./AppShell.css";
 
@@ -76,6 +77,7 @@ function AppShell({ user, onLogout }) {
 
   // Character identity and permissions are shared across all world pages.
   const { status, character } = useWorldAccess();
+  const hasCharacter = Boolean(character);
 
   const roleNames = {
     SOVEREIGN: "Sovereign",
@@ -91,6 +93,62 @@ function AppShell({ user, onLogout }) {
   const roleLabel = character?.roles
     ?.map((code) => roleNames[code] || code)
     .join(" · ");
+
+  // Keep one authenticated Socket.IO connection for the entire active world.
+  // Page components subscribe to events, but must NOT disconnect this socket.
+  useEffect(() => {
+    if (!worldId || status !== "ready" || !hasCharacter) {
+      disconnectSocket();
+      return;
+    }
+
+    const activeWorldId = worldId.toLowerCase();
+    let disposed = false;
+
+    function joinWorld() {
+      if (disposed || !socket.connected) return;
+
+      socket.emit("world:join", activeWorldId, (response) => {
+        if (disposed) return;
+        if (!response?.success) {
+          console.warn(
+            "Imperial Network: unable to join world",
+            response?.message,
+          );
+        }
+      });
+    }
+
+    function handleConnectError(error) {
+      if (!disposed) {
+        console.warn("Imperial Network connection error:", error.message);
+      }
+    }
+
+    function handleAccessRevoked(payload) {
+      if (payload?.worldId?.toLowerCase() === activeWorldId) {
+        disconnectSocket();
+        setChatOpen(false);
+      }
+    }
+
+    socket.on("connect", joinWorld);
+    socket.on("connect_error", handleConnectError);
+    socket.on("world:access-revoked", handleAccessRevoked);
+
+    connectSocket();
+    if (socket.connected) joinWorld();
+
+    return () => {
+      disposed = true;
+      socket.off("connect", joinWorld);
+      socket.off("connect_error", handleConnectError);
+      socket.off("world:access-revoked", handleAccessRevoked);
+      // Disconnect on world switch or when AppShell unmounts (sign-out).
+      // The War Table will be updated next to stop managing this lifecycle.
+      disconnectSocket();
+    };
+  }, [worldId, status, hasCharacter]);
 
   // Chat is a global AppShell popup, not a route.
   // This initial shell intentionally has no simulated messages or unread count.
@@ -113,6 +171,7 @@ function AppShell({ user, onLogout }) {
 
     try {
       await authApi.logout();
+      disconnectSocket();
       setChatOpen(false);
       onLogout();
       navigate("/", { replace: true });

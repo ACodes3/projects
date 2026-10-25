@@ -1,4 +1,3 @@
-
 import "dotenv/config";
 
 import express from "express";
@@ -13,10 +12,9 @@ import invitationRoutes from "./src/routes/invitationRoutes.js";
 import characterRoutes from "./src/routes/characterRoutes.js";
 import accessRoutes from "./src/routes/accessRoutes.js";
 import auditRoutes from "./src/routes/auditRoutes.js";
+import chatRoutes from "./src/routes/chatRoutes.js";
 
-import {
-  csrfProtection,
-} from "./src/middleware/csrfProtection.js";
+import { csrfProtection } from "./src/middleware/csrfProtection.js";
 
 const app = express();
 
@@ -30,7 +28,7 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json({ limit: "100kb" }));
@@ -101,6 +99,12 @@ app.use("/api/worlds", auditRoutes);
 // -----------------------------------------
 
 app.use("/api/worlds", warBoardRoutes);
+
+// -----------------------------------------
+// Imperial Communications
+// -----------------------------------------
+
+app.use("/api/worlds", chatRoutes);
 
 // -----------------------------------------
 // Handle unknown routes

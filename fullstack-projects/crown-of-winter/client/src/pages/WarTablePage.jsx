@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams } from "react-router-dom";
 import { warBoardApi } from "../services/warBoardApi";
-import { socket, connectSocket, disconnectSocket } from "../services/socket";
+import { socket } from "../services/socket";
 import { useWorldAccess } from "../context/WorldAccessContext";
 import {
   DndContext,
@@ -36,6 +36,18 @@ import {
 } from "lucide-react";
 
 import "./WarTablePage.css";
+
+function subscribeToSocketConnection(onChange) {
+  socket.on("connect", onChange);
+  socket.on("disconnect", onChange);
+  socket.on("connect_error", onChange);
+
+  return () => {
+    socket.off("connect", onChange);
+    socket.off("disconnect", onChange);
+    socket.off("connect_error", onChange);
+  };
+}
 
 const regions = [
   {
@@ -312,7 +324,11 @@ function WarTablePage() {
   );
   const [boardStatus, setBoardStatus] = useState("loading");
   const [boardError, setBoardError] = useState("");
-  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const realtimeConnected = useSyncExternalStore(
+    subscribeToSocketConnection,
+    () => accessStatus === "ready" && socket.connected,
+    () => false,
+  );
 
   // Synchronous flags protect active drags/saves from polling responses.
   const busyRef = useRef(false);
@@ -387,25 +403,10 @@ function WarTablePage() {
     let active = true;
     const normalizedWorldId = worldId.toLowerCase();
 
-    function joinWorld() {
-      if (!socket.connected) return;
-
-      socket.emit("world:join", normalizedWorldId, (response) => {
-        if (!active) return;
-        setRealtimeConnected(response?.success === true);
-        if (!response?.success) {
-          console.warn("War Table world room unavailable:", response?.message);
-        }
-      });
-    }
-
-    function handleDisconnect() {
-      if (active) setRealtimeConnected(false);
-    }
-
+    // AppShell owns the connection and joins the active world.
+    // This page only observes it and listens for board movements.
     function handleConnectError(error) {
       if (!active) return;
-      setRealtimeConnected(false);
       console.warn("War Table real-time connection failed:", error.message);
     }
 
@@ -450,29 +451,20 @@ function WarTablePage() {
 
     function handleAccessRevoked(payload) {
       if (payload?.worldId !== normalizedWorldId || !active) return;
-      setRealtimeConnected(false);
       setBoardError("Your real-time access to this world was revoked.");
     }
 
-    socket.on("connect", joinWorld);
-    socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
     socket.on("war-board:piece-moved", handlePieceMoved);
     socket.on("world:access-revoked", handleAccessRevoked);
 
-    if (socket.connected) joinWorld();
-    else connectSocket();
-
     return () => {
       active = false;
-      socket.off("connect", joinWorld);
-      socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleConnectError);
       socket.off("war-board:piece-moved", handlePieceMoved);
       socket.off("world:access-revoked", handleAccessRevoked);
-      // This page currently owns the shared socket connection.
-      // When chat uses it too, move connection ownership to an app-wide provider.
-      disconnectSocket();
+      // Do NOT disconnect here: AppShell owns the shared socket,
+      // which Imperial Communications needs on every page.
     };
   }, [worldId, accessStatus]);
 
