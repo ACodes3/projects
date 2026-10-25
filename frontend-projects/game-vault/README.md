@@ -1,132 +1,97 @@
 # Game Vault
 
-Game Vault is a frontend gaming library application built with React and Vite.
+**A frontend-only gaming library and launcher UI built with React and Vite.**
 
-The project is designed as a desktop game launcher interface inspired by modern game platforms. It includes a game library, dedicated play pages, a store, community pages, user profile UI, favorites, achievements, playtime information, and locally stored dummy game data.
+Game Vault is a portfolio project exploring the interface of a desktop-style gaming platform in the browser. It brings together a home dashboard, searchable game library, game details, store catalogue, community feed, and simulated launch screens in a cohesive dark-themed application.
 
-No external game API is required. The application uses local JSON data and Axios to simulate API requests.
+> **Project scope:** This is an interactive frontend demonstration, not a functional game launcher or commercial storefront. Games, profile information, achievements, social activity, and store content are sample data. There is no backend, user authentication, payment processing, or real game installation/launching.
 
 ## Features
 
-- Game library with selectable games
-- Favorites section
-- Search functionality
-- Dedicated game details view
-- Individual play pages
-- Simulated game launching screen
-- Achievement progress
-- Friends activity UI
-- Game add-ons and update information
-- Store page
-- Community page
-- Home dashboard
-- Responsive navigation
-- User profile and avatar
-- React Router navigation
-- Local JSON data fetched with Axios
-- Responsive dark gaming interface
+- **Home dashboard:** Featured and recently played game presentation.
+- **Game library:** Search games by title, browse the full collection, and view favorites as defined in the sample dataset.
+- **Game details:** Explore descriptions, genres, platforms, achievements, playtime, add-ons, updates, and related information.
+- **Play page:** Navigate to an individual game and trigger a **simulated** launch overlay.
+- **Store:** Browse and search a mock game catalogue with purchase-style UI.
+- **Community:** View example player posts and social activity generated from the local game dataset.
+- **Navigation:** Dedicated pages using React Router, reusable layout components, and responsive styling.
+- **Local data loading:** Axios fetches game records from a static JSON file served by Vite.
 
-## Tech Stack
+Some interface controls are visual placeholders rather than fully implemented functionality. For example, favorites originate in the dataset rather than being persistently toggleable.
 
-- React
-- Vite
-- JavaScript
-- React Router
-- Axios
-- Lucide React
-- CSS
-- Local JSON data
+## Technology Stack
+
+| Area | Technology |
+| --- | --- |
+| UI | React 19, JavaScript, CSS |
+| Build tooling | Vite 8 |
+| Routing | React Router 7 |
+| Data requests | Axios |
+| Iconography | Lucide React |
+| Data source | Static `public/data/games.json` |
+| Code quality | ESLint and React Hooks lint rules |
+
+## Getting Started
+
+**Prerequisites:** Node.js and npm compatible with the installed Vite version. Check the supported Node.js version in the [Vite documentation](https://vite.dev/guide/).
+
+From the `game-vault` project directory:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite in the terminal (typically `http://localhost:5173`).
+
+Additional scripts:
+
+```bash
+npm run build    # Production build into dist/
+npm run preview  # Preview the production build locally
+npm run lint     # Run ESLint
+```
+
+No `.env` file, API key, database, or separate backend service is required for the code supplied with this project.
+
+## Application Routes
+
+Defined in `src/main.jsx`:
+
+| Route | Screen |
+| --- | --- |
+| `/` | Home dashboard |
+| `/library` | Game library |
+| `/store` | Mock store |
+| `/community` | Community demonstration |
+| `/play/:gameId` | Individual game page and simulated launch |
 
 ## Project Structure
 
 ```text
 game-vault/
 ├── public/
-│   ├── data/
-│   │   └── games.json
-│   └── images/
-│       ├── avatar.png
-│       └── games/
-│           ├── neon-drift.png
-│           ├── achen-crown.png
-│           ├── void-harvest.png
-│           ├── scyforce.png
-│           ├── moonlit-vale.png
-│           └── rift-raiders.png
-│
+│   ├── data/games.json       # Sample game catalogue
+│   ├── images/               # Locally bundled imagery
+│   ├── favicon.svg
+│   └── icons.svg
 ├── src/
-│   ├── components/
-│   │   ├── Footer.jsx
-│   │   ├── GameDetails.jsx
-│   │   ├── GameListItem.jsx
-│   │   ├── Navbar.jsx
-│   │   └── Sidebar.jsx
-│   │
-│   ├── pages/
-│   │   ├── CommunityPage.jsx
-│   │   ├── HomePage.jsx
-│   │   ├── PlayPage.jsx
-│   │   ├── PlayPageWrapper.jsx
-│   │   └── StorePage.jsx
-│   │
+│   ├── components/           # Navbar, Sidebar, cards, details, footer
+│   ├── pages/                # Home, Store, Community, Play screens
 │   ├── services/
-│   │   └── gameService.js
-│   │
-│   ├── App.jsx
-│   ├── index.css
-│   └── main.jsx
-│
+│   │   └── gameService.js    # Axios-based static JSON fetch
+│   ├── assets/               # Frontend assets
+│   ├── App.jsx               # Library interface
+│   ├── main.jsx              # Route definitions and React root
+│   └── index.css             # Global styles
+├── index.html
 ├── package.json
 └── vite.config.js
 ```
 
-## Installation
+## Data Flow
 
-Clone the repository:
-
-```bash
-git clone https://github.com/ACodes3/projects.git
-cd frontend-projects
-cd game-vault
-```
-
-Enter the project directory:
-
-```bash
-cd game-vault
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Vite will display the local development URL in the terminal.
-
-## Dependencies
-
-The project uses the following main dependencies:
-
-```bash
-npm install axios react-router-dom lucide-react
-```
-
-## Local Data
-
-Game data is stored inside:
-
-```text
-public/data/games.json
-```
-
-The application fetches this file using Axios:
+The app loads sample records through `getGames()` in `src/services/gameService.js`:
 
 ```js
 import axios from "axios";
@@ -137,149 +102,19 @@ export const getGames = async () => {
 };
 ```
 
-This allows the frontend to behave similarly to an application consuming a real REST API while remaining completely frontend-only.
+Vite serves `public/data/games.json` at `/data/games.json`. The library and store filter the resulting data on the client. There is no database or write API: changes to the sample catalogue are made by editing the JSON file.
 
-## Routing
+## Purpose and Limitations
 
-The application uses React Router.
+This project demonstrates React component composition, client-side routing, asynchronous data loading, conditional rendering, search/filter state, and detailed UI implementation. It does **not** provide account management, persistent favorites, real purchases, online community interactions, or executable game integration.
 
-Main routes:
+Potential future enhancements include persistent user preferences, richer catalogue filtering, accessibility improvements, and integration with a real backend.
 
-```text
-/                  Home
-/store             Store
-/community         Community
-/library           Game Library
-/play/:gameId      Individual game play page
-```
+## Copyright and Licensing
 
-Routing is configured in `main.jsx`.
+Copyright © 2026 ACodes3. All rights reserved **for the author's original code and original content**.
 
-## Game Images
+Source code is publicly available for portfolio review. Unless explicitly stated otherwise, no general license is granted to copy, modify, redistribute, or commercially exploit the author's original work, except where allowed by applicable law.
+Third-party software, icons, images, fonts, trademarks, and other assets remain subject to their respective owners' terms. **The provenance and redistribution rights of bundled image/SVG assets should be reviewed before reuse or commercial distribution.**
 
-Game artwork is stored locally in:
-
-```text
-public/images/games/
-```
-
-Each game object in `games.json` references its image using a public path:
-
-```json
-{
-  "title": "Neon Drift",
-  "image": "/images/games/neon-drift.png"
-}
-```
-
-Because Vite serves everything inside `public` from the root URL, `/public` should not be included in image paths.
-
-## Example Game Data
-
-```json
-{
-  "id": 1,
-  "title": "Neon Drift",
-  "genre": ["Racing", "Arcade"],
-  "platforms": ["PC", "PlayStation", "Xbox"],
-  "rating": 9.1,
-  "releaseYear": 2025,
-  "developer": "Voltage Street Studios",
-  "favorite": true,
-  "status": "Installed",
-  "playTime": "18 h 42 min",
-  "lastPlayed": "Today",
-  "image": "/images/games/neon-drift.png",
-  "description": "A high-speed futuristic street racing game set in a neon megacity.",
-  "achievements": {
-    "unlocked": 46,
-    "total": 78
-  }
-}
-```
-
-## Pages
-
-### Home
-
-The home page acts as the main launcher dashboard and includes featured games and recently played titles.
-
-### Library
-
-The library contains:
-
-- Favorites
-- All games
-- Search
-- Selected game details
-- Playtime
-- Updates
-- Add-ons
-- Friends activity
-- Achievements
-
-### Play Page
-
-Each game has its own route:
-
-```text
-/play/:gameId
-```
-
-The play page displays game information and includes a simulated launch process.
-
-### Store
-
-The store displays available games in a browsable layout with search and purchase-style controls.
-
-### Community
-
-The community page contains mock player posts, activity, likes, comments, and online friends.
-
-## Design
-
-Game Vault uses a dark blue gaming launcher aesthetic with:
-
-- Compact desktop-style navigation
-- Game artwork
-- Dark panels
-- Blue accent colors
-- Achievement cards
-- Friend avatars
-- Responsive layouts
-- Gaming-focused UI elements
-
-## Notes
-
-This project currently uses dummy data and does not include a backend, authentication system, real payments, or actual game launching functionality.
-
-The goal of the project is to practice frontend development concepts such as:
-
-- Component architecture
-- React state
-- Routing
-- Reusable UI
-- Asynchronous data fetching
-- Filtering
-- Responsive design
-- Application-style layouts
-
-## Future Improvements
-
-Possible additions include:
-
-- Working favorite toggles
-- Persistent favorites with `localStorage`
-- Cart functionality
-- Game filters and sorting
-- Grid/list switching
-- User authentication
-- Reviews
-- Notifications
-- Profile customization
-- Backend integration
-- Real database storage
-
-## License
-
-This project is intended for learning and portfolio purposes.
+The application is a demonstration project and is not affiliated with any real game publisher or storefront.
