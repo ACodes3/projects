@@ -1,24 +1,76 @@
-
 import { apiRequest } from "./api";
 
+function worldChatPath(worldId) {
+  return `/api/worlds/${encodeURIComponent(worldId)}/chat`;
+}
+
 export const chatApi = {
-  // GET — Retrieve the latest 50 messages.
-  // Requires active world membership and character assignment.
+  // ==========================================
+  // LEGACY COMMON CHAT
+  // Keep these until AppShell is fully migrated.
+  // ==========================================
+
   getMessages(worldId) {
+    return apiRequest(`${worldChatPath(worldId)}/messages`);
+  },
+
+  sendMessage(worldId, content) {
+    return apiRequest(`${worldChatPath(worldId)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  // ==========================================
+  // CONVERSATION LIST
+  // ==========================================
+
+  getConversations(worldId) {
+    return apiRequest(`${worldChatPath(worldId)}/conversations`);
+  },
+
+  // ==========================================
+  // AVAILABLE PLAYERS
+  // ==========================================
+
+  getContacts(worldId) {
+    return apiRequest(`${worldChatPath(worldId)}/contacts`);
+  },
+
+  // ==========================================
+  // CREATE OR OPEN PRIVATE CONVERSATION
+  // ==========================================
+
+  createDirectConversation(worldId, recipientWorldCharacterId) {
+    return apiRequest(`${worldChatPath(worldId)}/conversations`, {
+      method: "POST",
+      body: JSON.stringify({
+        recipient_world_character_id: recipientWorldCharacterId,
+      }),
+    });
+  },
+
+  // ==========================================
+  // GET SELECTED CONVERSATION MESSAGES
+  // ==========================================
+
+  getConversationMessages(worldId, conversationId) {
     return apiRequest(
-      `/api/worlds/${encodeURIComponent(worldId)}/chat/messages`
+      `${worldChatPath(worldId)}/conversations/${encodeURIComponent(conversationId)}/messages`,
     );
   },
 
-  // POST — Send a message as the authenticated character.
-  // The backend determines the sender's identity.
-  sendMessage(worldId, content) {
+  // ==========================================
+  // SEND MESSAGE TO SELECTED CONVERSATION
+  // ==========================================
+
+  sendConversationMessage(worldId, conversationId, content) {
     return apiRequest(
-      `/api/worlds/${encodeURIComponent(worldId)}/chat/messages`,
+      `${worldChatPath(worldId)}/conversations/${encodeURIComponent(conversationId)}/messages`,
       {
         method: "POST",
         body: JSON.stringify({ content }),
-      }
+      },
     );
   },
 };
