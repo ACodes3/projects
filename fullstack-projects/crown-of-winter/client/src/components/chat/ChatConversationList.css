@@ -1,0 +1,249 @@
+/* Imperial Communications — conversation selector */
+.imperial-conversations {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 0;
+  min-width: 0;
+  color: #dbeaf3;
+}
+
+.imperial-conversations__search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  margin-bottom: 3px;
+  border: 1px solid #2a4b60;
+  border-radius: 9px;
+  background: #102638;
+  color: #8aafc3;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+.imperial-conversations__search:focus-within {
+  border-color: #6c9db8;
+  background: #122d43;
+}
+.imperial-conversations__search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  color: #e7f4f9;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 12px;
+}
+.imperial-conversations__search input::placeholder {
+  color: #7f9eaf;
+}
+.imperial-conversations__search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.imperial-conversations__heading {
+  margin: 14px 4px 4px;
+  color: #8bb8d0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.115em;
+  line-height: 1.5;
+}
+.imperial-conversations__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-width: 0;
+  min-height: 63px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #dcecf5;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+.imperial-conversations__row:hover,
+.imperial-conversations__row:focus-visible {
+  background: #19374c;
+  border-color: #365e77;
+}
+.imperial-conversations__row:focus-visible,
+.imperial-conversations__back:focus-visible,
+.imperial-conversations__new:focus-visible {
+  outline: 2px solid #a1d5ec;
+  outline-offset: 2px;
+}
+.imperial-conversations__row--world {
+  background: #163248;
+  border-color: #2f5268;
+}
+.imperial-conversations__row--unread {
+  background: #152f43;
+  border-color: #345a72;
+  box-shadow: inset 3px 0 0 #8bc8e0;
+}
+.imperial-conversations__row--world.imperial-conversations__row--unread {
+  background: #1a3a50;
+}
+.imperial-conversations__row:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.imperial-conversations__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #1a415b;
+  color: #b5dff2;
+}
+.imperial-conversations__avatar--world {
+  background: #204c68;
+}
+.imperial-conversations__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.imperial-conversations__row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.imperial-conversations__name {
+  overflow: hidden;
+  color: #e3f0f7;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imperial-conversations__preview {
+  overflow: hidden;
+  color: #88a9bd;
+  font-size: 10.5px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imperial-conversations__row--unread .imperial-conversations__name {
+  color: #f3faff;
+  font-weight: 750;
+}
+.imperial-conversations__row--unread .imperial-conversations__preview {
+  color: #b5d6e7;
+  font-weight: 600;
+}
+.imperial-conversations__unread {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #9dcfe1;
+  color: #0b2030;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.imperial-conversations__status {
+  margin: 0;
+  padding: 10px 8px;
+  color: #90afc1;
+  font-size: 11px;
+}
+.imperial-conversations__error {
+  padding: 9px;
+  color: #f0aaa9;
+  font-size: 11px;
+}
+.imperial-conversations__error button {
+  color: #bee4f4;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+}
+.imperial-conversations__back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 9px 6px;
+  margin-top: 2px;
+  border: 0;
+  background: transparent;
+  color: #b5def1;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.imperial-conversations__back:hover {
+  color: #f0faff;
+}
+.imperial-conversations__new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 43px;
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid #355d76;
+  border-radius: 10px;
+  background: #0b2131;
+  color: #bee5f6;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+.imperial-conversations__new:hover:not(:disabled) {
+  background: #16354b;
+  border-color: #5b8ba5;
+}
+.imperial-conversations__new:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* The AppShell owns the popup's constrained scroll container. */
+.app-shell__chat-popup .app-shell__chat-messages,
+.app-shell__chat-popup > div {
+  scrollbar-width: thin;
+  scrollbar-color: #345c74 #0a1c2b;
+}
+.app-shell__chat-popup .app-shell__chat-messages::-webkit-scrollbar,
+.app-shell__chat-popup > div::-webkit-scrollbar {
+  width: 6px;
+}
+.app-shell__chat-popup .app-shell__chat-messages::-webkit-scrollbar-thumb,
+.app-shell__chat-popup > div::-webkit-scrollbar-thumb {
+  background: #345c74;
+  border-radius: 8px;
+}
