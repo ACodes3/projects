@@ -1,28 +1,67 @@
-function App() {
+import { Routes, Route, Navigate } from "react-router";
+
+import AppLayout from "./components/layout/AppLayout";
+import FocusPage from "./features/focus/FocusPage";
+
+type PlaceholderPageProps = {
+  title: string;
+  description: string;
+};
+
+function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#1E1919] p-6 text-[#F2ECE8]">
-      <section className="w-full max-w-lg rounded-3xl border border-[#4B4344] bg-[#2A2324] p-10 shadow-2xl">
-        <div className="mb-6 h-12 w-12 rounded-2xl bg-[#E06A6A]" />
+    <div className="mx-auto max-w-5xl">
+      <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
 
-        <p className="mb-2 text-sm font-medium tracking-widest text-[#E06A6A] uppercase">
-          Warm Nocturne
-        </p>
+      <p className="mt-2 text-[#C9BDB8]">{description}</p>
 
-        <h1 className="mb-4 text-4xl font-bold tracking-tight">Focusroom</h1>
+      <div className="mt-10 rounded-3xl border border-[#4B4344] bg-[#2A2324] p-10 text-center">
+        <p className="text-sm text-[#E06A6A]">Coming soon</p>
 
-        <p className="mb-8 leading-relaxed text-[#C9BDB8]">
-          Your personal space for deep work, meaningful progress, and peaceful
-          productivity.
-        </p>
-
-        <div className="rounded-xl bg-[#322B2C] p-4">
-          <p className="text-sm text-[#9B8F8A]">Alpha version</p>
-
-          <p className="mt-1 font-semibold">v0.1.0 — The beginning</p>
-        </div>
-      </section>
-    </main>
+        <p className="mt-3 text-[#C9BDB8]">We're building this space.</p>
+      </div>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<FocusPage />} />
+
+        <Route
+          path="tasks"
+          element={
+            <PlaceholderPage
+              title="Tasks"
+              description="Organize your work and priorities."
+            />
+          }
+        />
+
+        <Route
+          path="history"
+          element={
+            <PlaceholderPage
+              title="Session History"
+              description="Reflect on your completed focus sessions."
+            />
+          }
+        />
+
+        <Route
+          path="settings"
+          element={
+            <PlaceholderPage
+              title="Settings"
+              description="Customize your Focusroom experience."
+            />
+          }
+        />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
