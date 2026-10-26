@@ -9,25 +9,28 @@ import {
   RotateCcw,
   SlidersHorizontal,
   Sparkles,
+  Timer,
 } from "lucide-react";
 
 import { useOutletContext } from "react-router";
 
 import { FOCUS_DURATION_PRESETS } from "../../hooks/useFocusTimer";
-import type { FocusTimer } from "../../hooks/useFocusTimer";
+import type { FocusTimer, TimerMode } from "../../hooks/useFocusTimer";
 
-// Circular timer dial markers
 const timerTicks = Array.from({ length: 60 }, (_, index) => index);
 
-// Session title configuration
 const SESSION_TITLE_KEY = "focusroom.session-title.v1";
 const DEFAULT_SESSION_TITLE = "Deep work";
 
-// Load saved session title
+const sessionModes = [
+  { id: "focus", label: "Focus", icon: Timer },
+  { id: "shortBreak", label: "Short break", icon: Coffee },
+  { id: "longBreak", label: "Long break", icon: Coffee },
+] as const;
+
 function loadSessionTitle(): string {
   try {
     const saved = localStorage.getItem(SESSION_TITLE_KEY);
-
     return saved?.trim().slice(0, 60) || DEFAULT_SESSION_TITLE;
   } catch {
     return DEFAULT_SESSION_TITLE;
@@ -36,6 +39,7 @@ function loadSessionTitle(): string {
 
 export default function FocusPage() {
   const {
+    mode,
     status,
     durationMinutes,
     formattedTime,
@@ -44,6 +48,7 @@ export default function FocusPage() {
     pause,
     reset,
     setDuration,
+    setMode,
   } = useOutletContext<FocusTimer>();
 
   const [sessionTitle, setSessionTitle] = useState(loadSessionTitle);
@@ -52,31 +57,48 @@ export default function FocusPage() {
     try {
       localStorage.setItem(SESSION_TITLE_KEY, sessionTitle);
     } catch {
-      // Continue working if localStorage is unavailable.
+      // Continue if localStorage is unavailable.
     }
   }, [sessionTitle]);
 
   function handleTitleBlur() {
-    const trimmed = sessionTitle.trim();
-    setSessionTitle(trimmed || DEFAULT_SESSION_TITLE);
+    setSessionTitle(sessionTitle.trim() || DEFAULT_SESSION_TITLE);
   }
 
   const isRunning = status === "running";
   const isSessionActive = status === "running" || status === "paused";
+  const isBreak = mode !== "focus";
 
-  const statusLabel = {
-    idle: "Ready",
-    running: "Focusing",
-    paused: "Paused",
-    completed: "Complete",
-  }[status];
+  const modeLabel =
+    mode === "focus"
+      ? "Focus Session"
+      : mode === "shortBreak"
+        ? "Short Break"
+        : "Long Break";
 
-  const statusMessage = {
-    idle: "Ready when you are. Begin your focus session.",
-    running: "One thing at a time. You've got this.",
-    paused: "Take your time. Resume whenever you're ready.",
-    completed: "Session complete. Beautiful work!",
-  }[status];
+  const statusLabel =
+    status === "running" && isBreak
+      ? "Resting"
+      : {
+          idle: "Ready",
+          running: "Focusing",
+          paused: "Paused",
+          completed: "Complete",
+        }[status];
+
+  const statusMessage = isBreak
+    ? {
+        idle: "Ready for a little rest?",
+        running: "Rest is productive, too.",
+        paused: "Your break is paused.",
+        completed: "Break complete. Feeling refreshed?",
+      }[status]
+    : {
+        idle: "Ready when you are. Begin your focus session.",
+        running: "One thing at a time. You've got this.",
+        paused: "Take your time. Resume whenever you're ready.",
+        completed: "Session complete. Beautiful work!",
+      }[status];
 
   const playButtonLabel = isRunning
     ? "Pause timer"
@@ -85,6 +107,10 @@ export default function FocusPage() {
       : status === "completed"
         ? "Start new session"
         : "Start timer";
+
+  const quickSwitchLabel = isBreak
+    ? "Switch to focus mode"
+    : "Switch to short break";
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -96,11 +122,13 @@ export default function FocusPage() {
         </div>
 
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Time to focus.
+          {isBreak ? "Time to recharge." : "Time to focus."}
         </h1>
 
         <p className="mt-3 text-sm leading-relaxed text-[#C9BDB8]">
-          Settle in, clear your mind, and make progress on what matters.
+          {isBreak
+            ? "Step away for a moment. You've earned some rest."
+            : "Settle in, clear your mind, and make progress on what matters."}
         </p>
       </header>
 
@@ -117,44 +145,58 @@ export default function FocusPage() {
                     isRunning ? "animate-pulse bg-[#E06A6A]" : "bg-[#A95D4F]"
                   }`}
                 />
-                Focus Session
+                {modeLabel}
               </div>
 
-              <div className="mt-1">
-                <label htmlFor="session-title" className="sr-only">
-                  Session title
-                </label>
+              {/* SESSION TITLE */}
+              {mode === "focus" ? (
+                <div className="mt-1">
+                  <label htmlFor="session-title" className="sr-only">
+                    Session title
+                  </label>
 
-                <input
-                  id="session-title"
-                  type="text"
-                  value={sessionTitle}
-                  onChange={(event) => setSessionTitle(event.target.value)}
-                  onBlur={handleTitleBlur}
-                  maxLength={60}
-                  placeholder="What are you working on?"
-                  autoComplete="off"
-                  className="
-                    w-full max-w-sm rounded-lg
-                    border border-transparent
-                    bg-transparent px-2 py-2
-                    text-xl font-semibold
-                    text-[#F2ECE8]
-                    outline-none
-                    transition-colors duration-200
-                    placeholder:text-[#756B67]
-                    hover:border-[#4B4344]
-                    focus:border-[#E06A6A]
-                    focus:bg-[#322B2C]
-                  "
-                />
+                  <input
+                    id="session-title"
+                    type="text"
+                    value={sessionTitle}
+                    onChange={(event) => setSessionTitle(event.target.value)}
+                    onBlur={handleTitleBlur}
+                    maxLength={60}
+                    placeholder="What are you working on?"
+                    autoComplete="off"
+                    className="
+                      w-full max-w-sm rounded-lg
+                      border border-transparent
+                      bg-transparent px-2 py-2
+                      text-xl font-semibold
+                      text-[#F2ECE8]
+                      outline-none
+                      transition-colors duration-200
+                      placeholder:text-[#756B67]
+                      hover:border-[#4B4344]
+                      focus:border-[#E06A6A]
+                      focus:bg-[#322B2C]
+                    "
+                  />
 
-                <p className="mt-1 px-2 text-xs text-[#9B8F8A]">
-                  Your time is yours. Click to edit your session.
-                </p>
-              </div>
+                  <p className="mt-1 px-2 text-xs text-[#9B8F8A]">
+                    Your time is yours. Click to edit your session.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-1 px-2">
+                  <h2 className="py-2 text-xl font-semibold">
+                    {mode === "shortBreak" ? "A little pause" : "A longer rest"}
+                  </h2>
+
+                  <p className="mt-1 text-xs text-[#9B8F8A]">
+                    Take care of yourself between sessions.
+                  </p>
+                </div>
+              )}
             </div>
 
+            {/* FUTURE SETTINGS */}
             <button
               type="button"
               disabled
@@ -166,56 +208,113 @@ export default function FocusPage() {
             </button>
           </div>
 
-          {/* FOCUS DURATION PRESETS */}
-          <div className="mt-6 border-t border-[#4B4344] pt-5 pb-2">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-xs font-medium tracking-wide text-[#C9BDB8]">
-                Focus duration
-              </p>
-
-              <span className="text-xs text-[#9B8F8A]">Select your pace</span>
-            </div>
+          {/* SESSION MODE SELECTOR */}
+          <div className="mt-6 border-t border-[#4B4344] pt-5">
+            <p className="mb-3 text-xs font-medium text-[#C9BDB8]">
+              Session mode
+            </p>
 
             <fieldset
               disabled={isSessionActive}
-              className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+              className="grid grid-cols-3 gap-2"
             >
-              <legend className="sr-only">Choose focus duration</legend>
+              <legend className="sr-only">Choose session mode</legend>
 
-              {FOCUS_DURATION_PRESETS.map((minutes) => {
-                const isSelected = durationMinutes === minutes;
+              {sessionModes.map((option) => {
+                const selected = mode === option.id;
+                const Icon = option.icon;
 
                 return (
                   <button
-                    key={minutes}
+                    key={option.id}
                     type="button"
-                    onClick={() => setDuration(minutes)}
-                    aria-pressed={isSelected}
+                    onClick={() => setMode(option.id as TimerMode)}
+                    aria-pressed={selected}
                     className={`
-                      rounded-2xl border px-3 py-4
-                      text-sm font-medium
+                      flex flex-col items-center justify-center
+                      gap-2 rounded-xl border px-2 py-3
+                      text-center text-xs font-medium
                       transition-all duration-200
                       disabled:cursor-not-allowed
                       disabled:opacity-40
                       ${
-                        isSelected
+                        selected
                           ? "border-[#E06A6A] bg-[#5B2F31] text-[#F07A79]"
                           : "border-[#4B4344] bg-[#322B2C] text-[#C9BDB8] hover:border-[#756B67] hover:text-[#F2ECE8]"
                       }
                     `}
                   >
-                    {minutes} min
+                    <Icon size={17} />
+                    <span>{option.label}</span>
                   </button>
                 );
               })}
             </fieldset>
-
-            {isSessionActive && (
-              <p className="mt-3 text-center text-xs text-[#9B8F8A]">
-                Reset the timer to change the duration.
-              </p>
-            )}
           </div>
+
+          {/* FOCUS DURATION PRESETS */}
+          {mode === "focus" && (
+            <div className="mt-5 pb-2">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-xs font-medium text-[#C9BDB8]">
+                  Focus duration
+                </p>
+
+                <span className="text-xs text-[#9B8F8A]">Select your pace</span>
+              </div>
+
+              <fieldset
+                disabled={isSessionActive}
+                className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+              >
+                <legend className="sr-only">Choose focus duration</legend>
+
+                {FOCUS_DURATION_PRESETS.map((minutes) => {
+                  const selected = durationMinutes === minutes;
+
+                  return (
+                    <button
+                      key={minutes}
+                      type="button"
+                      onClick={() => setDuration(minutes)}
+                      aria-pressed={selected}
+                      className={`
+                        rounded-2xl border px-3 py-4
+                        text-sm font-medium
+                        transition-all duration-200
+                        disabled:cursor-not-allowed
+                        disabled:opacity-40
+                        ${
+                          selected
+                            ? "border-[#E06A6A] bg-[#5B2F31] text-[#F07A79]"
+                            : "border-[#4B4344] bg-[#322B2C] text-[#C9BDB8] hover:border-[#756B67] hover:text-[#F2ECE8]"
+                        }
+                      `}
+                    >
+                      {minutes} min
+                    </button>
+                  );
+                })}
+              </fieldset>
+            </div>
+          )}
+
+          {/* BREAK INFORMATION */}
+          {isBreak && (
+            <div className="mt-5 rounded-xl border border-[#4B4344] bg-[#322B2C] p-4">
+              <p className="text-sm text-[#C9BDB8]">
+                {mode === "shortBreak"
+                  ? "A quick reset. Stretch, hydrate, and give your mind a moment."
+                  : "A longer pause. Rest your eyes, move around, and recharge."}
+              </p>
+            </div>
+          )}
+
+          {isSessionActive && (
+            <p className="mt-4 text-center text-xs text-[#9B8F8A]">
+              Reset the timer to change modes or duration.
+            </p>
+          )}
 
           {/* TIMER CENTER AREA */}
           <div className="mt-8 flex flex-1 flex-col items-center justify-center gap-6">
@@ -258,6 +357,7 @@ export default function FocusPage() {
                 })}
               </svg>
 
+              {/* COUNTDOWN */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="mb-3 text-xs font-medium tracking-[0.2em] text-[#C9BDB8] uppercase">
                   {statusLabel}
@@ -271,18 +371,29 @@ export default function FocusPage() {
                   {formattedTime}
                 </span>
 
-                <span className="mt-4 text-sm text-[#9B8F8A]">Focus mode</span>
+                <span className="mt-4 text-sm text-[#9B8F8A]">
+                  {isBreak ? "Break mode" : "Focus mode"}
+                </span>
               </div>
             </div>
 
-            {/* CURRENT SESSION DURATION */}
+            {/* CURRENT DURATION */}
             <div className="flex items-center gap-2 rounded-full border border-[#4B4344] bg-[#322B2C] px-4 py-2 text-sm text-[#C9BDB8]">
               <Clock3 size={15} />
-              <span>{durationMinutes} minute session</span>
+
+              <span>
+                {durationMinutes} minute{" "}
+                {mode === "focus"
+                  ? "focus session"
+                  : mode === "shortBreak"
+                    ? "short break"
+                    : "long break"}
+              </span>
             </div>
 
             {/* TIMER CONTROLS */}
             <div className="flex items-center justify-center gap-4">
+              {/* RESET */}
               <button
                 type="button"
                 onClick={reset}
@@ -294,6 +405,7 @@ export default function FocusPage() {
                 <RotateCcw size={19} />
               </button>
 
+              {/* START / PAUSE / RESUME */}
               <button
                 type="button"
                 onClick={isRunning ? pause : start}
@@ -308,18 +420,20 @@ export default function FocusPage() {
                 )}
               </button>
 
+              {/* QUICK BREAK / FOCUS SWITCH */}
               <button
                 type="button"
-                disabled
-                aria-label="Break mode coming soon"
-                title="Break mode coming soon"
-                className="flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-full bg-[#3A3334] text-[#9B8F8A] opacity-50"
+                onClick={() => setMode(isBreak ? "focus" : "shortBreak")}
+                disabled={isSessionActive}
+                aria-label={quickSwitchLabel}
+                title={quickSwitchLabel}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#3A3334] text-[#F2ECE8] transition-all hover:bg-[#4B4344] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Coffee size={19} />
+                {isBreak ? <Timer size={19} /> : <Coffee size={19} />}
               </button>
             </div>
 
-            {/* TIMER STATUS MESSAGE */}
+            {/* STATUS MESSAGE */}
             <p role="status" className="text-center text-xs text-[#9B8F8A]">
               {statusMessage}
             </p>
@@ -328,6 +442,7 @@ export default function FocusPage() {
 
         {/* SESSION NOTES PANEL */}
         <section className="flex min-h-[570px] min-w-0 flex-col rounded-3xl border border-[#4B4344] bg-[#2A2324] p-6 md:p-8">
+          {/* NOTES HEADER */}
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5B2F31]/60 text-[#E06A6A]">
               <NotebookPen size={20} />
@@ -340,6 +455,7 @@ export default function FocusPage() {
             </div>
           </div>
 
+          {/* NOTES PREVIEW */}
           <div className="flex flex-1 flex-col rounded-2xl border border-[#4B4344]/60 bg-[#322B2C] p-5">
             <p className="text-sm leading-7 text-[#9B8F8A]">
               What are you working on today?
@@ -359,6 +475,7 @@ export default function FocusPage() {
             </div>
           </div>
 
+          {/* GENTLE REMINDER */}
           <div className="mt-5 rounded-2xl border border-[#4B4344] bg-[#322B2C] p-4">
             <div className="flex items-center gap-2 text-[#E06A6A]">
               <Sparkles size={16} />
