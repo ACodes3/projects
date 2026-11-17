@@ -22,7 +22,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify that the Home screen is displayed.
-    expect(find.text('Welcome to KINETIQ!'), findsOneWidget);
+    expect(find.text('Ready to move?'), findsOneWidget);
 
     // The welcome button should no longer be visible.
     expect(find.text('GET STARTED'), findsNothing);
