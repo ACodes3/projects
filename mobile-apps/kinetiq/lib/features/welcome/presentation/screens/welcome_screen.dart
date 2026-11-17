@@ -1,4 +1,7 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:kinetiq/app/router/app_router.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -85,11 +88,7 @@ class WelcomeScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Welcome to KINETIQ!'),
-                          ),
-                        );
+                        context.go(AppRouter.home);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFC5F26B),
