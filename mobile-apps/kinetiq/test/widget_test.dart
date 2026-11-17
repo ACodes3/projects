@@ -13,7 +13,7 @@ void main() {
     expect(find.text('KINETIQ'), findsOneWidget);
 
     // Verify the tagline.
-    expect(find.text('MOVE. TRACK. IMPROVE.'), findsOneWidget);
+    expect(find.text('TRAIN. TRACK. EVOLVE.'), findsOneWidget);
 
     // Verify the main button.
     expect(find.text('GET STARTED'), findsOneWidget);

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'app/theme/kinetiq_theme.dart';
 
 void main() {
   runApp(const KinetiqApp());
@@ -12,15 +13,7 @@ class KinetiqApp extends StatelessWidget {
     return MaterialApp(
       title: 'KINETIQ',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF101416),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFC5F26B),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: KinetiqTheme.dark,
       home: const WelcomeScreen(),
     );
   }
