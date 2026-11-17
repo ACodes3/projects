@@ -76,6 +76,15 @@ coverage/
 # Flutter generated symbols
 app.*.symbols
 
+# Flutter / Dart additional generated files
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+
+# Flutter crash and performance files
+flutter_*.png
+*.trace
+
 
 # ------------------------------------------------------------
 # ANDROID / GRADLE
