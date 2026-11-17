@@ -1,6 +1,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kinetiq/main.dart';
+import 'package:kinetiq/app/app.dart';
 
 void main() {
   testWidgets('KINETIQ welcome screen displays correctly', (
