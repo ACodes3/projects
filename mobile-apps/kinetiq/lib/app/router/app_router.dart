@@ -6,6 +6,7 @@ import 'package:kinetiq/features/home/presentation/screens/home_screen.dart';
 import 'package:kinetiq/features/workouts/presentation/screens/workouts_screen.dart';
 import 'package:kinetiq/features/history/presentation/screens/history_screen.dart';
 import 'package:kinetiq/features/progress/presentation/screens/progress_screen.dart';
+import 'package:kinetiq/features/exercises/presentation/screens/exercise_library_screen.dart';
 
 /// Central navigation configuration for KINETIQ.
 abstract final class AppRouter {
@@ -15,6 +16,7 @@ abstract final class AppRouter {
   static const String workouts = '/workouts';
   static const String history = '/history';
   static const String progress = '/progress';
+  static const String exerciseLibrary = '/workouts/exercises';
 
   // Application router
   static GoRouter createRouter() => GoRouter(
@@ -51,6 +53,15 @@ abstract final class AppRouter {
                 path: workouts,
                 name: 'workouts',
                 builder: (context, state) => const WorkoutsScreen(),
+                routes: [
+                  // Exercise Library is nested inside the Workouts tab.
+                  GoRoute(
+                    path: 'exercises',
+                    name: 'exercise-library',
+                    builder: (context, state) =>
+                    const ExerciseLibraryScreen(),
+                  ),
+                ],
               ),
             ],
           ),
