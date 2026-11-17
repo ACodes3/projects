@@ -17,7 +17,7 @@ abstract final class AppRouter {
   static const String progress = '/progress';
 
   // Application router
-  static final GoRouter router = GoRouter(
+  static GoRouter createRouter() => GoRouter(
     initialLocation: welcome,
     routes: [
       // Welcome screen — outside the main navigation shell.
