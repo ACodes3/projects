@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:kinetiq/app/router/app_router.dart';
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
-import 'package:kinetiq/features/welcome/presentation/screens/welcome_screen.dart';
 
 /// Root widget of the KINETIQ application.
 class KinetiqApp extends StatelessWidget {
@@ -9,11 +9,11 @@ class KinetiqApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'KINETIQ',
       debugShowCheckedModeBanner: false,
       theme: KinetiqTheme.dark,
-      home: const WelcomeScreen(),
+      routerConfig: AppRouter.router,
     );
   }
 }
