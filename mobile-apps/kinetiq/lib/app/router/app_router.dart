@@ -1,3 +1,4 @@
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kinetiq/app/shell/app_shell.dart';
@@ -19,6 +20,7 @@ abstract final class AppRouter {
   static const String progress = '/progress';
   static const String exerciseLibrary = '/workouts/exercises';
   static const String addExercise = '/workouts/exercises/add';
+  static const String editExercise = '/workouts/exercises/:exerciseId/edit';
 
   // Application router
   static GoRouter createRouter() => GoRouter(
@@ -57,18 +59,41 @@ abstract final class AppRouter {
                 builder: (context, state) => const WorkoutsScreen(),
                 routes: [
                   // Exercise Library is nested inside the Workouts tab.
+
                   GoRoute(
                     path: 'exercises',
                     name: 'exercise-library',
                     builder: (context, state) =>
                     const ExerciseLibraryScreen(),
                     routes: [
-                      // Add Exercise screen.
+                      // Create a new exercise.
                       GoRoute(
                         path: 'add',
                         name: 'add-exercise',
                         builder: (context, state) =>
                         const AddExerciseScreen(),
+                      ),
+                      // Edit an existing exercise.
+                      GoRoute(
+                        path: ':exerciseId/edit',
+                        name: 'edit-exercise',
+                        builder: (context, state) {
+                          final exerciseId = int.tryParse(
+                            state.pathParameters['exerciseId'] ?? '',
+                          );
+
+                          if (exerciseId == null || exerciseId <= 0) {
+                            return const Scaffold(
+                              body: Center(
+                                child: Text('Invalid exercise ID.'),
+                              ),
+                            );
+                          }
+
+                          return AddExerciseScreen(
+                            exerciseId: exerciseId,
+                          );
+                        },
                       ),
                     ],
                   ),
