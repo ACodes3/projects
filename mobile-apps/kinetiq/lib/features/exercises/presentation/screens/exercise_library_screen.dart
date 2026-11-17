@@ -1,11 +1,11 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:kinetiq/app/router/app_router.dart';
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
-
-import 'package:go_router/go_router.dart';
-import 'package:kinetiq/app/router/app_router.dart';
 
 /// Displays exercises stored in the local SQLite database.
 class ExerciseLibraryScreen extends ConsumerWidget {
@@ -62,17 +62,17 @@ class ExerciseLibraryScreen extends ConsumerWidget {
           if (exercises.isEmpty) {
             return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.fitness_center_outlined,
                       size: 52,
                       color: KinetiqColors.primary,
                     ),
-                    SizedBox(height: 20),
-                    Text(
+                    const SizedBox(height: 20),
+                    const Text(
                       'Your exercise library is empty',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -81,8 +81,8 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Text(
+                    const SizedBox(height: 10),
+                    const Text(
                       'Exercises you add will appear here.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -93,6 +93,7 @@ class ExerciseLibraryScreen extends ConsumerWidget {
 
                     const SizedBox(height: 28),
 
+                    // Add exercise button for the empty state.
                     SizedBox(
                       width: 220,
                       child: ElevatedButton.icon(
@@ -117,6 +118,7 @@ class ExerciseLibraryScreen extends ConsumerWidget {
             );
           }
 
+          // Display saved exercises.
           return ListView.separated(
             padding: const EdgeInsets.all(24),
             itemCount: exercises.length,
@@ -140,7 +142,10 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                       Icons.fitness_center,
                       color: KinetiqColors.primary,
                     ),
+
                     const SizedBox(width: 16),
+
+                    // Exercise information.
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,7 +158,9 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+
                           const SizedBox(height: 6),
+
                           Text(
                             [
                               exercise.category,
@@ -166,6 +173,30 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+
+                    // NEW: Edit exercise button.
+                    const SizedBox(width: 8),
+
+                    IconButton(
+                      tooltip: 'Edit ${exercise.name}',
+                      onPressed: exercise.isCustom
+                          ? () {
+                        context.pushNamed(
+                          'edit-exercise',
+                          pathParameters: {
+                            'exerciseId': exercise.id.toString(),
+                          },
+                        );
+                      }
+                          : null,
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        color: exercise.isCustom
+                            ? KinetiqColors.primary
+                            : KinetiqColors.textMuted,
+                        size: 22,
                       ),
                     ),
                   ],
