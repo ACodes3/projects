@@ -2,6 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 
+import 'package:go_router/go_router.dart';
+import 'package:kinetiq/app/router/app_router.dart';
+
 /// Main screen for managing workout routines.
 class WorkoutsScreen extends StatelessWidget {
   const WorkoutsScreen({super.key});
@@ -47,6 +50,32 @@ class WorkoutsScreen extends StatelessWidget {
                 style: TextStyle(
                   color: KinetiqColors.textSecondary,
                   fontSize: 14,
+                ),
+              ),
+
+
+              const SizedBox(height: 28),
+
+// Opens the Exercise Library within the Workouts tab.
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    context.push(AppRouter.exerciseLibrary);
+                  },
+                  icon: const Icon(
+                    Icons.menu_book_outlined,
+                    size: 20,
+                  ),
+                  label: const Text('EXERCISE LIBRARY'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                    backgroundColor: KinetiqColors.primary,
+                    foregroundColor: KinetiqColors.background,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
 

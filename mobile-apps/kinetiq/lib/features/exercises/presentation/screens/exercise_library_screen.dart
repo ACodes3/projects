@@ -4,6 +4,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 
+import 'package:go_router/go_router.dart';
+import 'package:kinetiq/app/router/app_router.dart';
+
 /// Displays exercises stored in the local SQLite database.
 class ExerciseLibraryScreen extends ConsumerWidget {
   const ExerciseLibraryScreen({super.key});
@@ -17,6 +20,20 @@ class ExerciseLibraryScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Exercise Library'),
         backgroundColor: KinetiqColors.background,
+        actions: [
+          IconButton(
+            tooltip: 'Add exercise',
+            onPressed: () {
+              context.push(AppRouter.addExercise);
+            },
+            icon: const Icon(
+              Icons.add_circle_outline,
+              color: KinetiqColors.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
       body: exercisesAsync.when(
         // Database query is loading.
@@ -43,7 +60,7 @@ class ExerciseLibraryScreen extends ConsumerWidget {
         // Database query succeeded.
         data: (exercises) {
           if (exercises.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
@@ -71,6 +88,27 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                       style: TextStyle(
                         color: KinetiqColors.textSecondary,
                         fontSize: 14,
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    SizedBox(
+                      width: 220,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          context.push(AppRouter.addExercise);
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('ADD EXERCISE'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                          backgroundColor: KinetiqColors.primary,
+                          foregroundColor: KinetiqColors.background,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
                       ),
                     ),
                   ],
