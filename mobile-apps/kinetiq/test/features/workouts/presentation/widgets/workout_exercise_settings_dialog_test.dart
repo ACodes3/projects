@@ -26,7 +26,7 @@ void main() {
                     context: context,
                     builder: (dialogContext) {
                       return WorkoutExerciseSettingsDialog(
-                        exerciseName: 'Bench Press',
+                        exerciseName: 'Test Exercise',
                         trackingMode: trackingMode,
                         existingExercise: existingExercise,
                       );
@@ -53,10 +53,6 @@ void main() {
   // FIND INPUT BY LABEL
   // ----------------------------------------------------------
 
-  /// TextFormField internally builds a TextField.
-  ///
-  /// TextField exposes the decoration property, allowing
-  /// us to locate inputs by their labels reliably.
   Finder fieldWithLabel(String label) {
     return find.byWidgetPredicate((widget) {
       return widget is TextField && widget.decoration?.labelText == label;
@@ -96,7 +92,6 @@ void main() {
 
     expect(saveButton, findsOneWidget);
 
-    // Close the keyboard before saving.
     tester.testTextInput.hide();
     await tester.pump();
 
@@ -117,11 +112,8 @@ void main() {
     await openDialog(tester);
 
     expect(find.text('Configure Exercise'), findsOneWidget);
-
-    expect(find.text('Bench Press'), findsOneWidget);
-
+    expect(find.text('Test Exercise'), findsOneWidget);
     expect(find.text('ADD TO WORKOUT'), findsOneWidget);
-
     expect(find.text('CANCEL'), findsOneWidget);
   });
 
@@ -150,7 +142,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Configure Exercise'), findsNothing);
-
     expect(callbackCalled, isTrue);
     expect(savedSettings, isNull);
   });
@@ -176,9 +167,7 @@ void main() {
     expect(savedSettings, isNotNull);
 
     expect(savedSettings!.sets, 3);
-
     expect(savedSettings!.restBetweenSetsSeconds, 60);
-
     expect(savedSettings!.restAfterExerciseSeconds, 90);
 
     expect(savedSettings!.targetReps, isNull);
@@ -215,15 +204,8 @@ void main() {
     await openDialog(tester);
 
     expect(find.text('Edit Exercise Settings'), findsOneWidget);
-
     expect(find.text('SAVE CHANGES'), findsOneWidget);
-
     expect(find.text('ADD TO WORKOUT'), findsNothing);
-
-    // Verify the existing values were loaded.
-    //
-    // Use TextField instead of TextFormField because
-    // our label finder targets the underlying TextField.
 
     final setsField = tester.widget<TextField>(fieldWithLabel('Sets *'));
 
@@ -260,13 +242,11 @@ void main() {
     await openDialog(tester);
 
     await enterFieldValue(tester, 'Sets *', '0');
-
     await tapSave(tester);
 
     expect(find.text('Enter a number greater than 0.'), findsOneWidget);
 
     expect(find.text('Configure Exercise'), findsOneWidget);
-
     expect(savedSettings, isNull);
   });
 
@@ -280,11 +260,9 @@ void main() {
     await openDialog(tester);
 
     await enterFieldValue(tester, 'Sets *', '');
-
     await tapSave(tester);
 
     expect(find.text('Required field.'), findsOneWidget);
-
     expect(find.text('Configure Exercise'), findsOneWidget);
   });
 
@@ -302,7 +280,6 @@ void main() {
     await tapSave(tester);
 
     expect(find.text('Enter 0 or greater.'), findsOneWidget);
-
     expect(find.text('Configure Exercise'), findsOneWidget);
   });
 
@@ -360,7 +337,6 @@ void main() {
     await openDialog(tester);
 
     await enterFieldValue(tester, 'Sets *', '4');
-
     await enterFieldValue(tester, 'Target reps (optional)', '12');
 
     await enterFieldValue(tester, 'Target weight (optional)', '42.5');
@@ -383,5 +359,87 @@ void main() {
     expect(savedSettings!.notes, 'Controlled tempo');
 
     expect(find.text('Configure Exercise'), findsNothing);
+  });
+
+  // ----------------------------------------------------------
+  // TEST 11 — CARDIO DURATION TRACKING
+  // ----------------------------------------------------------
+
+  testWidgets('Duration mode saves seconds without strength targets', (
+    tester,
+  ) async {
+    WorkoutExerciseSettingsData? savedSettings;
+
+    await tester.pumpWidget(
+      createTestApp(
+        trackingMode: ExerciseTrackingMode.duration,
+        onResult: (result) {
+          savedSettings = result;
+        },
+      ),
+    );
+
+    await openDialog(tester);
+
+    // Duration exercises must expose a duration target.
+    expect(fieldWithLabel('Target duration (optional)'), findsOneWidget);
+
+    // Strength and distance targets are not shown.
+    expect(fieldWithLabel('Target reps (optional)'), findsNothing);
+    expect(fieldWithLabel('Target weight (optional)'), findsNothing);
+    expect(fieldWithLabel('Target distance (optional)'), findsNothing);
+
+    await enterFieldValue(tester, 'Target duration (optional)', '900');
+
+    await tapSave(tester);
+
+    expect(savedSettings, isNotNull);
+    expect(savedSettings!.sets, 3);
+    expect(savedSettings!.targetDurationSeconds, 900);
+
+    expect(savedSettings!.targetReps, isNull);
+    expect(savedSettings!.targetWeight, isNull);
+    expect(savedSettings!.targetDistanceKm, isNull);
+  });
+
+  // ----------------------------------------------------------
+  // TEST 12 — CARDIO DISTANCE TRACKING
+  // ----------------------------------------------------------
+
+  testWidgets('Distance mode saves kilometers without strength targets', (
+    tester,
+  ) async {
+    WorkoutExerciseSettingsData? savedSettings;
+
+    await tester.pumpWidget(
+      createTestApp(
+        trackingMode: ExerciseTrackingMode.distance,
+        onResult: (result) {
+          savedSettings = result;
+        },
+      ),
+    );
+
+    await openDialog(tester);
+
+    // Distance exercises must expose a distance target.
+    expect(fieldWithLabel('Target distance (optional)'), findsOneWidget);
+
+    // Unrelated tracking inputs are hidden.
+    expect(fieldWithLabel('Target reps (optional)'), findsNothing);
+    expect(fieldWithLabel('Target weight (optional)'), findsNothing);
+    expect(fieldWithLabel('Target duration (optional)'), findsNothing);
+
+    await enterFieldValue(tester, 'Target distance (optional)', '5.5');
+
+    await tapSave(tester);
+
+    expect(savedSettings, isNotNull);
+    expect(savedSettings!.sets, 3);
+    expect(savedSettings!.targetDistanceKm, 5.5);
+
+    expect(savedSettings!.targetReps, isNull);
+    expect(savedSettings!.targetWeight, isNull);
+    expect(savedSettings!.targetDurationSeconds, isNull);
   });
 }
