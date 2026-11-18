@@ -50,7 +50,6 @@ void main() {
 
     expect(find.text('Bench Press'), findsOneWidget);
 
-    // Clean up Drift subscriptions.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 10));
   });
@@ -82,17 +81,14 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Open the confirmation dialog.
     await tester.tap(find.byTooltip('Delete Deadlift'));
     await tester.pumpAndSettle();
 
     expect(find.text('Delete exercise?'), findsOneWidget);
 
-    // Cancel the deletion.
     await tester.tap(find.text('CANCEL'));
     await tester.pumpAndSettle();
 
-    // Verify the exercise still exists.
     final exercises =
     await database.select(database.exercises).get();
 
@@ -100,7 +96,6 @@ void main() {
     expect(exercises.first.id, exerciseId);
     expect(exercises.first.name, 'Deadlift');
 
-    // Clean up Drift subscriptions.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 10));
   });
@@ -132,29 +127,139 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Open the confirmation dialog.
     await tester.tap(find.byTooltip('Delete Pull Up'));
     await tester.pumpAndSettle();
 
     expect(find.text('Delete exercise?'), findsOneWidget);
 
-    // Confirm deletion.
     await tester.tap(find.text('DELETE'));
     await tester.pumpAndSettle();
 
-    // Verify SQLite no longer contains the exercise.
     final exercises =
     await database.select(database.exercises).get();
 
     expect(exercises, isEmpty);
 
-    // Verify the reactive UI shows the empty state.
     expect(
       find.text('Your exercise library is empty'),
       findsOneWidget,
     );
 
-    // Clean up Drift subscriptions.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 10));
+  });
+
+  // ----------------------------------------------------------
+  // TEST 4 — Search and category filtering
+  // ----------------------------------------------------------
+
+  testWidgets('Search and category filters work together', (
+      WidgetTester tester,
+      ) async {
+    // Create strength and cardio exercises.
+    await database.into(database.exercises).insert(
+      ExercisesCompanion.insert(
+        name: 'Barbell Squat',
+        category: const Value('strength'),
+      ),
+    );
+
+    await database.into(database.exercises).insert(
+      ExercisesCompanion.insert(
+        name: 'Bench Press',
+        category: const Value('strength'),
+      ),
+    );
+
+    await database.into(database.exercises).insert(
+      ExercisesCompanion.insert(
+        name: 'Running',
+        category: const Value('cardio'),
+      ),
+    );
+
+    // Build the Exercise Library.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWith((ref) => database),
+        ],
+        child: const MaterialApp(
+          home: ExerciseLibraryScreen(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // All exercises should initially appear.
+    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Running'), findsOneWidget);
+
+    // Select the Cardio category.
+    await tester.tap(find.text('Cardio'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Running'), findsOneWidget);
+    expect(find.text('Barbell Squat'), findsNothing);
+    expect(find.text('Bench Press'), findsNothing);
+
+    // Switch to Strength.
+    await tester.tap(find.text('Strength'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Running'), findsNothing);
+
+    // Search within the Strength category.
+    await tester.enterText(
+      find.byType(TextField).first,
+      'squat',
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Bench Press'), findsNothing);
+
+    // Change to Cardio while keeping the search query.
+    await tester.tap(find.text('Cardio'));
+    await tester.pumpAndSettle();
+
+    // No cardio exercise matches "squat".
+    expect(
+      find.text('No matching exercises'),
+      findsOneWidget,
+    );
+
+    // Clear the search field.
+    await tester.enterText(
+      find.byType(TextField).first,
+      '',
+    );
+
+    await tester.pumpAndSettle();
+
+    // Running should appear again.
+    expect(find.text('Running'), findsOneWidget);
+
+    // Return to All categories.
+    await tester.tap(find.text('All'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Running'), findsOneWidget);
+
+    // Verify filtering never deleted database records.
+    final exercises =
+    await database.select(database.exercises).get();
+
+    expect(exercises, hasLength(3));
+
+    // Dispose Riverpod and Drift subscriptions.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 10));
   });

@@ -1,13 +1,23 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:kinetiq/app/router/app_router.dart';
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
+
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 
-/// Displays exercises stored in the local SQLite database.
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_card.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_library_empty_state.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_library_filters.dart';
+
+/// Main Exercise Library screen.
+///
+/// Responsibilities:
+/// - Watch exercises through Riverpod.
+/// - Manage search and category state.
+/// - Coordinate navigation and deletion.
+/// - Compose reusable UI widgets.
 class ExerciseLibraryScreen extends ConsumerStatefulWidget {
   const ExerciseLibraryScreen({super.key});
 
@@ -16,17 +26,54 @@ class ExerciseLibraryScreen extends ConsumerStatefulWidget {
       _ExerciseLibraryScreenState();
 }
 
-class _ExerciseLibraryScreenState
-    extends ConsumerState<ExerciseLibraryScreen> {
-  // Local UI state for filtering exercises by name.
+class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   String _searchQuery = '';
+  String _selectedCategory = 'all';
 
-  /// Asks the user to confirm before deleting a custom exercise.
+  // ----------------------------------------------------------
+  // SEARCH
+  // ----------------------------------------------------------
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value.trim().toLowerCase();
+    });
+  }
+
+  // ----------------------------------------------------------
+  // CATEGORY FILTER
+  // ----------------------------------------------------------
+
+  void _onCategoryChanged(String category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+  }
+
+  // ----------------------------------------------------------
+  // NAVIGATION
+  // ----------------------------------------------------------
+
+  void _openAddExercise() {
+    context.push(AppRouter.addExercise);
+  }
+
+  void _openEditExercise(int exerciseId) {
+    context.pushNamed(
+      'edit-exercise',
+      pathParameters: {'exerciseId': exerciseId.toString()},
+    );
+  }
+
+  // ----------------------------------------------------------
+  // DELETE EXERCISE
+  // ----------------------------------------------------------
+
   Future<void> _confirmDelete(
-      BuildContext context,
-      int exerciseId,
-      String exerciseName,
-      ) async {
+    BuildContext context,
+    int exerciseId,
+    String exerciseName,
+  ) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -41,10 +88,8 @@ class _ExerciseLibraryScreenState
           ),
           content: Text(
             'Are you sure you want to delete "$exerciseName"? '
-                'This action cannot be undone.',
-            style: const TextStyle(
-              color: KinetiqColors.textSecondary,
-            ),
+            'This action cannot be undone.',
+            style: const TextStyle(color: KinetiqColors.textSecondary),
           ),
           actions: [
             TextButton(
@@ -59,9 +104,7 @@ class _ExerciseLibraryScreenState
               },
               child: const Text(
                 'DELETE',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                ),
+                style: TextStyle(color: Colors.redAccent),
               ),
             ),
           ],
@@ -69,7 +112,7 @@ class _ExerciseLibraryScreenState
       },
     );
 
-    // Stop if the user cancelled or dismissed the dialog.
+    // User cancelled or dismissed the dialog.
     if (shouldDelete != true || !context.mounted) {
       return;
     }
@@ -77,9 +120,7 @@ class _ExerciseLibraryScreenState
     try {
       final repository = ref.read(exerciseRepositoryProvider);
 
-      final deletedRows = await repository.deleteExercise(
-        exerciseId,
-      );
+      final deletedRows = await repository.deleteExercise(exerciseId);
 
       if (!context.mounted) return;
 
@@ -97,34 +138,30 @@ class _ExerciseLibraryScreenState
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Could not delete exercise. Please try again.',
-          ),
+          content: Text('Could not delete exercise. Please try again.'),
         ),
       );
     }
   }
 
+  // ----------------------------------------------------------
+  // BUILD
+  // ----------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
-    // Watch the reactive SQLite exercise list through Riverpod.
     final exercisesAsync = ref.watch(exercisesProvider);
 
     return Scaffold(
       backgroundColor: KinetiqColors.background,
 
-      // --------------------------------------------------------
-      // APP BAR
-      // --------------------------------------------------------
       appBar: AppBar(
         title: const Text('Exercise Library'),
         backgroundColor: KinetiqColors.background,
         actions: [
           IconButton(
             tooltip: 'Add exercise',
-            onPressed: () {
-              context.push(AppRouter.addExercise);
-            },
+            onPressed: _openAddExercise,
             icon: const Icon(
               Icons.add_circle_outline,
               color: KinetiqColors.primary,
@@ -135,282 +172,89 @@ class _ExerciseLibraryScreenState
         ],
       ),
 
-      // --------------------------------------------------------
-      // SEARCH + EXERCISE CONTENT
-      // --------------------------------------------------------
       body: Column(
         children: [
-          // Search field.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.trim().toLowerCase();
-                });
-              },
-              style: const TextStyle(
-                color: KinetiqColors.textPrimary,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search exercises...',
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: KinetiqColors.textSecondary,
-                ),
-                filled: true,
-                fillColor: KinetiqColors.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
+          // --------------------------------------------------
+          // SEARCH + CATEGORY FILTERS
+          // --------------------------------------------------
+          ExerciseLibraryFilters(
+            searchQuery: _searchQuery,
+            selectedCategory: _selectedCategory,
+            onSearchChanged: _onSearchChanged,
+            onCategoryChanged: _onCategoryChanged,
           ),
 
-          // Database content fills the remaining screen space.
+          // --------------------------------------------------
+          // DATABASE CONTENT
+          // --------------------------------------------------
           Expanded(
             child: exercisesAsync.when(
-              // ------------------------------------------------
-              // LOADING STATE
-              // ------------------------------------------------
               loading: () => const Center(
-                child: CircularProgressIndicator(
-                  color: KinetiqColors.primary,
-                ),
+                child: CircularProgressIndicator(color: KinetiqColors.primary),
               ),
 
-              // ------------------------------------------------
-              // ERROR STATE
-              // ------------------------------------------------
               error: (error, stackTrace) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(
                     'Could not load exercises.\n$error',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: KinetiqColors.textSecondary,
-                    ),
+                    style: const TextStyle(color: KinetiqColors.textSecondary),
                   ),
                 ),
               ),
 
-              // ------------------------------------------------
-              // DATA STATE
-              // ------------------------------------------------
               data: (exercises) {
-                // Filter exercises locally by their name.
+                // Apply search and category filters together.
                 final filteredExercises = exercises.where((exercise) {
-                  return exercise.name
-                      .toLowerCase()
-                      .contains(_searchQuery);
+                  final matchesSearch = exercise.name.toLowerCase().contains(
+                    _searchQuery,
+                  );
+
+                  final matchesCategory =
+                      _selectedCategory == 'all' ||
+                      exercise.category == _selectedCategory;
+
+                  return matchesSearch && matchesCategory;
                 }).toList();
 
-                // Empty library (no exercises in SQLite).
+                // Empty library.
                 if (exercises.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.fitness_center_outlined,
-                            size: 52,
-                            color: KinetiqColors.primary,
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Your exercise library is empty',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: KinetiqColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Exercises you add will appear here.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: KinetiqColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-
-                          // Create the first exercise.
-                          SizedBox(
-                            width: 220,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                context.push(AppRouter.addExercise);
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text('ADD EXERCISE'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(50),
-                                backgroundColor: KinetiqColors.primary,
-                                foregroundColor: KinetiqColors.background,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ExerciseLibraryEmptyState(
+                    hasExercises: false,
+                    onAddExercise: _openAddExercise,
                   );
                 }
 
-                // Search query returned no matches.
+                // Search or category returned no results.
                 if (filteredExercises.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off_outlined,
-                            size: 52,
-                            color: KinetiqColors.textMuted,
-                          ),
-                          SizedBox(height: 20),
-                          Text(
-                            'No matching exercises',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: KinetiqColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Try searching for a different exercise.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: KinetiqColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ExerciseLibraryEmptyState(
+                    hasExercises: true,
+                    onAddExercise: _openAddExercise,
                   );
                 }
 
-                // ------------------------------------------------
+                // ----------------------------------------------
                 // EXERCISE LIST
-                // ------------------------------------------------
+                // ----------------------------------------------
                 return ListView.separated(
                   padding: const EdgeInsets.all(24),
                   itemCount: filteredExercises.length,
                   separatorBuilder: (context, index) =>
-                  const SizedBox(height: 12),
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final exercise = filteredExercises[index];
 
-                    return Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: KinetiqColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: KinetiqColors.border,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.fitness_center,
-                            color: KinetiqColors.primary,
-                          ),
+                    return ExerciseCard(
+                      exercise: exercise,
 
-                          const SizedBox(width: 16),
+                      onEdit: () {
+                        _openEditExercise(exercise.id);
+                      },
 
-                          // Exercise information.
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  exercise.name,
-                                  style: const TextStyle(
-                                    color: KinetiqColors.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                Text(
-                                  [
-                                    exercise.category,
-                                    if (exercise.muscleGroup != null)
-                                      exercise.muscleGroup!,
-                                  ].join(' • '),
-                                  style: const TextStyle(
-                                    color: KinetiqColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          // Edit custom exercises.
-                          IconButton(
-                            tooltip: 'Edit ${exercise.name}',
-                            onPressed: exercise.isCustom
-                                ? () {
-                              context.pushNamed(
-                                'edit-exercise',
-                                pathParameters: {
-                                  'exerciseId':
-                                  exercise.id.toString(),
-                                },
-                              );
-                            }
-                                : null,
-                            icon: Icon(
-                              Icons.edit_outlined,
-                              color: exercise.isCustom
-                                  ? KinetiqColors.primary
-                                  : KinetiqColors.textMuted,
-                              size: 22,
-                            ),
-                          ),
-
-                          // Delete custom exercises.
-                          IconButton(
-                            tooltip: 'Delete ${exercise.name}',
-                            onPressed: exercise.isCustom
-                                ? () {
-                              _confirmDelete(
-                                context,
-                                exercise.id,
-                                exercise.name,
-                              );
-                            }
-                                : null,
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: exercise.isCustom
-                                  ? Colors.redAccent
-                                  : KinetiqColors.textMuted,
-                              size: 22,
-                            ),
-                          ),
-                        ],
-                      ),
+                      onDelete: () {
+                        _confirmDelete(context, exercise.id, exercise.name);
+                      },
                     );
                   },
                 );
