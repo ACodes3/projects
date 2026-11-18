@@ -11,6 +11,87 @@ import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 class ExerciseLibraryScreen extends ConsumerWidget {
   const ExerciseLibraryScreen({super.key});
 
+
+  Future<void> _confirmDelete(
+      BuildContext context,
+      WidgetRef ref,
+      int exerciseId,
+      String exerciseName,
+      ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: KinetiqColors.surface,
+          title: const Text(
+            'Delete exercise?',
+            style: TextStyle(
+              color: KinetiqColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete "$exerciseName"? '
+                'This action cannot be undone.',
+            style: const TextStyle(
+              color: KinetiqColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text(
+                'DELETE',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !context.mounted) {
+      return;
+    }
+
+    try {
+      final repository = ref.read(exerciseRepositoryProvider);
+
+      final deletedRows =
+      await repository.deleteExercise(exerciseId);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            deletedRows > 0
+                ? '"$exerciseName" deleted successfully.'
+                : 'Exercise could not be found.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not delete exercise. Please try again.',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final exercisesAsync = ref.watch(exercisesProvider);
@@ -195,6 +276,29 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                         Icons.edit_outlined,
                         color: exercise.isCustom
                             ? KinetiqColors.primary
+                            : KinetiqColors.textMuted,
+                        size: 22,
+                      ),
+                    ),
+
+
+// Delete custom exercise.
+                    IconButton(
+                      tooltip: 'Delete ${exercise.name}',
+                      onPressed: exercise.isCustom
+                          ? () {
+                        _confirmDelete(
+                          context,
+                          ref,
+                          exercise.id,
+                          exercise.name,
+                        );
+                      }
+                          : null,
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: exercise.isCustom
+                            ? Colors.redAccent
                             : KinetiqColors.textMuted,
                         size: 22,
                       ),
