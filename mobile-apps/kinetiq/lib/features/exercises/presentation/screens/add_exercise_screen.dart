@@ -6,16 +6,17 @@ import 'package:material_ui/material_ui.dart';
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/core/database/app_database.dart';
 import 'package:kinetiq/features/exercises/domain/enums/exercise_tracking_mode.dart';
-import 'package:kinetiq/features/exercises/presentation/widgets/exercise_tracking_mode_selector.dart';
 import 'package:kinetiq/features/exercises/presentation/widgets/exercise_form/exercise_category_selector.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_form/exercise_form_fields.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_form/exercise_save_button.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_tracking_mode_selector.dart';
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 
-/// Form for creating and editing custom exercises.
+/// Screen for creating and editing custom exercises.
 class AddExerciseScreen extends ConsumerStatefulWidget {
   const AddExerciseScreen({super.key, this.exerciseId});
 
-  /// Null = create mode.
-  /// Non-null = edit mode.
+  /// Null = create; non-null = edit an existing exercise.
   final int? exerciseId;
 
   @override
@@ -89,7 +90,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
         return;
       }
 
-      // Populate the form with existing SQLite data.
+      // Populate the form with saved SQLite data.
       _nameController.text = exercise.name;
       _muscleGroupController.text = exercise.muscleGroup ?? '';
       _notesController.text = exercise.notes ?? '';
@@ -116,24 +117,19 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
   }
 
   // ----------------------------------------------------------
-  // CATEGORY SELECTION
+  // CATEGORY AND TRACKING MODE
   // ----------------------------------------------------------
 
   void _onCategoryChanged(String category) {
     setState(() {
       _category = category;
 
-      // Suggest a default tracking mode for the category.
-      // Users can still choose another mode manually.
+      // Suggest the default tracking mode for this category.
       _trackingMode = category == 'cardio'
           ? ExerciseTrackingMode.duration
           : ExerciseTrackingMode.reps;
     });
   }
-
-  // ----------------------------------------------------------
-  // TRACKING MODE SELECTION
-  // ----------------------------------------------------------
 
   void _onTrackingModeChanged(ExerciseTrackingMode mode) {
     setState(() {
@@ -146,8 +142,10 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
   // ----------------------------------------------------------
 
   Future<void> _saveExercise() async {
+    // Prevent duplicate submissions.
     if (_isSaving || _isLoading) return;
 
+    // Validate required fields before saving.
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -162,6 +160,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       final muscleGroup = _muscleGroupController.text.trim();
       final notes = _notesController.text.trim();
 
+      // Values shared by Create and Edit operations.
       final companion = ExercisesCompanion(
         name: Value(_nameController.text.trim()),
         category: Value(_category),
@@ -172,7 +171,10 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       );
 
       if (_isEditing) {
-        // Update the original exercise without changing its ID.
+        // ----------------------------------------------------
+        // UPDATE EXISTING EXERCISE
+        // ----------------------------------------------------
+
         final existingExercise = await repository.getExerciseById(
           widget.exerciseId!,
         );
@@ -191,12 +193,16 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
           ),
         );
       } else {
-        // Insert a new custom exercise.
+        // ----------------------------------------------------
+        // CREATE NEW EXERCISE
+        // ----------------------------------------------------
+
         await repository.createExercise(companion);
       }
 
       if (!mounted) return;
 
+      // Return to the Exercise Library after saving.
       context.pop();
     } catch (_) {
       if (!mounted) return;
@@ -224,11 +230,17 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
     return Scaffold(
       backgroundColor: KinetiqColors.background,
 
+      // ------------------------------------------------------
+      // APP BAR
+      // ------------------------------------------------------
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Exercise' : 'Add Exercise'),
         backgroundColor: KinetiqColors.background,
       ),
 
+      // ------------------------------------------------------
+      // SCREEN CONTENT
+      // ------------------------------------------------------
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: KinetiqColors.primary),
@@ -284,30 +296,20 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                     const SizedBox(height: 32),
 
                     // ------------------------------------
-                    // EXERCISE NAME
+                    // NAME FIELD COMPONENT
                     // ------------------------------------
-                    TextFormField(
-                      controller: _nameController,
-                      maxLength: 120,
-                      textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(color: KinetiqColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Exercise name *',
-                        hintText: 'e.g. Bulgarian Split Squat',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Exercise name is required.';
-                        }
-                        return null;
-                      },
+                    ExerciseFormFields(
+                      nameController: _nameController,
+                      muscleGroupController: _muscleGroupController,
+                      notesController: _notesController,
+                      showName: true,
+                      showOptionalFields: false,
                     ),
 
                     const SizedBox(height: 20),
 
                     // ------------------------------------
-                    // REUSABLE CATEGORY SELECTOR
+                    // CATEGORY SELECTOR COMPONENT
                     // ------------------------------------
                     ExerciseCategorySelector(
                       selectedCategory: _category,
@@ -317,7 +319,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                     const SizedBox(height: 28),
 
                     // ------------------------------------
-                    // REUSABLE TRACKING MODE SELECTOR
+                    // TRACKING MODE COMPONENT
                     // ------------------------------------
                     ExerciseTrackingModeSelector(
                       selectedMode: _trackingMode,
@@ -327,70 +329,25 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                     const SizedBox(height: 20),
 
                     // ------------------------------------
-                    // MUSCLE GROUP (OPTIONAL)
+                    // OPTIONAL FORM FIELDS COMPONENT
                     // ------------------------------------
-                    TextFormField(
-                      controller: _muscleGroupController,
-                      textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(color: KinetiqColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Muscle group (optional)',
-                        hintText: 'e.g. Legs',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ------------------------------------
-                    // NOTES (OPTIONAL)
-                    // ------------------------------------
-                    TextFormField(
-                      controller: _notesController,
-                      maxLines: 4,
-                      style: const TextStyle(color: KinetiqColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Notes (optional)',
-                        hintText: 'Technique, equipment, instructions...',
-                        border: OutlineInputBorder(),
-                        alignLabelWithHint: true,
-                      ),
+                    ExerciseFormFields(
+                      nameController: _nameController,
+                      muscleGroupController: _muscleGroupController,
+                      notesController: _notesController,
+                      showName: false,
+                      showOptionalFields: true,
                     ),
 
                     const SizedBox(height: 32),
 
                     // ------------------------------------
-                    // SAVE BUTTON
+                    // REUSABLE SAVE BUTTON COMPONENT
                     // ------------------------------------
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _saveExercise,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.check),
-                        label: Text(
-                          _isSaving
-                              ? 'SAVING...'
-                              : _isEditing
-                              ? 'SAVE CHANGES'
-                              : 'SAVE EXERCISE',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(54),
-                          backgroundColor: KinetiqColors.primary,
-                          foregroundColor: KinetiqColors.background,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
+                    ExerciseSaveButton(
+                      isSaving: _isSaving,
+                      isEditing: _isEditing,
+                      onPressed: _saveExercise,
                     ),
 
                     const SizedBox(height: 16),
