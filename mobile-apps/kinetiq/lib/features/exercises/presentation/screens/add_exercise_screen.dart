@@ -7,6 +7,7 @@ import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/core/database/app_database.dart';
 import 'package:kinetiq/features/exercises/domain/enums/exercise_tracking_mode.dart';
 import 'package:kinetiq/features/exercises/presentation/widgets/exercise_tracking_mode_selector.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_form/exercise_category_selector.dart';
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 
 /// Form for creating and editing custom exercises.
@@ -88,15 +89,13 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
         return;
       }
 
-      // Populate the form with saved SQLite data.
+      // Populate the form with existing SQLite data.
       _nameController.text = exercise.name;
       _muscleGroupController.text = exercise.muscleGroup ?? '';
       _notesController.text = exercise.notes ?? '';
 
       setState(() {
         _category = exercise.category;
-
-        // Preserve the existing tracking mode when editing.
         _trackingMode = ExerciseTrackingMode.fromDatabase(
           exercise.trackingMode,
         );
@@ -124,8 +123,8 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
     setState(() {
       _category = category;
 
-      // Suggest an appropriate default when changing category.
-      // Users can choose a different tracking mode afterward.
+      // Suggest a default tracking mode for the category.
+      // Users can still choose another mode manually.
       _trackingMode = category == 'cardio'
           ? ExerciseTrackingMode.duration
           : ExerciseTrackingMode.reps;
@@ -163,7 +162,6 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       final muscleGroup = _muscleGroupController.text.trim();
       final notes = _notesController.text.trim();
 
-      // Shared values for both Create and Edit operations.
       final companion = ExercisesCompanion(
         name: Value(_nameController.text.trim()),
         category: Value(_category),
@@ -174,10 +172,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       );
 
       if (_isEditing) {
-        // ----------------------------------------------------
-        // UPDATE EXISTING EXERCISE
-        // ----------------------------------------------------
-
+        // Update the original exercise without changing its ID.
         final existingExercise = await repository.getExerciseById(
           widget.exerciseId!,
         );
@@ -196,16 +191,12 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
           ),
         );
       } else {
-        // ----------------------------------------------------
-        // CREATE NEW EXERCISE
-        // ----------------------------------------------------
-
+        // Insert a new custom exercise.
         await repository.createExercise(companion);
       }
 
       if (!mounted) return;
 
-      // Return to the Exercise Library after saving.
       context.pop();
     } catch (_) {
       if (!mounted) return;
@@ -309,7 +300,6 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Exercise name is required.';
                         }
-
                         return null;
                       },
                     ),
@@ -317,43 +307,17 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                     const SizedBox(height: 20),
 
                     // ------------------------------------
-                    // CATEGORY
+                    // REUSABLE CATEGORY SELECTOR
                     // ------------------------------------
-                    const Text(
-                      'CATEGORY *',
-                      style: TextStyle(
-                        color: KinetiqColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment<String>(
-                          value: 'strength',
-                          label: Text('Strength'),
-                          icon: Icon(Icons.fitness_center),
-                        ),
-                        ButtonSegment<String>(
-                          value: 'cardio',
-                          label: Text('Cardio'),
-                          icon: Icon(Icons.directions_run),
-                        ),
-                      ],
-                      selected: {_category},
-                      onSelectionChanged: (selection) {
-                        _onCategoryChanged(selection.first);
-                      },
+                    ExerciseCategorySelector(
+                      selectedCategory: _category,
+                      onChanged: _onCategoryChanged,
                     ),
 
                     const SizedBox(height: 28),
 
                     // ------------------------------------
-                    // TRACKING MODE COMPONENT
+                    // REUSABLE TRACKING MODE SELECTOR
                     // ------------------------------------
                     ExerciseTrackingModeSelector(
                       selectedMode: _trackingMode,
