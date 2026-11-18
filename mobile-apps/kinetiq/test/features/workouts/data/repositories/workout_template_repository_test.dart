@@ -135,4 +135,5 @@ void main() {
     expect(updatedTemplates.length, 1);
     expect(updatedTemplates.first.name, 'Full Body');
   });
+
 }

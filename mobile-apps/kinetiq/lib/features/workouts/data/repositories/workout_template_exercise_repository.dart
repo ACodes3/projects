@@ -92,10 +92,50 @@ class WorkoutTemplateExerciseRepository {
   /// Removes a configured exercise from a workout template.
   ///
   /// The original Exercise Library record remains untouched.
-  Future<int> removeExercise(int id) {
-    return (_database.delete(
-      _database.workoutTemplateExercises,
-    )..where((table) => table.id.equals(id))).go();
+
+  // ----------------------------------------------------------
+  // REMOVE EXERCISE AND NORMALIZE POSITIONS
+  // ----------------------------------------------------------
+
+  /// Removes an exercise from its workout template.
+  ///
+  /// The original Exercise Library record is preserved.
+  ///
+  /// Remaining exercises are renumbered starting at zero.
+  /// All changes happen in a single database transaction.
+  Future<int> removeExercise(int id) async {
+    return _database.transaction(() async {
+      // Find the exercise before deleting it.
+      final existing = await getTemplateExerciseById(id);
+
+      if (existing == null) {
+        return 0;
+      }
+
+      final templateId = existing.templateId;
+
+      // Delete only the workout's configured exercise.
+      final deletedRows = await (_database.delete(
+        _database.workoutTemplateExercises,
+      )..where((table) => table.id.equals(id))).go();
+
+      // Load the remaining exercises in their current order.
+      final remaining = await getExercisesForTemplate(templateId);
+
+      // Normalize positions: 0, 1, 2, 3...
+      for (var index = 0; index < remaining.length; index++) {
+        final exercise = remaining[index];
+
+        // Avoid unnecessary database updates.
+        if (exercise.position == index) continue;
+
+        await (_database.update(_database.workoutTemplateExercises)
+              ..where((table) => table.id.equals(exercise.id)))
+            .write(WorkoutTemplateExercisesCompanion(position: Value(index)));
+      }
+
+      return deletedRows;
+    });
   }
 
   // ----------------------------------------------------------

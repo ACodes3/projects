@@ -6,7 +6,7 @@ import 'package:kinetiq/core/database/app_database.dart';
 /// Displays an exercise configured inside a workout template.
 ///
 /// This component handles presentation only.
-/// The parent screen handles editing and removal.
+/// The parent screen handles editing, removal, and reordering.
 class WorkoutTemplateExerciseCard extends StatelessWidget {
   const WorkoutTemplateExerciseCard({
     super.key,
@@ -15,9 +15,12 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
     required this.displayPosition,
     required this.onEdit,
     required this.onRemove,
+    this.reorderIndex,
   });
 
-  final int displayPosition;
+  // ----------------------------------------------------------
+  // PROPERTIES
+  // ----------------------------------------------------------
 
   /// Configuration stored in workout_template_exercises.
   final WorkoutTemplateExercise exercise;
@@ -25,8 +28,25 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
   /// Name resolved from the Exercise Library.
   final String exerciseName;
 
+  /// Sequential number displayed on the card (starts at 1).
+  ///
+  /// This is separate from the stored SQLite position.
+  final int displayPosition;
+
+  /// Index of the item inside a ReorderableListView.
+  ///
+  /// When null, no drag handle is displayed.
+  final int? reorderIndex;
+
+  /// Opens the exercise settings editor.
   final VoidCallback onEdit;
+
+  /// Removes this exercise from the workout.
   final VoidCallback onRemove;
+
+  // ----------------------------------------------------------
+  // BUILD
+  // ----------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +67,10 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
 
           Row(
             children: [
+              // ----------------------------------------------
+              // EXERCISE NUMBER
+              // ----------------------------------------------
+
               Container(
                 width: 42,
                 height: 42,
@@ -67,6 +91,9 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
+              // ----------------------------------------------
+              // EXERCISE NAME
+              // ----------------------------------------------
               Expanded(
                 child: Text(
                   exerciseName,
@@ -80,6 +107,9 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
                 ),
               ),
 
+              // ----------------------------------------------
+              // EDIT BUTTON
+              // ----------------------------------------------
               IconButton(
                 tooltip: 'Edit exercise settings',
                 onPressed: onEdit,
@@ -90,6 +120,9 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
                 ),
               ),
 
+              // ----------------------------------------------
+              // REMOVE BUTTON
+              // ----------------------------------------------
               IconButton(
                 tooltip: 'Remove from workout',
                 onPressed: onRemove,
@@ -99,6 +132,28 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
                   size: 20,
                 ),
               ),
+
+              // ----------------------------------------------
+              // DRAG HANDLE
+              // ----------------------------------------------
+
+              // Only visible when this card is inside a
+              // reorderable list and receives an index.
+              if (reorderIndex != null)
+                ReorderableDragStartListener(
+                  index: reorderIndex!,
+                  child: const Tooltip(
+                    message: 'Drag to reorder exercise',
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.drag_handle,
+                        color: KinetiqColors.textMuted,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
 

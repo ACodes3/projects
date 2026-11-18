@@ -277,4 +277,91 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  // ----------------------------------------------------------
+  // TEST 9 — NORMALIZE POSITIONS AFTER DELETION
+  // ----------------------------------------------------------
+
+  test('Removing an exercise normalizes remaining positions', () async {
+    // Create three configured exercises.
+    // Reusing a library exercise in multiple template rows
+    // is allowed because each row has its own configuration.
+
+    final firstId = await repository.addExercise(
+      WorkoutTemplateExercisesCompanion(
+        templateId: Value(templateId),
+        exerciseId: Value(benchPressId),
+        position: const Value(0),
+      ),
+    );
+
+    final secondId = await repository.addExercise(
+      WorkoutTemplateExercisesCompanion(
+        templateId: Value(templateId),
+        exerciseId: Value(squatId),
+        position: const Value(1),
+      ),
+    );
+
+    final thirdId = await repository.addExercise(
+      WorkoutTemplateExercisesCompanion(
+        templateId: Value(templateId),
+        exerciseId: Value(benchPressId),
+        position: const Value(2),
+        sets: const Value(5),
+      ),
+    );
+
+    // Delete the middle exercise.
+    final deletedRows = await repository.removeExercise(secondId);
+
+    expect(deletedRows, 1);
+
+    // Load the remaining exercises.
+    final remaining = await repository.getExercisesForTemplate(
+      templateId,
+    );
+
+    // Only the first and third exercises should remain.
+    expect(remaining.length, 2);
+
+    expect(
+      remaining.map((exercise) => exercise.id).toList(),
+      [firstId, thirdId],
+    );
+
+    // Stored positions must now be sequential.
+    expect(
+      remaining.map((exercise) => exercise.position).toList(),
+      [0, 1],
+    );
+
+    // The third exercise's configuration must be preserved.
+    expect(remaining[1].sets, 5);
+
+    // Adding another exercise should continue the sequence.
+    final fourthId = await repository.addExercise(
+      WorkoutTemplateExercisesCompanion(
+        templateId: Value(templateId),
+        exerciseId: Value(squatId),
+        position: const Value(2),
+      ),
+    );
+
+    final updated = await repository.getExercisesForTemplate(
+      templateId,
+    );
+
+    expect(updated.length, 3);
+
+    expect(
+      updated.map((exercise) => exercise.id).toList(),
+      [firstId, thirdId, fourthId],
+    );
+
+    expect(
+      updated.map((exercise) => exercise.position).toList(),
+      [0, 1, 2],
+    );
+  });
 }
