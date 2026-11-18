@@ -4,9 +4,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/core/database/app_database.dart';
-import 'package:kinetiq/features/workouts/providers/workout_template_providers.dart';
 import 'package:kinetiq/features/workouts/presentation/widgets/workout_template_card.dart';
+import 'package:kinetiq/features/workouts/presentation/widgets/workout_template_form_dialog.dart';
 import 'package:kinetiq/features/workouts/presentation/widgets/workout_templates_empty_state.dart';
+import 'package:kinetiq/features/workouts/providers/workout_template_providers.dart';
 
 /// Displays and manages saved workout templates.
 class WorkoutsScreen extends ConsumerWidget {
@@ -23,92 +24,26 @@ class WorkoutsScreen extends ConsumerWidget {
   }) async {
     final isEditing = template != null;
 
-    final nameController = TextEditingController(text: template?.name ?? '');
-
-    final descriptionController = TextEditingController(
-      text: template?.description ?? '',
+    // The dialog owns its input controllers and validation.
+    // It returns the completed form data, or null on cancel.
+    final formData = await showDialog<WorkoutTemplateFormData>(
+      context: context,
+      builder: (dialogContext) {
+        return WorkoutTemplateFormDialog(
+          initialName: template?.name ?? '',
+          initialDescription: template?.description,
+          isEditing: isEditing,
+        );
+      },
     );
 
-    final formKey = GlobalKey<FormState>();
+    if (formData == null || !context.mounted) return;
 
     try {
-      final shouldSave = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) {
-          return AlertDialog(
-            backgroundColor: KinetiqColors.surface,
-            title: Text(
-              isEditing ? 'Edit Workout' : 'Create Workout',
-              style: const TextStyle(color: KinetiqColors.textPrimary),
-            ),
-            content: SingleChildScrollView(
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      maxLength: 120,
-                      autofocus: true,
-                      textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(color: KinetiqColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Workout name *',
-                        hintText: 'e.g. Upper Body',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Workout name is required.';
-                        }
-
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: descriptionController,
-                      maxLines: 3,
-                      style: const TextStyle(color: KinetiqColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Description (optional)',
-                        hintText: 'Describe your routine...',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(false);
-                },
-                child: const Text('CANCEL'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (formKey.currentState!.validate()) {
-                    Navigator.of(dialogContext).pop(true);
-                  }
-                },
-                child: Text(isEditing ? 'SAVE CHANGES' : 'CREATE'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (shouldSave != true || !context.mounted) return;
-
-      final name = nameController.text.trim();
-      final description = descriptionController.text.trim();
-
       final repository = ref.read(workoutTemplateRepositoryProvider);
 
       if (isEditing) {
+        // Fetch the latest version before updating.
         final existing = await repository.getTemplateById(template.id);
 
         if (existing == null) {
@@ -117,15 +52,15 @@ class WorkoutsScreen extends ConsumerWidget {
 
         await repository.updateTemplate(
           existing.copyWith(
-            name: name,
-            description: Value(description.isEmpty ? null : description),
+            name: formData.name,
+            description: Value(formData.description),
           ),
         );
       } else {
         await repository.createTemplate(
           WorkoutTemplatesCompanion(
-            name: Value(name),
-            description: Value(description.isEmpty ? null : description),
+            name: Value(formData.name),
+            description: Value(formData.description),
           ),
         );
       }
@@ -133,9 +68,6 @@ class WorkoutsScreen extends ConsumerWidget {
       if (!context.mounted) return;
 
       _showError(context, 'Could not save workout template.');
-    } finally {
-      nameController.dispose();
-      descriptionController.dispose();
     }
   }
 
@@ -306,7 +238,6 @@ class WorkoutsScreen extends ConsumerWidget {
                       ),
                     );
                   },
-
                   error: (error, stackTrace) {
                     return const Center(
                       child: Text(
@@ -315,9 +246,7 @@ class WorkoutsScreen extends ConsumerWidget {
                       ),
                     );
                   },
-
                   data: (templates) {
-                    // No saved templates.
                     if (templates.isEmpty) {
                       return WorkoutTemplatesEmptyState(
                         onCreateWorkout: () {
@@ -326,7 +255,6 @@ class WorkoutsScreen extends ConsumerWidget {
                       );
                     }
 
-                    // Display saved templates.
                     return ListView.builder(
                       padding: const EdgeInsets.only(bottom: 24),
                       itemCount: templates.length,
@@ -335,15 +263,12 @@ class WorkoutsScreen extends ConsumerWidget {
 
                         return WorkoutTemplateCard(
                           template: template,
-
                           onEdit: () {
                             _showTemplateForm(context, ref, template: template);
                           },
-
                           onDelete: () {
                             _confirmDelete(context, ref, template);
                           },
-
                           onToggleFavorite: () {
                             _toggleFavorite(context, ref, template);
                           },
