@@ -5,12 +5,16 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/core/database/app_database.dart';
+import 'package:kinetiq/features/exercises/domain/enums/exercise_tracking_mode.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_tracking_mode_selector.dart';
 import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 
-/// Form for creating custom exercises.
+/// Form for creating and editing custom exercises.
 class AddExerciseScreen extends ConsumerStatefulWidget {
   const AddExerciseScreen({super.key, this.exerciseId});
 
+  /// Null = create mode.
+  /// Non-null = edit mode.
   final int? exerciseId;
 
   @override
@@ -18,6 +22,10 @@ class AddExerciseScreen extends ConsumerStatefulWidget {
 }
 
 class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
+  // ----------------------------------------------------------
+  // FORM STATE
+  // ----------------------------------------------------------
+
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
@@ -25,12 +33,18 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
   final _notesController = TextEditingController();
 
   String _category = 'strength';
-  bool _isSaving = false;
+
+  ExerciseTrackingMode _trackingMode = ExerciseTrackingMode.reps;
 
   bool _isLoading = false;
+  bool _isSaving = false;
   bool _hasLoadError = false;
 
   bool get _isEditing => widget.exerciseId != null;
+
+  // ----------------------------------------------------------
+  // LIFECYCLE
+  // ----------------------------------------------------------
 
   @override
   void initState() {
@@ -40,6 +54,19 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       _loadExercise();
     }
   }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _muscleGroupController.dispose();
+    _notesController.dispose();
+
+    super.dispose();
+  }
+
+  // ----------------------------------------------------------
+  // LOAD EXISTING EXERCISE
+  // ----------------------------------------------------------
 
   Future<void> _loadExercise() async {
     setState(() {
@@ -61,12 +88,18 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
         return;
       }
 
+      // Populate the form with saved SQLite data.
       _nameController.text = exercise.name;
       _muscleGroupController.text = exercise.muscleGroup ?? '';
       _notesController.text = exercise.notes ?? '';
 
       setState(() {
         _category = exercise.category;
+
+        // Preserve the existing tracking mode when editing.
+        _trackingMode = ExerciseTrackingMode.fromDatabase(
+          exercise.trackingMode,
+        );
       });
     } catch (_) {
       if (!mounted) return;
@@ -83,15 +116,39 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _muscleGroupController.dispose();
-    _notesController.dispose();
-    super.dispose();
+  // ----------------------------------------------------------
+  // CATEGORY SELECTION
+  // ----------------------------------------------------------
+
+  void _onCategoryChanged(String category) {
+    setState(() {
+      _category = category;
+
+      // Suggest an appropriate default when changing category.
+      // Users can choose a different tracking mode afterward.
+      _trackingMode = category == 'cardio'
+          ? ExerciseTrackingMode.duration
+          : ExerciseTrackingMode.reps;
+    });
   }
 
+  // ----------------------------------------------------------
+  // TRACKING MODE SELECTION
+  // ----------------------------------------------------------
+
+  void _onTrackingModeChanged(ExerciseTrackingMode mode) {
+    setState(() {
+      _trackingMode = mode;
+    });
+  }
+
+  // ----------------------------------------------------------
+  // SAVE EXERCISE
+  // ----------------------------------------------------------
+
   Future<void> _saveExercise() async {
+    if (_isSaving || _isLoading) return;
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -106,24 +163,31 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
       final muscleGroup = _muscleGroupController.text.trim();
       final notes = _notesController.text.trim();
 
+      // Shared values for both Create and Edit operations.
       final companion = ExercisesCompanion(
         name: Value(_nameController.text.trim()),
         category: Value(_category),
-        trackingMode: Value(_category == 'cardio' ? 'duration' : 'reps'),
+        trackingMode: Value(_trackingMode.databaseValue),
         muscleGroup: Value(muscleGroup.isEmpty ? null : muscleGroup),
         notes: Value(notes.isEmpty ? null : notes),
         isCustom: const Value(true),
       );
 
       if (_isEditing) {
-        final exercise = await repository.getExerciseById(widget.exerciseId!);
+        // ----------------------------------------------------
+        // UPDATE EXISTING EXERCISE
+        // ----------------------------------------------------
 
-        if (exercise == null) {
+        final existingExercise = await repository.getExerciseById(
+          widget.exerciseId!,
+        );
+
+        if (existingExercise == null) {
           throw StateError('Exercise no longer exists.');
         }
 
         await repository.updateExercise(
-          exercise.copyWith(
+          existingExercise.copyWith(
             name: companion.name.value,
             category: companion.category.value,
             trackingMode: companion.trackingMode.value,
@@ -132,6 +196,10 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
           ),
         );
       } else {
+        // ----------------------------------------------------
+        // CREATE NEW EXERCISE
+        // ----------------------------------------------------
+
         await repository.createExercise(companion);
       }
 
@@ -139,7 +207,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
       // Return to the Exercise Library after saving.
       context.pop();
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -156,10 +224,15 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
     }
   }
 
+  // ----------------------------------------------------------
+  // BUILD
+  // ----------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: KinetiqColors.background,
+
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Exercise' : 'Add Exercise'),
         backgroundColor: KinetiqColors.background,
@@ -182,9 +255,13 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(24),
                   children: [
+                    // ------------------------------------
+                    // PAGE HEADING
+                    // ------------------------------------
+
                     Text(
                       _isEditing ? 'EDIT EXERCISE' : 'CREATE EXERCISE',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: KinetiqColors.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -196,7 +273,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     Text(
                       _isEditing ? 'Refine your exercise.' : 'Make it yours.',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: KinetiqColors.textPrimary,
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -206,7 +283,7 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Add a custom exercise to your library.',
+                      'Customize your exercise and how you track it.',
                       style: TextStyle(
                         color: KinetiqColors.textSecondary,
                         fontSize: 14,
@@ -215,7 +292,9 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Exercise name
+                    // ------------------------------------
+                    // EXERCISE NAME
+                    // ------------------------------------
                     TextFormField(
                       controller: _nameController,
                       maxLength: 120,
@@ -237,7 +316,9 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Exercise category
+                    // ------------------------------------
+                    // CATEGORY
+                    // ------------------------------------
                     const Text(
                       'CATEGORY *',
                       style: TextStyle(
@@ -252,12 +333,12 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     SegmentedButton<String>(
                       segments: const [
-                        ButtonSegment(
+                        ButtonSegment<String>(
                           value: 'strength',
                           label: Text('Strength'),
                           icon: Icon(Icons.fitness_center),
                         ),
-                        ButtonSegment(
+                        ButtonSegment<String>(
                           value: 'cardio',
                           label: Text('Cardio'),
                           icon: Icon(Icons.directions_run),
@@ -265,15 +346,25 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                       ],
                       selected: {_category},
                       onSelectionChanged: (selection) {
-                        setState(() {
-                          _category = selection.first;
-                        });
+                        _onCategoryChanged(selection.first);
                       },
                     ),
 
                     const SizedBox(height: 28),
 
-                    // Optional muscle group
+                    // ------------------------------------
+                    // TRACKING MODE COMPONENT
+                    // ------------------------------------
+                    ExerciseTrackingModeSelector(
+                      selectedMode: _trackingMode,
+                      onChanged: _onTrackingModeChanged,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ------------------------------------
+                    // MUSCLE GROUP (OPTIONAL)
+                    // ------------------------------------
                     TextFormField(
                       controller: _muscleGroupController,
                       textCapitalization: TextCapitalization.words,
@@ -287,7 +378,9 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Optional notes
+                    // ------------------------------------
+                    // NOTES (OPTIONAL)
+                    // ------------------------------------
                     TextFormField(
                       controller: _notesController,
                       maxLines: 4,
@@ -302,7 +395,9 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Save button
+                    // ------------------------------------
+                    // SAVE BUTTON
+                    // ------------------------------------
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -333,6 +428,8 @@ class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

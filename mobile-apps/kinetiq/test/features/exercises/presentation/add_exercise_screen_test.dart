@@ -55,15 +55,28 @@ void main() {
 
     expect(saveButton, findsOneWidget);
 
-    // Try saving without entering a name.
-    await tester.tap(saveButton);
-    await tester.pumpAndSettle();
+    // Try saving without entering an exercise name.
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
 
-    // Verify the validation message.
-    expect(
-      find.text('Exercise name is required.'),
-      findsOneWidget,
-    );
+    // The form is now longer because of the tracking mode selector.
+    // Scroll back to the name field to inspect its validation error.
+        final validationMessage = find.text('Exercise name is required.');
+
+        await tester.scrollUntilVisible(
+          validationMessage,
+          -200,
+          scrollable: find.byType(Scrollable).first,
+        );
+
+        await tester.pumpAndSettle();
+
+    // Verify that the required-name validation appeared.
+        expect(
+          validationMessage,
+          findsOneWidget,
+        );
+
 
     // Invalid input must not be saved.
     final exercises = await database
