@@ -12,24 +12,24 @@ import 'package:kinetiq/features/workouts/presentation/widgets/workout_template_
 import 'package:kinetiq/features/workouts/providers/workout_template_exercise_providers.dart';
 import 'package:kinetiq/features/workouts/providers/workout_template_providers.dart';
 
-/// Displays and manages exercises inside a workout template.
+/// Displays and manages the exercises inside a workout template.
 class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   const WorkoutTemplateDetailsScreen({
     super.key,
     required this.templateId,
-    required this.onAddExercise,
-    required this.onEditExercise,
+    this.onAddExercise,
+    this.onEditExercise,
   });
 
   final int templateId;
 
-  // Kept temporarily for compatibility with the existing router.
-  // The real Add/Edit workflows are handled inside this screen.
-  final VoidCallback onAddExercise;
-  final ValueChanged<WorkoutTemplateExercise> onEditExercise;
+  // Optional for compatibility with the existing router.
+  // These callbacks are no longer used by this screen.
+  final VoidCallback? onAddExercise;
+  final ValueChanged<WorkoutTemplateExercise>? onEditExercise;
 
   // ----------------------------------------------------------
-  // ERROR AND SUCCESS MESSAGES
+  // USER MESSAGES
   // ----------------------------------------------------------
 
   void _showMessage(BuildContext context, String message) {
@@ -38,7 +38,7 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   }
 
   // ----------------------------------------------------------
-  // OPEN EXERCISE SETTINGS
+  // EXERCISE SETTINGS DIALOG
   // ----------------------------------------------------------
 
   Future<WorkoutExerciseSettingsData?> _showSettings(
@@ -61,11 +61,10 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   }
 
   // ----------------------------------------------------------
-  // ADD EXERCISE TO WORKOUT
+  // ADD EXERCISE
   // ----------------------------------------------------------
 
   Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
-    // Step 1: Select an exercise from the library.
     final exerciseId = await showDialog<int>(
       context: context,
       builder: (dialogContext) {
@@ -73,11 +72,9 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
       },
     );
 
-    // The user cancelled the picker.
     if (exerciseId == null || !context.mounted) return;
 
     try {
-      // Step 2: Load the selected library exercise.
       final exerciseRepository = ref.read(exerciseRepositoryProvider);
 
       final libraryExercise = await exerciseRepository.getExerciseById(
@@ -91,19 +88,12 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
         return;
       }
 
-      // Step 3: Configure sets, reps, weight, and rest.
-      //
-      // Nothing is added to SQLite until this dialog
-      // has been completed successfully.
       final settings = await _showSettings(context, libraryExercise);
 
-      // Cancelling settings must not create an exercise row.
       if (settings == null || !context.mounted) return;
 
       final repository = ref.read(workoutTemplateExerciseRepositoryProvider);
 
-      // Step 4: Determine the position at the end
-      // of this workout.
       final existingExercises = await repository.getExercisesForTemplate(
         templateId,
       );
@@ -117,30 +107,24 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                     .reduce((a, b) => a > b ? a : b) +
                 1;
 
-      // Step 5: Save the selected exercise AND
-      // all of its configured settings.
       await repository.addExercise(
         WorkoutTemplateExercisesCompanion(
           templateId: Value(templateId),
           exerciseId: Value(exerciseId),
           position: Value(nextPosition),
-
           sets: Value(settings.sets),
           targetReps: Value(settings.targetReps),
           targetWeight: Value(settings.targetWeight),
           targetDurationSeconds: Value(settings.targetDurationSeconds),
           targetDistanceKm: Value(settings.targetDistanceKm),
-
           restBetweenSetsSeconds: Value(settings.restBetweenSetsSeconds),
           restAfterExerciseSeconds: Value(settings.restAfterExerciseSeconds),
-
           notes: Value(settings.notes),
         ),
       );
 
       if (!context.mounted) return;
 
-      // Drift + Riverpod automatically refresh the list.
       _showMessage(context, 'Exercise added to workout.');
     } catch (_) {
       if (!context.mounted) return;
@@ -150,7 +134,7 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   }
 
   // ----------------------------------------------------------
-  // EDIT EXISTING EXERCISE SETTINGS
+  // EDIT EXERCISE SETTINGS
   // ----------------------------------------------------------
 
   Future<void> _editExercise(
@@ -161,7 +145,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
     try {
       final exerciseRepository = ref.read(exerciseRepositoryProvider);
 
-      // Get the exercise name and tracking mode.
       final libraryExercise = await exerciseRepository.getExerciseById(
         exercise.exerciseId,
       );
@@ -173,7 +156,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
         return;
       }
 
-      // Open settings with previously saved values.
       final settings = await _showSettings(
         context,
         libraryExercise,
@@ -184,7 +166,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
 
       final repository = ref.read(workoutTemplateExerciseRepositoryProvider);
 
-      // Fetch the latest configuration before updating.
       final existing = await repository.getTemplateExerciseById(exercise.id);
 
       if (!context.mounted) return;
@@ -194,8 +175,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
         return;
       }
 
-      // Save new targets while preserving the relationship ID,
-      // exercise ID, template ID, and position.
       await repository.updateExercise(
         existing.copyWith(
           sets: settings.sets,
@@ -220,7 +199,7 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   }
 
   // ----------------------------------------------------------
-  // REMOVE EXERCISE FROM WORKOUT
+  // REMOVE EXERCISE
   // ----------------------------------------------------------
 
   Future<void> _confirmRemove(
@@ -281,6 +260,47 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
   }
 
   // ----------------------------------------------------------
+  // REORDER EXERCISES
+  // ----------------------------------------------------------
+
+  Future<void> _reorderExercises(
+    BuildContext context,
+    WidgetRef ref,
+    List<WorkoutTemplateExercise> exercises,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    // onReorderItem already provides the adjusted destination.
+    // Do not subtract 1 again when dragging downward.
+    if (oldIndex == newIndex) return;
+
+    // Never modify the Riverpod-provided list directly.
+    final reordered = List<WorkoutTemplateExercise>.from(exercises);
+
+    final movedExercise = reordered.removeAt(oldIndex);
+
+    reordered.insert(newIndex, movedExercise);
+
+    // These are workout-template-exercise relationship IDs,
+    // not Exercise Library IDs.
+    final orderedIds = reordered.map((exercise) => exercise.id).toList();
+
+    try {
+      final repository = ref.read(workoutTemplateExerciseRepositoryProvider);
+
+      // The repository saves positions in one transaction.
+      await repository.reorderExercises(templateId, orderedIds);
+
+      // Drift notifies Riverpod and rebuilds the list
+      // with the newly saved exercise order.
+    } catch (_) {
+      if (!context.mounted) return;
+
+      _showMessage(context, 'Could not reorder exercises.');
+    }
+  }
+
+  // ----------------------------------------------------------
   // BUILD
   // ----------------------------------------------------------
 
@@ -296,24 +316,20 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: KinetiqColors.background,
-
       appBar: AppBar(
         title: const Text('Workout Details'),
         backgroundColor: KinetiqColors.background,
       ),
-
       body: templatesAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: KinetiqColors.primary),
         ),
-
         error: (error, stackTrace) => const Center(
           child: Text(
             'Could not load workout details.',
             style: TextStyle(color: KinetiqColors.textSecondary),
           ),
         ),
-
         data: (templates) {
           WorkoutTemplate? template;
 
@@ -367,7 +383,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                   if (template.description != null &&
                       template.description!.trim().isNotEmpty) ...[
                     const SizedBox(height: 8),
-
                     Text(
                       template.description!,
                       style: const TextStyle(
@@ -389,14 +404,12 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                           color: KinetiqColors.primary,
                         ),
                       ),
-
                       error: (error, stackTrace) => const Center(
                         child: Text(
                           'Could not load workout exercises.',
                           style: TextStyle(color: KinetiqColors.textSecondary),
                         ),
                       ),
-
                       data: (workoutExercises) {
                         return libraryExercisesAsync.when(
                           loading: () => const Center(
@@ -404,7 +417,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                               color: KinetiqColors.primary,
                             ),
                           ),
-
                           error: (error, stackTrace) => const Center(
                             child: Text(
                               'Could not load Exercise Library.',
@@ -413,7 +425,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                               ),
                             ),
                           ),
-
                           data: (libraryExercises) {
                             final exerciseNames = {
                               for (final exercise in libraryExercises)
@@ -423,10 +434,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // --------------------------------
-                                // EXERCISE COUNT
-                                // --------------------------------
-
                                 Text(
                                   '${workoutExercises.length} exercises',
                                   style: const TextStyle(
@@ -439,7 +446,7 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                                 const SizedBox(height: 16),
 
                                 // --------------------------------
-                                // EXERCISE CARDS
+                                // REORDERABLE EXERCISE LIST
                                 // --------------------------------
                                 Expanded(
                                   child: workoutExercises.isEmpty
@@ -456,24 +463,49 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                                             ),
                                           ),
                                         )
-                                      : ListView.builder(
+                                      : ReorderableListView.builder(
+                                          // We use our own drag handles.
+                                          buildDefaultDragHandles: false,
+
                                           padding: const EdgeInsets.only(
                                             bottom: 16,
                                           ),
+
                                           itemCount: workoutExercises.length,
+
+                                          // Uses Flutter's adjusted
+                                          // destination index.
+                                          onReorderItem: (oldIndex, newIndex) {
+                                            _reorderExercises(
+                                              context,
+                                              ref,
+                                              workoutExercises,
+                                              oldIndex,
+                                              newIndex,
+                                            );
+                                          },
+
                                           itemBuilder: (context, index) {
                                             final exercise =
                                                 workoutExercises[index];
 
                                             return WorkoutTemplateExerciseCard(
+                                              // Required stable key.
+                                              key: ValueKey(exercise.id),
+
                                               exercise: exercise,
+
                                               exerciseName:
                                                   exerciseNames[exercise
                                                       .exerciseId] ??
                                                   'Unknown exercise',
+
+                                              // Visible numbering: 1, 2, 3...
                                               displayPosition: index + 1,
 
-                                              // Edit the saved settings.
+                                              // Display the custom drag handle.
+                                              reorderIndex: index,
+
                                               onEdit: () {
                                                 _editExercise(
                                                   context,
@@ -482,8 +514,6 @@ class WorkoutTemplateDetailsScreen extends ConsumerWidget {
                                                 );
                                               },
 
-                                              // Remove the exercise from
-                                              // this workout only.
                                               onRemove: () {
                                                 _confirmRemove(
                                                   context,

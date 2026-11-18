@@ -106,26 +106,6 @@ abstract final class AppRouter {
 
                       return WorkoutTemplateDetailsScreen(
                         templateId: templateId,
-
-                        // Temporary callback.
-                        // The exercise picker comes next.
-                        onAddExercise: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Exercise picker coming next.'),
-                            ),
-                          );
-                        },
-
-                        // Temporary callback.
-                        // The settings editor comes later.
-                        onEditExercise: (exercise) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Exercise editor coming next.'),
-                            ),
-                          );
-                        },
                       );
                     },
                   ),
