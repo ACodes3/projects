@@ -12,9 +12,12 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
     super.key,
     required this.exercise,
     required this.exerciseName,
+    required this.displayPosition,
     required this.onEdit,
     required this.onRemove,
   });
+
+  final int displayPosition;
 
   /// Configuration stored in workout_template_exercises.
   final WorkoutTemplateExercise exercise;
@@ -53,7 +56,7 @@ class WorkoutTemplateExerciseCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${exercise.position + 1}',
+                  '$displayPosition',
                   style: const TextStyle(
                     color: KinetiqColors.primary,
                     fontSize: 16,

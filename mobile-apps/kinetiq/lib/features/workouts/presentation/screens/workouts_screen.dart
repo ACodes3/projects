@@ -2,6 +2,8 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:go_router/go_router.dart';
+
 import 'package:kinetiq/app/theme/kinetiq_theme.dart';
 import 'package:kinetiq/core/database/app_database.dart';
 import 'package:kinetiq/features/workouts/presentation/widgets/workout_template_card.dart';
@@ -263,6 +265,12 @@ class WorkoutsScreen extends ConsumerWidget {
 
                         return WorkoutTemplateCard(
                           template: template,
+
+                          // Open this workout's Details screen.
+                          onOpen: () {
+                            context.push('/workouts/templates/${template.id}');
+                          },
+
                           onEdit: () {
                             _showTemplateForm(context, ref, template: template);
                           },
