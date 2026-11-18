@@ -82,7 +82,6 @@ abstract final class AppRouter {
                 path: workouts,
                 name: 'workouts',
                 builder: (context, state) => const WorkoutsScreen(),
-
                 routes: [
                   // --------------------------------------
                   // WORKOUT TEMPLATE DETAILS
@@ -104,6 +103,8 @@ abstract final class AppRouter {
                         );
                       }
 
+                      // The details screen manages its own
+                      // Add, Edit, Remove, and Reorder actions.
                       return WorkoutTemplateDetailsScreen(
                         templateId: templateId,
                       );
@@ -117,7 +118,6 @@ abstract final class AppRouter {
                     path: 'exercises',
                     name: 'exercise-library',
                     builder: (context, state) => const ExerciseLibraryScreen(),
-
                     routes: [
                       // ----------------------------------
                       // CREATE EXERCISE
