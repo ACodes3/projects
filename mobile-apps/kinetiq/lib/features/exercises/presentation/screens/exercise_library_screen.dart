@@ -10,14 +10,16 @@ import 'package:kinetiq/features/exercises/providers/exercise_providers.dart';
 import 'package:kinetiq/features/exercises/presentation/widgets/exercise_card.dart';
 import 'package:kinetiq/features/exercises/presentation/widgets/exercise_library_empty_state.dart';
 import 'package:kinetiq/features/exercises/presentation/widgets/exercise_library_filters.dart';
+import 'package:kinetiq/features/exercises/presentation/widgets/exercise_results_count.dart';
 
 /// Main Exercise Library screen.
 ///
 /// Responsibilities:
 /// - Watch exercises through Riverpod.
 /// - Manage search and category state.
+/// - Filter exercises.
 /// - Coordinate navigation and deletion.
-/// - Compose reusable UI widgets.
+/// - Compose reusable UI components.
 class ExerciseLibraryScreen extends ConsumerStatefulWidget {
   const ExerciseLibraryScreen({super.key});
 
@@ -27,6 +29,10 @@ class ExerciseLibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
+  // ----------------------------------------------------------
+  // LOCAL UI STATE
+  // ----------------------------------------------------------
+
   String _searchQuery = '';
   String _selectedCategory = 'all';
 
@@ -112,7 +118,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       },
     );
 
-    // User cancelled or dismissed the dialog.
+    // Stop if deletion was cancelled or the screen was removed.
     if (shouldDelete != true || !context.mounted) {
       return;
     }
@@ -155,6 +161,9 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     return Scaffold(
       backgroundColor: KinetiqColors.background,
 
+      // --------------------------------------------------------
+      // APP BAR
+      // --------------------------------------------------------
       appBar: AppBar(
         title: const Text('Exercise Library'),
         backgroundColor: KinetiqColors.background,
@@ -172,11 +181,15 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
         ],
       ),
 
+      // --------------------------------------------------------
+      // BODY
+      // --------------------------------------------------------
       body: Column(
         children: [
           // --------------------------------------------------
-          // SEARCH + CATEGORY FILTERS
+          // SEARCH + CATEGORY FILTER COMPONENT
           // --------------------------------------------------
+
           ExerciseLibraryFilters(
             searchQuery: _searchQuery,
             selectedCategory: _selectedCategory,
@@ -185,14 +198,21 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
           ),
 
           // --------------------------------------------------
-          // DATABASE CONTENT
+          // REACTIVE DATABASE CONTENT
           // --------------------------------------------------
           Expanded(
             child: exercisesAsync.when(
+              // ----------------------------------------------
+              // LOADING
+              // ----------------------------------------------
+
               loading: () => const Center(
                 child: CircularProgressIndicator(color: KinetiqColors.primary),
               ),
 
+              // ----------------------------------------------
+              // ERROR
+              // ----------------------------------------------
               error: (error, stackTrace) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -204,6 +224,9 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
                 ),
               ),
 
+              // ----------------------------------------------
+              // DATA
+              // ----------------------------------------------
               data: (exercises) {
                 // Apply search and category filters together.
                 final filteredExercises = exercises.where((exercise) {
@@ -218,45 +241,78 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
                   return matchesSearch && matchesCategory;
                 }).toList();
 
-                // Empty library.
-                if (exercises.isEmpty) {
-                  return ExerciseLibraryEmptyState(
-                    hasExercises: false,
-                    onAddExercise: _openAddExercise,
-                  );
-                }
+                // Calculate results for our counter component.
+                final totalCount = exercises.length;
+                final visibleCount = filteredExercises.length;
 
-                // Search or category returned no results.
-                if (filteredExercises.isEmpty) {
-                  return ExerciseLibraryEmptyState(
-                    hasExercises: true,
-                    onAddExercise: _openAddExercise,
-                  );
-                }
+                return Column(
+                  children: [
+                    // ------------------------------------------
+                    // RESULTS COUNTER COMPONENT
+                    // ------------------------------------------
 
-                // ----------------------------------------------
-                // EXERCISE LIST
-                // ----------------------------------------------
-                return ListView.separated(
-                  padding: const EdgeInsets.all(24),
-                  itemCount: filteredExercises.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final exercise = filteredExercises[index];
+                    ExerciseResultsCount(
+                      visibleCount: visibleCount,
+                      totalCount: totalCount,
+                    ),
 
-                    return ExerciseCard(
-                      exercise: exercise,
+                    // ------------------------------------------
+                    // EXERCISE CONTENT
+                    // ------------------------------------------
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          // The SQLite library is completely empty.
+                          if (exercises.isEmpty) {
+                            return ExerciseLibraryEmptyState(
+                              hasExercises: false,
+                              onAddExercise: _openAddExercise,
+                            );
+                          }
 
-                      onEdit: () {
-                        _openEditExercise(exercise.id);
-                      },
+                          // Search/category filters returned no results.
+                          if (filteredExercises.isEmpty) {
+                            return ExerciseLibraryEmptyState(
+                              hasExercises: true,
+                              onAddExercise: _openAddExercise,
+                            );
+                          }
 
-                      onDelete: () {
-                        _confirmDelete(context, exercise.id, exercise.name);
-                      },
-                    );
-                  },
+                          // ------------------------------------
+                          // EXERCISE LIST
+                          // ------------------------------------
+
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(24),
+                            itemCount: filteredExercises.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final exercise = filteredExercises[index];
+
+                              return ExerciseCard(
+                                exercise: exercise,
+
+                                // Edit existing exercise.
+                                onEdit: () {
+                                  _openEditExercise(exercise.id);
+                                },
+
+                                // Delete with confirmation.
+                                onDelete: () {
+                                  _confirmDelete(
+                                    context,
+                                    exercise.id,
+                                    exercise.name,
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
