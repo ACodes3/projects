@@ -1,177 +1,36 @@
-
-# ============================================================
-# KINETIQ — FLUTTER MOBILE APPLICATION
-# Root .gitignore
-# ============================================================
-
-
-# ------------------------------------------------------------
-# OPERATING SYSTEM
-# ------------------------------------------------------------
-
-.DS_Store
-Thumbs.db
-Desktop.ini
-*.swp
-*.swo
-*~
-
-
-# ------------------------------------------------------------
-# IDE / EDITOR
-# ------------------------------------------------------------
-
-.idea/
-*.iml
-
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/launch.json
-!.vscode/tasks.json
-
-
-# ------------------------------------------------------------
-# ENVIRONMENT VARIABLES / SECRETS
-# ------------------------------------------------------------
-
-.env
-.env.*
-!.env.example
-
-*.pem
-*.p12
-*.p8
-*.key
-*.keystore
-*.jks
-
-**/android/key.properties
-
-google-services.json
-GoogleService-Info.plist
-
-
-# ------------------------------------------------------------
-# FLUTTER / DART
-# ------------------------------------------------------------
-
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-
-.pub-cache/
 .pub/
-
 build/
 coverage/
-
-# Flutter local configuration
-**/android/local.properties
-**/ios/Flutter/Generated.xcconfig
-**/ios/Flutter/flutter_export_environment.sh
-**/ios/Flutter/ephemeral/
-
-# Flutter generated symbols
-app.*.symbols
-
-# Flutter / Dart additional generated files
-**/ios/Flutter/.last_build_id
-**/ios/Flutter/app.flx
-**/ios/Flutter/app.zip
-
-# Flutter crash and performance files
-flutter_*.png
-*.trace
+*.iml
+.idea/
+.metadata
+**/.DS_Store
+android/local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
 
 
-# ------------------------------------------------------------
-# ANDROID / GRADLE
-# ------------------------------------------------------------
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
 
-.gradle/
-.cxx/
-
-**/android/.gradle/
-**/android/.cxx/
-**/android/captures/
-
-*.apk
-*.aab
-*.ap_
-
-
-# ------------------------------------------------------------
-# IOS / XCODE / COCOAPODS
-# ------------------------------------------------------------
-
-Pods/
-DerivedData/
-
-*.xcuserstate
-xcuserdata/
-
-*.ipa
-*.dSYM
-*.dSYM.zip
-
-**/ios/Flutter/App.framework
-**/ios/Flutter/Flutter.framework
-
-
-# ------------------------------------------------------------
-# SQLITE / LOCAL USER DATA
-# ------------------------------------------------------------
-
+# Local databases
 *.sqlite
 *.sqlite3
 *.db
-
-*.db-shm
 *.db-wal
-*.sqlite-shm
-*.sqlite-wal
-*.sqlite3-shm
+*.db-shm
 *.sqlite3-wal
+*.sqlite3-shm
 
-# Local backups and exported user data
-backups/
-exports/
-
-
-# ------------------------------------------------------------
-# LOGS / TEMPORARY FILES
-# ------------------------------------------------------------
-
-*.log
-logs/
-
-*.tmp
-*.temp
-
-.cache/
-.tmp/
-.temp/
-
-
-# ------------------------------------------------------------
-# KEEP TRACKED (DO NOT IGNORE)
-# ------------------------------------------------------------
-
-# pubspec.yaml
-# pubspec.lock
-# analysis_options.yaml
-# lib/
-# test/
-# integration_test/
-# assets/
-# android/
-# ios/
-# blueprint/
-# README.md
-# LICENSE
-#
-# Keep generated Dart source files tracked:
-# *.g.dart
-# *.freezed.dart
+# Python generated files
+__pycache__/
+*.pyc

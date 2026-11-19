@@ -1,109 +1,60 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-import 'package:kinetiq/core/database/tables/exercises.dart';
-import 'package:kinetiq/core/database/tables/workout_templates.dart';
-import 'package:kinetiq/core/database/tables/workout_template_exercises.dart';
-import 'package:kinetiq/core/database/tables/workout_sessions.dart';
+import 'schema.dart';
+import 'schema_v2.dart';
 
-part 'app_database.g.dart';
-
-/// Main SQLite database for the KINETIQ application.
-///
-/// All workout data is stored locally on the device.
-///
-/// Database responsibilities:
-/// - Exercise Library
-/// - Workout Templates
-/// - Exercises assigned to workout templates
-/// - Workout Sessions
-@DriftDatabase(
-  tables: [
-    Exercises,
-    WorkoutTemplates,
-    WorkoutTemplateExercises,
-    WorkoutSessions,
-  ],
-)
-class AppDatabase extends _$AppDatabase {
-  // ----------------------------------------------------------
-  // CONSTRUCTORS
-  // ----------------------------------------------------------
-
-  /// Persistent database used by the application.
-  AppDatabase() : super(driftDatabase(name: 'kinetiq'));
-
-  /// In-memory database used by automated tests.
-  AppDatabase.forTesting(super.executor);
-
-  // ----------------------------------------------------------
-  // DATABASE VERSION
-  // ----------------------------------------------------------
+/// Drift-backed SQLite database using explicit, reviewable SQL.
+/// No generated files or build_runner step required.
+class KinetiqDatabase extends GeneratedDatabase {
+  KinetiqDatabase() : super(driftDatabase(name: 'kinetiq_v2'));
+  KinetiqDatabase.test(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 2;
 
-  // ----------------------------------------------------------
-  // DATABASE MIGRATIONS
-  // ----------------------------------------------------------
+  @override
+  Iterable<DatabaseSchemaEntity> get allSchemaEntities => const [];
+
+  @override
+  Iterable<TableInfo<Table, dynamic>> get allTables => const [];
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    // --------------------------------------------------------
-    // NEW DATABASE INSTALLATIONS
-    // --------------------------------------------------------
-
-    /// New installations receive every registered table.
-    onCreate: (Migrator m) async {
-      await m.createAll();
-    },
-
-    // --------------------------------------------------------
-    // EXISTING DATABASE UPGRADES
-    // --------------------------------------------------------
-
-    /// Upgrade existing installations without deleting
-    /// previously saved exercises or workout templates.
-    onUpgrade: (Migrator m, int from, int to) async {
-      // ------------------------------------------------------
-      // VERSION 1 -> VERSION 2
-      // ------------------------------------------------------
-
-      // Introduce saved workout templates.
-      if (from < 2) {
-        await m.createTable(workoutTemplates);
-      }
-
-      // ------------------------------------------------------
-      // VERSION 2 -> VERSION 3
-      // ------------------------------------------------------
-
-      // Introduce exercises configured inside templates.
-      if (from < 3) {
-        await m.createTable(workoutTemplateExercises);
-      }
-
-      // ------------------------------------------------------
-      // VERSION 3 -> VERSION 4
-      // ------------------------------------------------------
-
-      // Introduce actual workout sessions.
-      //
-      // This adds a new table and does not modify the
-      // existing exercise or workout template tables.
-      if (from < 4) {
-        await m.createTable(workoutSessions);
+    onCreate: (m) async {
+      for (final statement in [...schemaV1, ...schemaV2]) {
+        await customStatement(statement);
       }
     },
-
-    // --------------------------------------------------------
-    // DATABASE CONNECTION SETUP
-    // --------------------------------------------------------
-
-    /// Enable foreign-key enforcement for every connection,
-    /// including persistent and in-memory test databases.
+    onUpgrade: (m, from, to) async {
+      if (from == 1 && to == 2) {
+        for (final statement in schemaV2) {
+          await customStatement(statement);
+        }
+        return;
+      }
+      // Never silently drop or replace existing user data.
+      throw StateError('No migration implemented from schema $from to $to');
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<List<Map<String, dynamic>>> query(
+    String sql, [
+    List<Object?> args = const [],
+  ]) async {
+    final vars = args.map<Variable<Object>>((value) {
+      if (value == null) return const Variable<String>(null);
+      if (value is int) return Variable<int>(value);
+      if (value is double) return Variable<double>(value);
+      return Variable<String>(value.toString());
+    }).toList();
+    final rows = await customSelect(sql, variables: vars).get();
+    return rows.map((e) => e.data).toList();
+  }
+
+  Future<void> execute(String sql, [List<Object?> args = const []]) =>
+      customStatement(sql, args);
 }

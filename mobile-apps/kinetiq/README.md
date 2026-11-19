@@ -1,179 +1,63 @@
-# KINETIQ
+# KINETIQ 2.0 — Flutter + offline storage + optional accounts
 
-**Move. Track. Improve.**
+**Train. Fuel. Evolve.** This is the revised source project from the *KINETIQ 2.0 Master Development Blueprint* (19 November 2026). The AI/KAI capability is **deliberately excluded**: no AI screens, prompts, SDKs, inference routes or API keys are present. The app is built from reusable, prop-driven Flutter widgets, including **one universal `KHeader`** shared across screens.
 
-KINETIQ is an offline-first fitness tracking mobile application built with **Flutter and Dart**. It aims to make strength training and basic cardio logging simple, with workout history and progress insights—without mandatory accounts or hosted infrastructure.
+**Important limitations:** This is an extended developer build, **not a certified release or a fully completed commercial product**. The optional self-hosted account server, manual cloud backup and email workflows require setup. Production subscriptions, automatic two-way cloud sync, commercial food data, scheduled OS notifications and various deferred or unselected blueprint features are not claimed as complete. See [`docs/BLUEPRINT_COVERAGE.md`](docs/BLUEPRINT_COVERAGE.md) for the full status inventory.
 
-> **Project status:** Early development. Flutter setup, the welcome screen, branding assets, and an initial widget test are in place. Workout tracking, local database persistence, and progress charts are planned features, not yet implemented.
+## Install and run on Windows
 
-## About
+Have Flutter with Dart >=3.13 and the `material_ui` package-compatible SDK (the Flutter 3.47+ toolchain that reports the replacement for deprecated `flutter/material.dart`), Android Studio and Android SDK installed.
 
-KINETIQ is an independent, public portfolio project focused on a fast, focused training experience. Its first release is planned for Android, with future iOS support through Flutter.
+From the **root of this extracted folder**, in PowerShell:
 
-### Principles
-
-- **Offline-first:** Core features should work without internet access.
-- **Private by design:** Data will be stored locally instead of in a hosted database.
-- **Focused:** Make everyday logging easy without unnecessary features.
-- **Accessible:** Use clear navigation, legible text, and comfortable touch targets.
-- **Maintainable:** Prefer feature-based organization and tested components.
-
-## Planned Features
-
-### Strength Training
-
-Create workout routines, select or add exercises, log sets, repetitions and weights, and track workout duration. A rest timer will support active sessions.
-
-### Basic Cardio
-
-Log running, walking, and cycling sessions with duration and optional distance. GPS route recording is outside the initial scope.
-
-### Workout History
-
-Review completed training sessions and their exercises, sets, durations and dates. Editing and deleting logged sessions is planned.
-
-### Progress Tracking
-
-Review training frequency, exercise performance, and personal records using simple summaries and charts.
-
-### Local Storage
-
-Persist data in SQLite, provide on-device settings, and eventually offer manual backup and restore. Version 1.0 does not include accounts or multi-device synchronization.
-
-## Technology Stack
-
-| Technology | Purpose | Status |
-| --- | --- | --- |
-| Flutter | Cross-platform app framework | In use |
-| Dart | Programming language | In use |
-| Material UI | Interface components and theming | In use |
-| Flutter Test | Automated widget testing | In use |
-| SQLite + Drift | Local database and typed queries | Planned |
-| Riverpod | State management | Planned |
-| GoRouter | Application navigation | Planned |
-| fl_chart | Progress charts | Planned |
-
-Planned packages will be introduced as features are built, rather than added preemptively.
-
-## Design Direction
-
-KINETIQ uses a dark visual style with electric-lime accents, bold typography, and simple, reusable components.
-
-| Token | Color |
-| --- | --- |
-| Background | `#101416` |
-| Accent | `#C5F26B` |
-| Surface | `#202B27` |
-| Primary text | `#FFFFFF` |
-| Secondary text | `#B1BDB7` |
-
-The app currently has a branded welcome screen. Its planned primary navigation is **Home**, **Workouts**, **History**, and **Progress**.
-
-## Project Structure
-
-KINETIQ is evolving toward a feature-first architecture:
-
-```text
-kinetiq/
-├── android/             # Android platform configuration
-├── ios/                 # iOS platform configuration
-├── assets/              # Images and branding
-├── blueprint/           # Development reference booklet
-├── lib/
-│   ├── main.dart        # Application entry point
-│   ├── app/             # Planned theme and app configuration
-│   ├── core/            # Planned shared code and database layer
-│   └── features/        # Planned feature modules
-├── test/
-├── pubspec.yaml
-└── README.md
-```
-
-Some directories in this diagram describe the intended organization and may not exist yet.
-
-## Getting Started
-
-### Prerequisites
-
-Install [Flutter](https://docs.flutter.dev/install), the Android SDK, and Android Studio or VS Code with Flutter/Dart support. Start an Android emulator or connect an Android device.
-
-### Run the App
-
-Clone the repository containing KINETIQ, then navigate to its directory. In the current larger project repository, the relative path is `mobile-apps/kinetiq`.
-
-```bash
-cd mobile-apps/kinetiq
-flutter pub get
+```powershell
 flutter doctor
-flutter devices
+flutter create --platforms=android --project-name kinetiq .
+flutter pub get
+flutter analyze
+flutter test
 flutter run
 ```
 
-To target a particular device:
+`flutter create` adds host-platform files, while preserving the app `lib/`, tests and `pubspec.yaml`. This archive includes `test/widget_test.dart` so Flutter's default nonexistent `MyApp` test will not be left behind. For iOS generation and builds use macOS with Xcode.
 
-```bash
-flutter run -d <device-id>
+If you already have a local database from **this standalone v1 app**, the app supplies a non-destructive v1→v2 migration. **It does not migrate the older private KINETIQ Drift v4 database**. Back up either app before switching or attempting import.
+
+### Optional accounts on local emulator
+
+The app starts and works fully offline as a guest **without running the server**. To test login/sign-up manually, open a separate terminal in `server/`:
+
+```powershell
+python kinetiq_server.py
 ```
 
-### Code Quality
+Then launch Flutter on the Android emulator (Android host loopback is `10.0.2.2`):
 
-```bash
-flutter analyze
-flutter test
+```powershell
+flutter run --dart-define=KINETIQ_API_BASE_URL=http://10.0.2.2:8765 --dart-define=KINETIQ_ALLOW_DEV_HTTP=true
 ```
 
-Both checks passed during initial project setup. Run them again against the latest code before submitting changes.
+For **Android debug HTTP only**, Android may block cleartext traffic by default; use a local HTTPS tunnel/reverse proxy, or add `android:usesCleartextTraffic="true"` to your **debug-only** `android/app/src/debug/AndroidManifest.xml` application element. Do **not** enable cleartext traffic in a release build. For a deployed backend use HTTPS and **omit** `KINETIQ_ALLOW_DEV_HTTP`. `server/README.md` explains SMTP configuration for email verification and password reset; without SMTP, those actions fail explicitly. The server is a developer reference implementation, not a production-ready public service.
 
-## Development Roadmap
+## Included modules
 
-### Phase 1 — Foundation and Interface
+- **Welcome & onboarding:** branded loading/welcome, Get Started, Explore as Guest, Sign In, Sign Up, Forgot Password, six-step optional and resumable onboarding.
+- **Guest and account:** free-account login/registration with an optional server, session tokens in secure mobile storage, verification and password change/reset UI, account deletion, sign out, account-to-guest data retention, explicitly reviewed backup merge and confirmed manual upload.
+- **Home:** actual statistics, active-session resume, training week, nutrition preview, and meaningful empty states.
+- **Training:** exercise library with custom entries, favorite/archive, routine create/edit/duplicate/favorite/archive, targets and ordering, standalone workout or routine snapshot, actual set logging, notes, optional set kinds/RPE/RIR, rest countdown, finish/discard/resume, history and explicit historical set corrections, manual cardio and weekly training programs.
+- **Nutrition:** manual source-labeled foods, day/category food diary, edit/delete/copy previous day, saved meals, recipe ingredients, macro calculations that preserve unknowns, hydration, optional nutrition targets.
+- **Progress:** deterministic completed-session counts, volume and fitness/chart summaries without invented stats.
+- **Profile and data:** editable experience/schedule/equipment/goals/units, guest/local data export to JSON, file-based or pasted JSON import with duplicate/conflict preview, no destructive overwrite, and local clear confirmation.
+- **Backend:** Python standard-library SQLite account and manual backup server under `server/` with distinct tests. No AI endpoints.
 
-Establish the Flutter application, visual identity, reusable theme, navigation structure, and main screen layouts. The initial welcome screen is implemented; architectural organization and the main app interface are next.
+### Component structure
 
-### Phase 2 — Local Database
+`lib/shared/widgets/` provides `KHeader`, `KScreen`, `KButton`, `KCard`, `KSection`, `KChoice`, `KNumberField`, `KTextField`, `KEmptyState`, `KDialog`, `KListTile`, `KStat`, `KProgressBar`. Domain-specific reusable widgets are in each feature's `widgets/` folder (for example `SetRow`, `ExercisePicker`, `RestTimerPanel`, `CompletedSetEditor`, `MealCard`, `MacroSummary`, and `AccountForm`). All screens compose these widgets with props rather than redefining headers.
 
-Introduce SQLite and Drift, model exercises and sessions, add repositories and schema migrations, and verify persistence through automated tests.
+### Tests
 
-### Phase 3 — Strength Workout Tracking
+**Flutter/Dart suite:** `flutter test` contains pure domain fixtures, widget tests, an HTTP client test harness, and 50 SQLite repository tests (routines, sessions, snapshot safety, imports, nutrition and persistence). `flutter analyze` and `flutter test` **could not be run in the authoring environment**, because the Flutter SDK is not installed. Do not treat the test suite as verified until it passes in your SDK.
 
-Implement the exercise library, workout routine management, active-session logging, set and weight entry, rest timers, and session completion.
+**Python service suite:** from `server/` run `python -m unittest discover -s tests -v`. **35 Python tests passed** in the authoring environment, including migration constraints, authentication, token expiry, password recovery and backup conflict handling.
 
-### Phase 4 — Cardio and History
-
-Add manual cardio tracking and a unified training history with detailed, editable session records.
-
-### Phase 5 — Progress and Insights
-
-Build training frequency summaries, personal-record tracking, and charts based on actual saved workout data.
-
-### Phase 6 — Polish and Release
-
-Improve accessibility and resilience, extend testing, add manual export/restore, and prepare Android release assets and documentation. iOS testing and builds will require a compatible macOS environment.
-
-This roadmap describes development priorities, not fixed delivery dates.
-
-## Testing Strategy
-
-KINETIQ will use unit tests for business logic and calculations, widget tests for interface behavior, database tests for storage and migrations, and integration tests for complete workout flows. Offline use and persistence across app restarts are key test scenarios.
-
-## Privacy and Data
-
-The planned app stores training data on the user's device and does not require an account or hosted database. Because local data may be lost if an app is uninstalled or a device fails, manual backup and restore are part of the planned release scope.
-
-## Documentation
-
-See [`blueprint/`](./blueprint/) for the detailed KINETIQ development booklet covering feature scope, architecture, data design, UX, and implementation milestones.
-
-## Contributing
-
-KINETIQ is an independent portfolio project in active development. Feedback and bug reports are welcome; contribution guidelines may be added as the project matures.
-
-## License
-
-A license has not yet been selected. Public availability of source code does not automatically grant permission to copy, modify, or redistribute it.
-
----
-
-**KINETIQ — Move. Track. Improve.**
-
-*Built with Flutter. Designed for consistency.*
+Read [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) for manual device workflows and [`docs/BLUEPRINT_COVERAGE.md`](docs/BLUEPRINT_COVERAGE.md) for outstanding release gates.
